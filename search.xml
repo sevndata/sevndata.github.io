@@ -4,7 +4,7 @@
   
     
     <entry>
-      <title>Java Web快速生成代码(二):利用mybatis-plus-generator并自定义freemarker模板</title>
+      <title>使用mybatis-plus-generator,freemarker模板生成代码</title>
       <link href="/2019/11/06/mybatis-plus-generator/"/>
       <url>/2019/11/06/mybatis-plus-generator/</url>
       
@@ -31,7 +31,7 @@
     
     
     <entry>
-      <title>Java Web快速生成代码(一):利用mybatis-generator及git</title>
+      <title>使用mybatis-generator及git生成代码</title>
       <link href="/2019/11/06/mybatis-generator/"/>
       <url>/2019/11/06/mybatis-generator/</url>
       
