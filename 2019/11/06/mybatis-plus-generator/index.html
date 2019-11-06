@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="description" content="Java Web快速生成代码(二):利用mybatis-plus-generator并自定义freemarker模板"/><meta name="keywords" content="mybatis-plus, freemarker, sevndata" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2019/11/06/mybatis-plus-generator/"/>
+
+<link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
+
+<script id="baidu_analytics">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?51be18ea09d4d62a30bc6098cd0c26a1";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script><script id="baidu_push">
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+<script>
+  window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
+</script>
+
+    <title>Java Web快速生成代码(二):利用mybatis-plus-generator并自定义freemarker模板 - sevndata</title>
+  </head>
+
+  <body><div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/." class="logo">sevndata</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list"><a href="/">
+        <li class="mobile-menu-item">首页
+          </li>
+      </a><a href="/archives/">
+        <li class="mobile-menu-item">归档
+          </li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签
+          </li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类
+          </li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于
+          </li>
+      </a></ul>
+</nav>
+<div class="container" id="mobile-panel">
+      <header id="header" class="header"><div class="logo-wrapper">
+  <a href="/." class="logo">sevndata</a>
+</div>
+
+<nav class="site-navbar"><ul id="menu" class="menu"><li class="menu-item">
+          <a class="menu-item-link" href="/">
+            首页
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/archives/">
+            归档
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/tags/">
+            标签
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/categories/">
+            分类
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/about/">
+            关于
+            </a>
+        </li>
+      </ul></nav>
+</header>
+
+      <main id="main" class="main">
+        <div class="content-wrapper">
+          <div id="content" class="content"><article class="post">
+    <header class="post-header">
+      <h1 class="post-title">Java Web快速生成代码(二):利用mybatis-plus-generator并自定义freemarker模板
+        </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          2019-11-06
+        </span><span class="post-category">
+            <a href="/categories/Java/">Java</a>
+            </span>
+        </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+    <h2 class="post-toc-title">文章目录</h2>
+    <div class="post-toc-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-maven引入"><span class="toc-text">1. maven引入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-创建模板文件"><span class="toc-text">2. 创建模板文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-配置"><span class="toc-text">3. 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-生成代码"><span class="toc-text">4. 生成代码</span></a></li></ol>
+    </div>
+  </div><div class="post-content"><p>在使用mybatis-plus时也可以快速生成代码，并且可以自定义模板，这里使用freemarker模板</p>
+<a id="more"></a>
+<ol>
+<li>maven引入</li>
+<li>创建模板文件</li>
+<li>配置</li>
+<li>生成代码</li>
+</ol>
+<h2 id="1-maven引入"><a href="#1-maven引入" class="headerlink" title="1. maven引入"></a>1. maven引入</h2><p>需要引入如下依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.baomidou<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>mybatis-plus<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.1.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.baomidou<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>mybatis-plus-generator<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.1.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.freemarker<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>freemarker<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.3.28<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="2-创建模板文件"><a href="#2-创建模板文件" class="headerlink" title="2. 创建模板文件"></a>2. 创建模板文件</h2><p>常规需要创建controller.java.ftl，entity.java.ftl，mapper.java.ftl，service.java.ftl， serviceImpl.java.ftl这些模板。可根据差异变化模板内容。这里提供参考模板：<br>controller.java.ftl</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line">package $&#123;package.Controller&#125;;</span><br><span class="line"></span><br><span class="line">import javax.annotation.Resource;</span><br><span class="line">import org.springframework.stereotype.Controller;</span><br><span class="line">import org.springframework.validation.BindingResult;</span><br><span class="line">import org.springframework.validation.annotation.Validated;</span><br><span class="line">import org.springframework.web.bind.annotation.RequestBody;</span><br><span class="line">import org.springframework.web.bind.annotation.RequestMapping;</span><br><span class="line">import org.springframework.web.bind.annotation.RequestMethod;</span><br><span class="line">import org.springframework.web.bind.annotation.ResponseBody;</span><br><span class="line"></span><br><span class="line">import $&#123;package.Service&#125;.$&#123;table.serviceName&#125;;</span><br><span class="line">import $&#123;package.Entity&#125;.$&#123;table.entityName&#125;;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * &lt;p&gt;</span><br><span class="line"> * $&#123;table.comment!&#125;接口</span><br><span class="line"> * &lt;/p&gt;</span><br><span class="line"> *</span><br><span class="line"> * @author $&#123;author&#125;</span><br><span class="line"> * @since $&#123;date&#125;</span><br><span class="line"> */</span><br><span class="line">@Controller</span><br><span class="line">@RequestMapping(value = &quot;$&#123;table.entityName?lower_case&#125;&quot;, method = &#123;RequestMethod.POST&#125;)</span><br><span class="line">public class $&#123;table.controllerName&#125;&#123;</span><br><span class="line"></span><br><span class="line">    @Resource</span><br><span class="line">    private $&#123;table.serviceName&#125;&lt;$&#123;table.entityName&#125;&gt; $&#123;table.entityName?lower_case&#125;Service;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * $&#123;table.comment!&#125;列表查询</span><br><span class="line">     * @param page 查询条件</span><br><span class="line">     * @return QueryResult&lt;$&#123;table.entityName&#125;&gt;</span><br><span class="line">     */</span><br><span class="line">    @RequestMapping(&quot;/query&quot;)</span><br><span class="line">    public @ResponseBody</span><br><span class="line">    QueryResult&lt;$&#123;table.entityName&#125;&gt; query(@RequestBody Page&lt;$&#123;table.entityName&#125;&gt; page) &#123;</span><br><span class="line">        return $&#123;table.entityName?lower_case&#125;Service.selectByCondition(page, page.getCondition($&#123;table.entityName&#125;.class));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * $&#123;table.comment!&#125;添加</span><br><span class="line">     * @param $&#123;table.entityName?lower_case&#125; $&#123;table.comment!&#125;实体类</span><br><span class="line">     * @param bindingResult　验参信息</span><br><span class="line">     * @return SqlExecuteResult&lt;$&#123;table.entityName&#125;&gt;</span><br><span class="line">     */</span><br><span class="line">    @RequestMapping(&quot;/add&quot;)</span><br><span class="line">    public @ResponseBody</span><br><span class="line">    SqlExecuteResult&lt;$&#123;table.entityName&#125;&gt; add(@RequestBody @Validated(&#123;Insert.class&#125;) $&#123;table.entityName&#125; $&#123;table.entityName?lower_case&#125;, BindingResult bindingResult) &#123;</span><br><span class="line">       return $&#123;table.entityName?lower_case&#125;Service.add($&#123;table.entityName?lower_case&#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * $&#123;table.comment!&#125;删除</span><br><span class="line">     * @param baseParam baseParam</span><br><span class="line">     * @return SqlExecuteResult&lt;$&#123;table.entityName&#125;&gt;</span><br><span class="line">     */</span><br><span class="line">    @RequestMapping(value = &quot;/delete&quot;)</span><br><span class="line">    public @ResponseBody</span><br><span class="line">    Integer delete(@RequestBody @Validated BaseParam baseParam, BindingResult bindingResult) &#123;</span><br><span class="line">       $&#123;table.entityName&#125; $&#123;table.entityName?lower_case&#125; = new $&#123;table.entityName&#125;();</span><br><span class="line">       $&#123;table.entityName?lower_case&#125;.setId(Long.valueOf(baseParam.getId()));</span><br><span class="line">       return $&#123;table.entityName?lower_case&#125;Service.delete($&#123;table.entityName?lower_case&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">            </span><br><span class="line">    /**</span><br><span class="line">     * $&#123;table.comment!&#125;修改</span><br><span class="line">     * @param $&#123;table.entityName?lower_case&#125;　$&#123;table.comment!&#125;实体类</span><br><span class="line">     * @param bindingResult　验参信息</span><br><span class="line">     * @return SqlExecuteResult&lt;$&#123;table.entityName&#125;&gt;</span><br><span class="line">     */</span><br><span class="line">    @RequestMapping(&quot;/update&quot;)</span><br><span class="line">    public @ResponseBody</span><br><span class="line">    SqlExecuteResult&lt;$&#123;table.entityName&#125;&gt; update(@RequestBody @Validated(&#123;Update.class&#125;) $&#123;table.entityName&#125; $&#123;table.entityName?lower_case&#125;, BindingResult bindingResult) &#123;</span><br><span class="line">        return $&#123;table.entityName?lower_case&#125;Service.update($&#123;table.entityName?lower_case&#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * $&#123;table.comment!&#125;详情</span><br><span class="line">     * @param baseParam baseParam</span><br><span class="line">     * @return SqlExecuteResult&lt;$&#123;table.entityName&#125;&gt;</span><br><span class="line">     */</span><br><span class="line">    @RequestMapping(&quot;/detail&quot;)</span><br><span class="line">    public @ResponseBody</span><br><span class="line">    SqlExecuteResult&lt;$&#123;table.entityName&#125;&gt; detail(@RequestBody @Validated BaseParam baseParam, BindingResult bindingResult) &#123;</span><br><span class="line">        $&#123;table.entityName&#125; $&#123;table.entityName?lower_case&#125; = new $&#123;table.entityName&#125;();</span><br><span class="line">        $&#123;table.entityName?lower_case&#125;.setId(new Long(baseParam.getId()));</span><br><span class="line">        return $&#123;table.entityName?lower_case&#125;Service.selectById($&#123;table.entityName?lower_case&#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>mapper.java.ftl</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">package $&#123;package.Mapper&#125;;</span><br><span class="line"></span><br><span class="line">import $&#123;package.Entity&#125;.$&#123;entity&#125;;</span><br><span class="line">import $&#123;superMapperClassPackage&#125;;</span><br><span class="line">import org.springframework.stereotype.Component;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * &lt;p&gt;</span><br><span class="line"> * $&#123;table.comment!&#125; Mapper</span><br><span class="line"> * &lt;/p&gt;</span><br><span class="line"> *</span><br><span class="line"> * @author $&#123;author&#125;</span><br><span class="line"> * @since $&#123;date&#125;</span><br><span class="line"> */</span><br><span class="line">&lt;#if kotlin&gt;</span><br><span class="line">interface $&#123;table.mapperName&#125; : $&#123;superMapperClass&#125;&lt;$&#123;entity&#125;&gt;</span><br><span class="line">&lt;#else&gt;</span><br><span class="line">@Component</span><br><span class="line">public interface $&#123;table.mapperName&#125; extends $&#123;superMapperClass&#125;&lt;$&#123;entity&#125;&gt; &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">&lt;/#if&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-配置"><a href="#3-配置" class="headerlink" title="3. 配置"></a>3. 配置</h2><p>创建CodeGenerator.java</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.generator;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.baomidou.mybatisplus.generator.AutoGenerator;</span><br><span class="line"><span class="keyword">import</span> com.baomidou.mybatisplus.generator.InjectionConfig;</span><br><span class="line"><span class="keyword">import</span> com.baomidou.mybatisplus.generator.config.*;</span><br><span class="line"><span class="keyword">import</span> com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;</span><br><span class="line"><span class="keyword">import</span> com.baomidou.mybatisplus.generator.engine.FreemarkerTemplateEngine;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CodeGenerator</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 可以看mybatis-plus官方文档，详细了解</span></span><br><span class="line"><span class="comment">     * 项目位置及author</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String projectPath = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String outputDir = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String author = <span class="string">""</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 数据库配置</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String dataUrl = <span class="string">"j"</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String dataUserName = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String dataPassword = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String dataDriver = <span class="string">""</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 输出文件位置</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String moduleName = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String parent = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String dao = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String service = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String domian = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String controller = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String serviceImpl = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String xml = <span class="string">""</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 要生成的数据库表名，以逗号分割 示例:cfg_skutype,node_rchg</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> String tableName = <span class="string">""</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 执行该主方法生成</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> args null</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        generator();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">generator</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        AutoGenerator mpg = <span class="keyword">new</span> AutoGenerator();</span><br><span class="line">        GlobalConfig gc = <span class="keyword">new</span> GlobalConfig();</span><br><span class="line">        gc.setOutputDir(projectPath + outputDir);</span><br><span class="line">        gc.setAuthor(author);</span><br><span class="line">        gc.setOpen(<span class="keyword">false</span>);</span><br><span class="line">        mpg.setGlobalConfig(gc);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 数据源配置</span></span><br><span class="line">        DataSourceConfig dsc = <span class="keyword">new</span> DataSourceConfig();</span><br><span class="line">        dsc.setUrl(dataUrl);</span><br><span class="line">        dsc.setDriverName(dataDriver);</span><br><span class="line">        dsc.setUsername(dataUserName);</span><br><span class="line">        dsc.setPassword(dataPassword);</span><br><span class="line">        mpg.setDataSource(dsc);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 包配置</span></span><br><span class="line">        PackageConfig pc = <span class="keyword">new</span> PackageConfig();</span><br><span class="line">        pc.setModuleName(moduleName);</span><br><span class="line">        pc.setParent(parent);</span><br><span class="line">        pc.setController(controller);</span><br><span class="line">        pc.setEntity(domian);</span><br><span class="line">        pc.setService(service);</span><br><span class="line">        pc.setServiceImpl(serviceImpl);</span><br><span class="line">        pc.setMapper(dao);</span><br><span class="line">        pc.setXml(xml);</span><br><span class="line">        mpg.setPackageInfo(pc);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 自定义配置</span></span><br><span class="line">        InjectionConfig cfg = <span class="keyword">new</span> InjectionConfig() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initMap</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        mpg.setCfg(cfg);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 配置模板，也就是2中的模板</span></span><br><span class="line">        TemplateConfig templateConfig = <span class="keyword">new</span> TemplateConfig();</span><br><span class="line">        templateConfig.setController(<span class="string">"controller.java"</span>);</span><br><span class="line">        templateConfig.setEntity(<span class="string">"entity.java"</span>);</span><br><span class="line">        templateConfig.setMapper(<span class="string">"mapper.java"</span>);</span><br><span class="line">        templateConfig.setService(<span class="string">"service.java"</span>);</span><br><span class="line">        templateConfig.setServiceImpl(<span class="string">"serviceImpl.java"</span>);</span><br><span class="line">        templateConfig.setXml(<span class="keyword">null</span>);</span><br><span class="line">        mpg.setTemplate(templateConfig);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 策略配置</span></span><br><span class="line">        StrategyConfig strategy = <span class="keyword">new</span> StrategyConfig();</span><br><span class="line">        strategy.setNaming(NamingStrategy.underline_to_camel);</span><br><span class="line">        strategy.setColumnNaming(NamingStrategy.underline_to_camel);</span><br><span class="line">        strategy.setSuperEntityClass(<span class="string">"com.baomidou.ant.common.BaseEntity"</span>);</span><br><span class="line">        strategy.setEntityLombokModel(<span class="keyword">true</span>);</span><br><span class="line">        strategy.setRestControllerStyle(<span class="keyword">true</span>);</span><br><span class="line">        strategy.setSuperEntityColumns(<span class="string">"id"</span>);</span><br><span class="line">        strategy.setInclude(tableName.split(<span class="string">","</span>));</span><br><span class="line">        strategy.setControllerMappingHyphenStyle(<span class="keyword">true</span>);</span><br><span class="line">        strategy.setTablePrefix(pc.getModuleName() + <span class="string">"_"</span>);</span><br><span class="line">        mpg.setStrategy(strategy);</span><br><span class="line">        mpg.setTemplateEngine(<span class="keyword">new</span> FreemarkerTemplateEngine());</span><br><span class="line">        mpg.execute();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-生成代码"><a href="#4-生成代码" class="headerlink" title="4. 生成代码"></a>4. 生成代码</h2><p>执行CodeGenerator中main方法生成代码。</p>
+<p>这样，就快速生成了代码。</p>
+
+      </div>
+      <div class="post-copyright">
+    <p class="copyright-item">
+      <span>原文作者: </span>
+      <a href="http://sevndata.com">sevn</a>
+    </p>
+    <p class="copyright-item">
+      <span>原文链接: </span>
+      <a href="http://sevndata.com/2019/11/06/mybatis-plus-generator/">http://sevndata.com/2019/11/06/mybatis-plus-generator/</a>
+    </p>
+    <p class="copyright-item">
+      <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
+    </p>
+  </div>
+      <footer class="post-footer">
+        <div class="post-tags">
+            <a href="/tags/mybatis-plus/">mybatis-plus</a>
+            <a href="/tags/freemarker/">freemarker</a>
+            </div>
+        
+        <nav class="post-nav"><a class="next" href="/2019/11/06/mybatis-generator/">
+        <span class="next-text nav-default">Java Web快速生成代码(一):利用mybatis-generator及git</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    </nav></footer>
+    </article></div><div class="comments" id="comments"></div></div>
+      </main>
+
+      <footer id="footer" class="footer"><div class="social-links"><a href="mailto:885119788@qq.com" target="_blank" rel="noopener" class="iconfont icon-email" title="email"></a>
+        <a href="https://github.com/sevndata" target="_blank" rel="noopener" class="iconfont icon-github" title="github"></a>
+        <a href="/atom.xml" class="iconfont icon-rss" title="rss"></a>
+    </div><div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/ahonn/hexo-theme-even" target="_blank" rel="noopener">Even</a>
+  </span>
+
+  <span class="copyright-year">&copy;2019<span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">sevn</span>
+  </span>
+</div>
+</footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div><script type="text/javascript" src="/lib/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/src/even.js?v=2.11.0"></script>
+</body>
+</html>
