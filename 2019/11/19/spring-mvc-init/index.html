@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="description" content="剖析Spring MVC:结构与创建过程"/><meta name="keywords" content="springmvc, sevndata" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2019/11/19/spring-mvc-init/"/>
+
+<link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
+
+<script id="baidu_analytics">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?51be18ea09d4d62a30bc6098cd0c26a1";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script><script id="baidu_push">
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+<script>
+  window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
+</script>
+
+    <title>剖析Spring MVC:结构与创建过程 - sevndata</title>
+  </head>
+
+  <body><div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/." class="logo">sevndata</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list"><a href="/">
+        <li class="mobile-menu-item">首页
+          </li>
+      </a><a href="/archives/">
+        <li class="mobile-menu-item">归档
+          </li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签
+          </li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类
+          </li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于
+          </li>
+      </a></ul>
+</nav>
+<div class="container" id="mobile-panel">
+      <header id="header" class="header"><div class="logo-wrapper">
+  <a href="/." class="logo">sevndata</a>
+</div>
+
+<nav class="site-navbar"><ul id="menu" class="menu"><li class="menu-item">
+          <a class="menu-item-link" href="/">
+            首页
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/archives/">
+            归档
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/tags/">
+            标签
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/categories/">
+            分类
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/about/">
+            关于
+            </a>
+        </li>
+      </ul></nav>
+</header>
+
+      <main id="main" class="main">
+        <div class="content-wrapper">
+          <div id="content" class="content"><article class="post">
+    <header class="post-header">
+      <h1 class="post-title">剖析Spring MVC:结构与创建过程
+        </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          2019-11-19
+        </span><span class="post-category">
+            <a href="/categories/Spring-MCV/">Spring MCV</a>
+            </span>
+        </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+    <h2 class="post-toc-title">文章目录</h2>
+    <div class="post-toc-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-接口"><span class="toc-text">1. 接口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Profiles"><span class="toc-text">1. Profiles</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Properties"><span class="toc-text">2. Properties</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-HttpServletBean"><span class="toc-text">2. HttpServletBean</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-FrameworkServlet"><span class="toc-text">3. FrameworkServlet</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-DispatcherServlet"><span class="toc-text">4. DispatcherServlet</span></a></li></ol>
+    </div>
+  </div><div class="post-content"><p>剖析Spring MVC,介绍Spring MVC的结构与创建过程。</p>
+<a id="more"></a>
+
+<p>首先看<code>Spring MVC</code>的结构。我们知道Spring MVC从创建<code>DispatcherServlet</code>开始:</p>
+<pre class="mermaid">  graph BT
+  DispatcherServlet --> FrameworkServlet
+  DispatcherServlet -.- SuppressWarnings
+  FrameworkServlet --> HttpServletBean
+  FrameworkServlet -.-> ApplicationContextAware
+  HttpServletBean --> HttpServlet
+  HttpServletBean -.-> EnvironmentAware
+  HttpServletBean -.-> EnvironmentCapable
+  HttpServlet --> GenericServlet
+  EnvironmentAware --> Aware
+  ApplicationContextAware --> Aware
+  GenericServlet -.->ServletConfig
+  GenericServlet -.->Servlet
+  GenericServlet -.->Serializable</pre>
+<p>可以看到<code>DispatcherServlet</code>继承<code>FrameworkServlet</code>,<code>FrameworkServlet</code>继承<code>HttpServletBean</code>,<code>HttpServletBean</code>继承<code>Servlet</code>中的<code>HttpServlet</code>。</p>
+<h2 id="1-接口"><a href="#1-接口" class="headerlink" title="1. 接口"></a>1. 接口</h2><p>这三个类实现了<code>EnvironmentCapable</code>,<code>EnvironmentAware</code>.<code>ApplicationContextAware</code>接口。可以实现这些接口获取<code>Environment</code>,<code>ApplicationContext</code>。</p>
+<p><code>Environment</code>：应用运行的环境，包括应用环境的：<code>Profiles</code>和<code>Properties</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Environment</span> <span class="keyword">extends</span> <span class="title">PropertyResolver</span> </span>&#123;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">//获取激活的Profiles</span></span><br><span class="line">	String[] getActiveProfiles();</span><br><span class="line">  <span class="comment">//没有找到激活的则找默认的Profiles</span></span><br><span class="line">	String[] getDefaultProfiles();</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Deprecated</span></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">acceptsProfiles</span><span class="params">(String... profiles)</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">acceptsProfiles</span><span class="params">(Profiles profiles)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">PropertyResolver</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">containsProperty</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function">String <span class="title">getProperty</span><span class="params">(String key)</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">getProperty</span><span class="params">(String key, String defaultValue)</span></span>;</span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	&lt;T&gt; <span class="function">T <span class="title">getProperty</span><span class="params">(String key, Class&lt;T&gt; targetType)</span></span>;</span><br><span class="line">	&lt;T&gt; <span class="function">T <span class="title">getProperty</span><span class="params">(String key, Class&lt;T&gt; targetType, T defaultValue)</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">getRequiredProperty</span><span class="params">(String key)</span> <span class="keyword">throws</span> IllegalStateException</span>;</span><br><span class="line">	&lt;T&gt; <span class="function">T <span class="title">getRequiredProperty</span><span class="params">(String key, Class&lt;T&gt; targetType)</span> <span class="keyword">throws</span> IllegalStateException</span>;</span><br><span class="line">	<span class="function">String <span class="title">resolvePlaceholders</span><span class="params">(String text)</span></span>;</span><br><span class="line">	<span class="function">String <span class="title">resolveRequiredPlaceholders</span><span class="params">(String text)</span> <span class="keyword">throws</span> IllegalArgumentException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-Profiles"><a href="#1-Profiles" class="headerlink" title="1. Profiles"></a>1. Profiles</h3><p><code>profile</code>配置是一个被命名的、bean定义的逻辑组,当<code>profile</code>激活时对应的<code>bean</code>会被注册到容器中，这样就能实现不同环境不同配置的切换，如开发中dev,sit,pro环境。可以使用<code>xml</code>,<code>@Profile</code>,环境变量，JVM参数，<code>Maven</code>等设置。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//注解</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="meta">@Profile</span>(<span class="string">"dev"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DevDatasourceConfig</span></span></span><br><span class="line"><span class="class">//<span class="title">xml</span></span></span><br><span class="line"><span class="class">&lt;<span class="title">beans</span> <span class="title">profile</span></span>=<span class="string">"dev"</span>&gt;</span><br><span class="line">    &lt;bean id=<span class="string">"devDatasourceConfig"</span></span><br><span class="line">      <span class="class"><span class="keyword">class</span></span>=<span class="string">"DevDatasourceConfig"</span> /&gt;</span><br><span class="line">&lt;/beans&gt;</span><br><span class="line"><span class="comment">//WebApplicationInitializer</span></span><br><span class="line">servletContext.setInitParameter(<span class="string">"spring.profiles.active"</span>, <span class="string">"dev"</span>);</span><br><span class="line"><span class="comment">//JVM参数</span></span><br><span class="line">java -jar xxx.jar -Dspring.profiles.active=dev</span><br><span class="line"><span class="comment">//环境变量</span></span><br><span class="line">export spring_profiles_active=dev</span><br><span class="line"><span class="comment">//maven</span></span><br><span class="line">&lt;profiles&gt;</span><br><span class="line">    &lt;profile&gt;</span><br><span class="line">        &lt;id&gt;dev&lt;/id&gt;</span><br><span class="line">        &lt;activation&gt;</span><br><span class="line">            &lt;activeByDefault&gt;true&lt;/activeByDefault&gt;</span><br><span class="line">        &lt;/activation&gt;</span><br><span class="line">        &lt;properties&gt;</span><br><span class="line">            &lt;spring.profiles.active&gt;dev&lt;/spring.profiles.active&gt;</span><br><span class="line">        &lt;/properties&gt;</span><br><span class="line">    &lt;/profile&gt;</span><br><span class="line">    &lt;profile&gt;</span><br><span class="line">        &lt;id&gt;pro&lt;/id&gt;</span><br><span class="line">        &lt;properties&gt;</span><br><span class="line">            &lt;spring.profiles.active&gt;pro&lt;/spring.profiles.active&gt;</span><br><span class="line">        &lt;/properties&gt;</span><br><span class="line">    &lt;/profile&gt;</span><br><span class="line">&lt;/profiles&gt;</span><br><span class="line"></span><br><span class="line">mvn install -Pdev</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-Properties"><a href="#2-Properties" class="headerlink" title="2. Properties"></a>2. Properties</h3><p><code>properties</code>配置属性，常见的<code>.properties</code>文件，<code>JVM properties</code>,<code>system环境</code></p>
+<h2 id="2-HttpServletBean"><a href="#2-HttpServletBean" class="headerlink" title="2. HttpServletBean"></a>2. HttpServletBean</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line">	<span class="comment">// 设置参数</span></span><br><span class="line">	PropertyValues pvs = <span class="keyword">new</span> ServletConfigPropertyValues(getServletConfig(), <span class="keyword">this</span>.requiredProperties);</span><br><span class="line">	<span class="keyword">if</span> (!pvs.isEmpty()) &#123;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(<span class="keyword">this</span>);</span><br><span class="line">			ResourceLoader resourceLoader = <span class="keyword">new</span> ServletContextResourceLoader(getServletContext());</span><br><span class="line">			bw.registerCustomEditor(Resource<span class="class">.<span class="keyword">class</span>, <span class="title">new</span> <span class="title">ResourceEditor</span>(<span class="title">resourceLoader</span>, <span class="title">getEnvironment</span>()))</span>;</span><br><span class="line">      <span class="comment">//模板方法。</span></span><br><span class="line">			initBeanWrapper(bw);</span><br><span class="line">			bw.setPropertyValues(pvs, <span class="keyword">true</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line">			<span class="keyword">if</span> (logger.isErrorEnabled()) &#123;</span><br><span class="line">				logger.error(<span class="string">"Failed to set bean properties on servlet '"</span> + getServletName() + <span class="string">"'"</span>, ex);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">throw</span> ex;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 模板方法。初始化工作，调用子类（FrameworkServlet）initServletBean()方法</span></span><br><span class="line">	initServletBean();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-FrameworkServlet"><a href="#3-FrameworkServlet" class="headerlink" title="3. FrameworkServlet"></a>3. FrameworkServlet</h2><p>从<code>HttpServletBean</code>可以看到调用<code>initServletBean()</code>方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Overridden method of &#123;<span class="doctag">@link</span> HttpServletBean&#125;, invoked after any bean properties</span></span><br><span class="line"><span class="comment"> * have been set. Creates this servlet's WebApplicationContext.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">initServletBean</span><span class="params">()</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line">	getServletContext().log(<span class="string">"Initializing Spring "</span> + getClass().getSimpleName() + <span class="string">" '"</span> + getServletName() + <span class="string">"'"</span>);</span><br><span class="line">	<span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">		logger.info(<span class="string">"Initializing Servlet '"</span> + getServletName() + <span class="string">"'"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">long</span> startTime = System.currentTimeMillis();</span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">//初始化webApplicationContext</span></span><br><span class="line">		<span class="keyword">this</span>.webApplicationContext = initWebApplicationContext();</span><br><span class="line">    <span class="comment">//模板方法，子类并没有实现</span></span><br><span class="line">		initFrameworkServlet();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">catch</span> (ServletException | RuntimeException ex) &#123;</span><br><span class="line">		logger.error(<span class="string">"Context initialization failed"</span>, ex);</span><br><span class="line">		<span class="keyword">throw</span> ex;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">		String value = <span class="keyword">this</span>.enableLoggingRequestDetails ?</span><br><span class="line">				<span class="string">"shown which may lead to unsafe logging of potentially sensitive data"</span> :</span><br><span class="line">				<span class="string">"masked to prevent unsafe logging of potentially sensitive data"</span>;</span><br><span class="line">		logger.debug(<span class="string">"enableLoggingRequestDetails='"</span> + <span class="keyword">this</span>.enableLoggingRequestDetails +</span><br><span class="line">				<span class="string">"': request parameters and headers will be "</span> + value);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (logger.isInfoEnabled()) &#123;</span><br><span class="line">		logger.info(<span class="string">"Completed initialization in "</span> + (System.currentTimeMillis() - startTime) + <span class="string">" ms"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>来看<code>initWebApplicationContext()</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">protected</span> WebApplicationContext <span class="title">initWebApplicationContext</span><span class="params">()</span> </span>&#123;</span><br><span class="line">   <span class="comment">//获取rootContext</span></span><br><span class="line">   <span class="comment">//String ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE = WebApplicationContext.class.getName() + ".ROOT";</span></span><br><span class="line">   <span class="comment">//Object attr = sc.getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);</span></span><br><span class="line">   <span class="comment">//从ServletContext中获取名为WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE的Object</span></span><br><span class="line">	WebApplicationContext rootContext =</span><br><span class="line">			WebApplicationContextUtils.getWebApplicationContext(getServletContext());</span><br><span class="line">	WebApplicationContext wac = <span class="keyword">null</span>;</span><br><span class="line">   <span class="comment">//如果已经设置了webApplicationContext</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.webApplicationContext != <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="comment">// A context instance was injected at construction time -&gt; use it</span></span><br><span class="line">		wac = <span class="keyword">this</span>.webApplicationContext;</span><br><span class="line">		<span class="keyword">if</span> (wac <span class="keyword">instanceof</span> ConfigurableWebApplicationContext) &#123;</span><br><span class="line">			ConfigurableWebApplicationContext cwac = (ConfigurableWebApplicationContext) wac;</span><br><span class="line">			<span class="keyword">if</span> (!cwac.isActive()) &#123;</span><br><span class="line">				<span class="comment">// The context has not yet been refreshed -&gt; provide services such as</span></span><br><span class="line">				<span class="comment">// setting the parent context, setting the application context id, etc</span></span><br><span class="line">				<span class="keyword">if</span> (cwac.getParent() == <span class="keyword">null</span>) &#123;</span><br><span class="line">					<span class="comment">// The context instance was injected without an explicit parent -&gt; set</span></span><br><span class="line">					<span class="comment">// the root application context (if any; may be null) as the parent</span></span><br><span class="line">					cwac.setParent(rootContext);</span><br><span class="line">				&#125;</span><br><span class="line">				configureAndRefreshWebApplicationContext(cwac);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (wac == <span class="keyword">null</span>) &#123;</span><br><span class="line">	  <span class="comment">//如果WebApplicationContext未设置，从ServletContext中获取</span></span><br><span class="line">     <span class="comment">//WebApplicationContext wac = WebApplicationContextUtils.getWebApplicationContext(getServletContext(), attrName);</span></span><br><span class="line">		wac = findWebApplicationContext();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (wac == <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="comment">//如果还未获取到，创建一个</span></span><br><span class="line">     <span class="comment">//设置一些东西，特别是设置了一个ContextRefreshListener监听</span></span><br><span class="line">     <span class="comment">//public void onApplicationEvent(ContextRefreshedEvent event) &#123;</span></span><br><span class="line">	  <span class="comment">//  this.refreshEventReceived = true; //表示已经刷新</span></span><br><span class="line">	  <span class="comment">//  synchronized (this.onRefreshMonitor) &#123;</span></span><br><span class="line">		<span class="comment">//  onRefresh(event.getApplicationContext());//onRefresh</span></span><br><span class="line">	  <span class="comment">//  &#125;</span></span><br><span class="line">    <span class="comment">//&#125;</span></span><br><span class="line">     <span class="comment">//onApplicationEvent()-&gt;</span></span><br><span class="line">		wac = createWebApplicationContext(rootContext);</span><br><span class="line">	&#125;</span><br><span class="line">   <span class="comment">//如果没有onRefresh过则onRefresh</span></span><br><span class="line">	<span class="keyword">if</span> (!<span class="keyword">this</span>.refreshEventReceived) &#123;</span><br><span class="line">		<span class="keyword">synchronized</span> (<span class="keyword">this</span>.onRefreshMonitor) &#123;</span><br><span class="line">       <span class="comment">//模板方法。子类重写</span></span><br><span class="line">			onRefresh(wac);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">   <span class="comment">//把WebApplicationContext设置到ServletContext中</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.publishContext) &#123;</span><br><span class="line">		<span class="comment">// Publish the context as a servlet context attribute.</span></span><br><span class="line">		String attrName = getServletContextAttributeName();</span><br><span class="line">		getServletContext().setAttribute(attrName, wac);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> wac;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-DispatcherServlet"><a href="#4-DispatcherServlet" class="headerlink" title="4. DispatcherServlet"></a>4. DispatcherServlet</h2><p>从<code>FrameworkServlet</code>看出，调用<code>DispatcherServlet</code>中<code>onRefresh</code>方法。<code>onRefresh()-&gt;initStrategies()</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * This implementation calls &#123;<span class="doctag">@link</span> #initStrategies&#125;.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onRefresh</span><span class="params">(ApplicationContext context)</span> </span>&#123;</span><br><span class="line">	initStrategies(context);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">  * 初始化组件</span></span><br><span class="line"><span class="comment"> * Initialize the strategy objects that this servlet uses.</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;May be overridden in subclasses in order to initialize further strategy objects.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initStrategies</span><span class="params">(ApplicationContext context)</span> </span>&#123;</span><br><span class="line">	initMultipartResolver(context);</span><br><span class="line">	initLocaleResolver(context);</span><br><span class="line">	initThemeResolver(context);</span><br><span class="line">	initHandlerMappings(context);</span><br><span class="line">	initHandlerAdapters(context);</span><br><span class="line">	initHandlerExceptionResolvers(context);</span><br><span class="line">	initRequestToViewNameTranslator(context);</span><br><span class="line">	initViewResolvers(context);</span><br><span class="line">	initFlashMapManager(context);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>初始化组件会从<code>context</code>中获取，如果获取不到会调用<code>getDefaultStrategies()</code>。通过默认文件<code>DispatcherServlet.properties</code>初始化组件</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Properties defaultStrategies;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> String DEFAULT_STRATEGIES_PATH = <span class="string">"DispatcherServlet.properties"</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> &#123;</span><br><span class="line">	<span class="comment">// Load default strategy implementations from properties file.</span></span><br><span class="line">	<span class="comment">// This is currently strictly internal and not meant to be customized</span></span><br><span class="line">	<span class="comment">// by application developers.</span></span><br><span class="line">	<span class="keyword">try</span> &#123;</span><br><span class="line">		ClassPathResource resource = <span class="keyword">new</span> ClassPathResource(DEFAULT_STRATEGIES_PATH, DispatcherServlet<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">		defaultStrategies = PropertiesLoaderUtils.loadProperties(resource);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(<span class="string">"Could not load '"</span> + DEFAULT_STRATEGIES_PATH + <span class="string">"': "</span> + ex.getMessage());</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create a List of default strategy objects for the given strategy interface.</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;The default implementation uses the "DispatcherServlet.properties" file (in the same</span></span><br><span class="line"><span class="comment"> * package as the DispatcherServlet class) to determine the class names. It instantiates</span></span><br><span class="line"><span class="comment"> * the strategy objects through the context's BeanFactory.</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> context the current WebApplicationContext</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> strategyInterface the strategy interface</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> the List of corresponding strategy objects</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function">List&lt;T&gt; <span class="title">getDefaultStrategies</span><span class="params">(ApplicationContext context, Class&lt;T&gt; strategyInterface)</span> </span>&#123;</span><br><span class="line">	String key = strategyInterface.getName();</span><br><span class="line">	String value = defaultStrategies.getProperty(key);</span><br><span class="line">	<span class="keyword">if</span> (value != <span class="keyword">null</span>) &#123;</span><br><span class="line">		String[] classNames = StringUtils.commaDelimitedListToStringArray(value);</span><br><span class="line">		List&lt;T&gt; strategies = <span class="keyword">new</span> ArrayList&lt;&gt;(classNames.length);</span><br><span class="line">		<span class="keyword">for</span> (String className : classNames) &#123;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				Class&lt;?&gt; clazz = ClassUtils.forName(className, DispatcherServlet<span class="class">.<span class="keyword">class</span>.<span class="title">getClassLoader</span>())</span>;</span><br><span class="line">				Object strategy = createDefaultStrategy(context, clazz);</span><br><span class="line">				strategies.add((T) strategy);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (ClassNotFoundException ex) &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> BeanInitializationException(</span><br><span class="line">						<span class="string">"Could not find DispatcherServlet's default strategy class ["</span> + className +</span><br><span class="line">						<span class="string">"] for interface ["</span> + key + <span class="string">"]"</span>, ex);</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">catch</span> (LinkageError err) &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> BeanInitializationException(</span><br><span class="line">						<span class="string">"Unresolvable class definition for DispatcherServlet's default strategy class ["</span> +</span><br><span class="line">						className + <span class="string">"] for interface ["</span> + key + <span class="string">"]"</span>, err);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> strategies;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> LinkedList&lt;&gt;();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      </div>
+      <div class="post-copyright">
+    <p class="copyright-item">
+      <span>原文作者: </span>
+      <a href="http://sevndata.com">sevn</a>
+    </p>
+    <p class="copyright-item">
+      <span>原文链接: </span>
+      <a href="http://sevndata.com/2019/11/19/spring-mvc-init/">http://sevndata.com/2019/11/19/spring-mvc-init/</a>
+    </p>
+    <p class="copyright-item">
+      <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
+    </p>
+  </div>
+      <footer class="post-footer">
+        <div class="post-tags">
+            <a href="/tags/springmvc/">springmvc</a>
+            </div>
+        
+        <nav class="post-nav"><a class="next" href="/2019/11/18/spring-mvc5/">
+        <span class="next-text nav-default">浅析Spring MVC(5):响应式Web应用</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    </nav></footer>
+    </article></div><div class="comments" id="comments"></div></div>
+      </main>
+
+      <footer id="footer" class="footer"><div class="social-links"><a href="mailto:885119788@qq.com" target="_blank" rel="noopener" class="iconfont icon-email" title="email"></a>
+        <a href="https://github.com/sevndata" target="_blank" rel="noopener" class="iconfont icon-github" title="github"></a>
+        <a href="/atom.xml" class="iconfont icon-rss" title="rss"></a>
+    </div>
+  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize("");
+    }
+  </script>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/ahonn/hexo-theme-even" target="_blank" rel="noopener">Even</a>
+  </span>
+
+  <span class="copyright-year">&copy;2019<span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">sevn</span>
+  </span>
+</div>
+</footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div><script type="text/javascript" src="/lib/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/src/even.js?v=2.11.0"></script>
+</body>
+</html>
