@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="description" content="系统架构及投产部署的分享"/><meta name="keywords" content="framework, sevndata" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2020/08/28/project-pro-framework/"/>
+
+<link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
+
+<script id="baidu_analytics">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?51be18ea09d4d62a30bc6098cd0c26a1";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script><script id="baidu_push">
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+<script>
+  window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
+</script>
+
+    <title>系统架构及投产部署的分享 - sevndata</title>
+  </head>
+
+  <body><div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/." class="logo">sevndata</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list"><a href="/">
+        <li class="mobile-menu-item">首页
+          </li>
+      </a><a href="/archives/">
+        <li class="mobile-menu-item">归档
+          </li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签
+          </li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类
+          </li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于
+          </li>
+      </a></ul>
+</nav>
+<div class="container" id="mobile-panel">
+      <header id="header" class="header"><div class="logo-wrapper">
+  <a href="/." class="logo">sevndata</a>
+</div>
+
+<nav class="site-navbar"><ul id="menu" class="menu"><li class="menu-item">
+          <a class="menu-item-link" href="/">
+            首页
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/archives/">
+            归档
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/tags/">
+            标签
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/categories/">
+            分类
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/about/">
+            关于
+            </a>
+        </li>
+      </ul></nav>
+</header>
+
+      <main id="main" class="main">
+        <div class="content-wrapper">
+          <div id="content" class="content"><article class="post">
+    <header class="post-header">
+      <h1 class="post-title">系统架构及投产部署的分享
+        </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          2020-08-28
+        </span><span class="post-category">
+            <a href="/categories/Project/">Project</a>
+            </span>
+        </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+    <h2 class="post-toc-title">文章目录</h2>
+    <div class="post-toc-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#XXX系统部署运维手册"><span class="toc-text">XXX系统部署运维手册</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-文档简介"><span class="toc-text">1 文档简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-修订版本"><span class="toc-text">2 修订版本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-系统概述"><span class="toc-text">3 系统概述</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1-部署图"><span class="toc-text">3.1 部署图</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-服务器详解"><span class="toc-text">3.2 服务器详解</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-服务器配置"><span class="toc-text">3.3 服务器配置</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#3-3-1-数据存储服务器"><span class="toc-text">3.3.1 数据存储服务器</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-3-2-server应用服务器"><span class="toc-text">3.3.2 server应用服务器</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-3-3-web应用服务器"><span class="toc-text">3.3.3 web应用服务器</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-3-4-负载均衡服务器"><span class="toc-text">3.3.4 负载均衡服务器</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-更新投产"><span class="toc-text">4 更新投产</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-投产时序图"><span class="toc-text">4.1 投产时序图</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-应用版本管理"><span class="toc-text">4.2 应用版本管理</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#4-2-1-配置文件"><span class="toc-text">4.2.1 配置文件</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-2-2-版本分支"><span class="toc-text">4.2.2 版本分支</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-2-3-系统版本号"><span class="toc-text">4.2.3 系统版本号</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-3-生产部署"><span class="toc-text">4.3 生产部署</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#4-3-1-小程序发布"><span class="toc-text">4.3.1 小程序发布</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-3-2-数据库更新"><span class="toc-text">4.3.2 数据库更新</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-3-3-java服务端应用发布"><span class="toc-text">4.3.3 java服务端应用发布</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-3-4-小程序发布"><span class="toc-text">4.3.4 小程序发布</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-3-5-web管理端发布"><span class="toc-text">4.3.5 web管理端发布</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-3-6-H5发布"><span class="toc-text">4.3.6 H5发布</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-4-常见异常与日志"><span class="toc-text">4.4 常见异常与日志</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#4-4-1-java服务端应用异常"><span class="toc-text">4.4.1 java服务端应用异常</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4-4-2-web，h5应用异常"><span class="toc-text">4.4.2 web，h5应用异常</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-5-开发期间遇到生产重大bug修复"><span class="toc-text">4.5 开发期间遇到生产重大bug修复</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-全新部署"><span class="toc-text">5 全新部署</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#5-1-硬件设备及网络"><span class="toc-text">5.1 硬件设备及网络</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-2-操作系统及软件版本"><span class="toc-text">5.2 操作系统及软件版本</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-3-服务器的安装"><span class="toc-text">5.3 服务器的安装</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#5-3-1-操作系统安装"><span class="toc-text">5.3.1 操作系统安装</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5-3-2-依赖与环境"><span class="toc-text">5.3.2 依赖与环境</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5-3-3-编辑网络"><span class="toc-text">5.3.3 编辑网络</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#5-3-4-账号与权限"><span class="toc-text">5.3.4 账号与权限</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-4-系统部署"><span class="toc-text">5.4 系统部署</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-5-系统验证"><span class="toc-text">5.5 系统验证</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-6-系统监控及报警"><span class="toc-text">5.6 系统监控及报警</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-维护"><span class="toc-text">6 维护</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-Q-amp-A"><span class="toc-text">7 Q&amp;A</span></a></li></ol></li></ol>
+    </div>
+  </div><div class="post-content"><p>最近进行项目的交接与培训，分享一个使用的系统架构部署及运维手册。</p>
+<a id="more"></a>
+
+<h2 id="XXX系统部署运维手册"><a href="#XXX系统部署运维手册" class="headerlink" title="XXX系统部署运维手册"></a>XXX系统部署运维手册</h2><h3 id="1-文档简介"><a href="#1-文档简介" class="headerlink" title="1 文档简介"></a>1 文档简介</h3><p>本文详细介绍了XXX系统架构及部署运维，是XXX系统的部署运维手册。</p>
+<p>主要内容为：XXX系统的架构部署，迭代更新方法，全新部署方法，系统日常运维，运维过程中常见问题。</p>
+<h3 id="2-修订版本"><a href="#2-修订版本" class="headerlink" title="2 修订版本"></a>2 修订版本</h3><table>
+<thead>
+<tr>
+<th>版本</th>
+<th align="center">修订人</th>
+<th align="center">修订日期</th>
+<th align="center">说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>V1.0.0</td>
+<td align="center">yzq</td>
+<td align="center">2020-08-26</td>
+<td align="center">init</td>
+</tr>
+</tbody></table>
+<h3 id="3-系统概述"><a href="#3-系统概述" class="headerlink" title="3 系统概述"></a>3 系统概述</h3><h4 id="3-1-部署图"><a href="#3-1-部署图" class="headerlink" title="3.1 部署图"></a>3.1 部署图</h4><pre class="mermaid">  flowchart BT
+  节点应用服务 & 总控应用服务 -->redis缓存服务
+  节点应用服务 & 总控应用服务 -->OSS文件服务
+
+  企业节点01 & 企业节点02 & 企业节点03 --> 节点mysql数据库
+  总控服务01 & 总控服务02 & 总控服务03 --> 总控mysql数据库
+
+ subgraph 节点应用服务
+
+  企业节点03
+  企业节点02 
+  企业节点01
+
+ end
+
+ subgraph 总控应用服务
+
+  总控服务01 
+  总控服务02 
+  总控服务03 
+
+ end
+
+ 收银终端设备 --> 总控制负载均衡 & 企业节点负载均衡
+
+浏览器 --> web管理端负载均衡 --> XXX-WEB运营端 --> 总控制负载均衡 --> 总控应用服务
+
+企业节点负载均衡 --> 节点应用服务
+
+XXXAPP --> H5端负载均衡--> XXX-H5商户端 --> 总控制负载均衡 & 企业节点负载均衡
+
+XXX-微信小程序 --> 总控制负载均衡</pre>
+
+<h4 id="3-2-服务器详解"><a href="#3-2-服务器详解" class="headerlink" title="3.2 服务器详解"></a>3.2 服务器详解</h4><p>目前XXX系统一共使用16台服务器。分别为：</p>
+<ol>
+<li>数据存储(阿里云RDS，阿里云redis，阿里云OSS)：总控mysql数据库，节点mysql数据库，redis缓存服务，OSS文件服务。</li>
+<li>应用服务器(阿里云ECS)：服务端6台（总控服务端3台，节点服务端3台），web管理端服务器，H5服务器。</li>
+<li>负载均衡(阿里云负载均衡)：总控负载均衡，企业节点负载均衡，web管理端负载均衡，H5端负载均衡。</li>
+</ol>
+<h4 id="3-3-服务器配置"><a href="#3-3-服务器配置" class="headerlink" title="3.3 服务器配置"></a>3.3 服务器配置</h4><h5 id="3-3-1-数据存储服务器"><a href="#3-3-1-数据存储服务器" class="headerlink" title="3.3.1 数据存储服务器"></a>3.3.1 数据存储服务器</h5><table>
+<thead>
+<tr>
+<th>名称</th>
+<th align="center">应用版本</th>
+<th align="center">型号</th>
+<th align="center">规格</th>
+<th align="center">配置</th>
+<th align="center">存储</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>总控mysql数据库</td>
+<td align="center">mysql5.7</td>
+<td align="center">独享套餐</td>
+<td align="center">mysql.x4.large.2</td>
+<td align="center">4核16GB内存（独享型）2500最大连接数4500IOPS</td>
+<td align="center">本地SSD硬盘 1T</td>
+</tr>
+<tr>
+<td>节点mysql数据库</td>
+<td align="center">mysql5.7</td>
+<td align="center">独享套餐</td>
+<td align="center">mysql.x4.large.2</td>
+<td align="center">4核16GB内存（独享型）2500最大连接数4500IOPS</td>
+<td align="center">本地SSD硬盘 500G</td>
+</tr>
+<tr>
+<td>redis缓存服务</td>
+<td align="center">redis5.0</td>
+<td align="center">企业版</td>
+<td align="center">性能增强型</td>
+<td align="center">标准版4G主从版性能增强</td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th align="center">bucket</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>OSS文件服务</td>
+<td align="center">tq-hsh</td>
+</tr>
+</tbody></table>
+<h5 id="3-3-2-server应用服务器"><a href="#3-3-2-server应用服务器" class="headerlink" title="3.3.2 server应用服务器"></a>3.3.2 server应用服务器</h5><table>
+<thead>
+<tr>
+<th>名称</th>
+<th align="center">应用版本</th>
+<th align="center">型号</th>
+<th align="center">规格</th>
+<th align="center">配置</th>
+<th align="center">存储</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>总控应用服务</td>
+<td align="center">CentOS 7.3 64位</td>
+<td align="center">通用型g6</td>
+<td align="center">ecs.g6.xlarge</td>
+<td align="center">4 vCPU 16 GiB</td>
+<td align="center">SSD云盘 40G</td>
+</tr>
+<tr>
+<td>节点应用服务</td>
+<td align="center">CentOS 7.3 64位</td>
+<td align="center">通用型g6</td>
+<td align="center">ecs.g6.xlarge</td>
+<td align="center">4 vCPU 16 GiB</td>
+<td align="center">SSD云盘 40G</td>
+</tr>
+</tbody></table>
+<h5 id="3-3-3-web应用服务器"><a href="#3-3-3-web应用服务器" class="headerlink" title="3.3.3 web应用服务器"></a>3.3.3 web应用服务器</h5><table>
+<thead>
+<tr>
+<th>名称</th>
+<th align="center">应用版本</th>
+<th align="center">型号</th>
+<th align="center">规格</th>
+<th align="center">配置</th>
+<th align="center">存储</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>WEB运营端</td>
+<td align="center">CentOS 7.3 64位</td>
+<td align="center">通用型g6</td>
+<td align="center">ecs.g6.xlarge</td>
+<td align="center">4 vCPU 16 GiB</td>
+<td align="center">SSD云盘 40G</td>
+</tr>
+<tr>
+<td>H5商户端</td>
+<td align="center">CentOS 7.3 64位</td>
+<td align="center">通用型g6</td>
+<td align="center">ecs.g6.xlarge</td>
+<td align="center">4 vCPU 16 GiB</td>
+<td align="center">SSD云盘 40G</td>
+</tr>
+</tbody></table>
+<h5 id="3-3-4-负载均衡服务器"><a href="#3-3-4-负载均衡服务器" class="headerlink" title="3.3.4 负载均衡服务器"></a>3.3.4 负载均衡服务器</h5><table>
+<thead>
+<tr>
+<th>名称</th>
+<th align="center">型号</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>负载均衡服务器</td>
+<td align="center">标准型I (slb.s2.small)</td>
+</tr>
+</tbody></table>
+<h3 id="4-更新投产"><a href="#4-更新投产" class="headerlink" title="4 更新投产"></a>4 更新投产</h3><p>在进行正常迭代更新投产时，使用以下方法进行更新投产。</p>
+<h4 id="4-1-投产时序图"><a href="#4-1-投产时序图" class="headerlink" title="4.1 投产时序图"></a>4.1 投产时序图</h4><pre class="mermaid">sequenceDiagram
+    participant 小程序
+    participant 数据库
+    participant 服务端
+    participant web管理端
+    participant H5端
+    小程序->>小程序: 1.提交发布审核申请，确保审核通过
+    小程序->>数据库: 2.执行数据库脚本，确保数据库脚本执行成功
+    数据库->>服务端: 3.发布服务端应用，确保服务端发布成功
+    服务端-x小程序: 4.发布小程序
+    服务端-xweb管理端: 5.发布web管理端
+    服务端-xH5端: 6.发布h5端</pre>
+
+<p>通过以上图示进行XXX系统的的迭代更新投产，具体步骤为：</p>
+<ol>
+<li>提交小程序的发布审核申请，等待小程序端过审，确保过审后进行下个步骤。</li>
+<li>整理本次数据库变动脚本，并在生产数据库执行数据库脚本，确保数据库脚本执行成功。</li>
+<li>发布java服务端应用，保证发布成功。</li>
+<li>发布小程序，发布web管理端，发布H5端。</li>
+<li>生产验证，更新投产成功。</li>
+</ol>
+<h4 id="4-2-应用版本管理"><a href="#4-2-应用版本管理" class="headerlink" title="4.2 应用版本管理"></a>4.2 应用版本管理</h4><h5 id="4-2-1-配置文件"><a href="#4-2-1-配置文件" class="headerlink" title="4.2.1 配置文件"></a>4.2.1 配置文件</h5><p>服务端应用配置三种配置分别为dev，test，release。未有测试组可只使用dev和release配置。</p>
+<ol>
+<li>dev：开发环境配置</li>
+<li>test：测试环境配置</li>
+<li>release：生产环境配置</li>
+</ol>
+<h5 id="4-2-2-版本分支"><a href="#4-2-2-版本分支" class="headerlink" title="4.2.2 版本分支"></a>4.2.2 版本分支</h5><p>服务端应用使用主要使用四条git分支分别为：master，test，pre，release。未有测试组和预发布可只使用master和release分支。根据实际情况使用临时分支。</p>
+<ol>
+<li>master：开发分支</li>
+<li>test：测试分支</li>
+<li>pre：预发布分支</li>
+<li>release：生产分支</li>
+</ol>
+<p>通过git分支进行版本的管理，使用<code>merge</code>进行分支合并，如下图所示：</p>
+<pre class="mermaid">sequenceDiagram
+    participant master
+    participant test
+    participant pre
+    participant release
+    loop 测试通过预发布
+    master->>test: 1.单元测试，内部测试
+    test->>test: 2.持续测试
+    test->>master: 3.问题反馈
+    master->>master: 4.问题修复
+    master->>test: 5.单元测试，内部测试
+    end
+    loop 产品验证通过预发布
+    test->>pre: 6.通过测试，预发布
+    pre->>pre: 7.产品验证
+    pre->>test: 8.验证未通过
+    test->>test: 9.问题修复
+    test->>pre: 10.通过测试，预发布
+    end
+    pre->>release: 11.发布投产
+    release->>release: 12.生产验证</pre>
+
+<p>上图示为正常应用版本发布流程，未有测试组和预发布使用下图示流程：</p>
+<pre class="mermaid">sequenceDiagram
+    participant master
+    participant release
+    loop 测试通过可发布版本
+    master->>master: 1.单元内部持续测试，问题反馈，问题修复
+    end
+    master->>release: 2.发布投产
+    release->>release: 3.生产验证</pre>
+<p>发生生产环境重大问题紧急修复时，创建临时分支修复发布，并<code>merge</code>到开发环境：</p>
+<pre class="mermaid">sequenceDiagram
+    participant release
+    participant 临时分支
+    participant master
+    release->>临时分支: 1.获取版本
+    loop 测试通过可发布版本
+    临时分支->>临时分支: 2.问题修复测试
+    end
+    临时分支->>release: 3.发布投产
+    临时分支->>master: 4.修复问题的提交合并到开发分支</pre>
+
+<h5 id="4-2-3-系统版本号"><a href="#4-2-3-系统版本号" class="headerlink" title="4.2.3 系统版本号"></a>4.2.3 系统版本号</h5><p>每次发布投产必须使用tag标记，tag名称为本次发布的版本号，并把详细内容描述在tag详情中。</p>
+<p>版本号示例：<code>release1.0.5-pro-20200814</code></p>
+<p>版本号规范：release[主版本号].[次版本号].[修订号]-pro-[发布日期yyyymmdd]</p>
+<p>主版本号：不兼容的API修改，提升该版本号。</p>
+<p>次版本号：向下兼容的比较大的功能修改，提升该版本号。</p>
+<p>修订号：向下兼容的问题修改，提升该版本号。</p>
+<h4 id="4-3-生产部署"><a href="#4-3-生产部署" class="headerlink" title="4.3 生产部署"></a>4.3 生产部署</h4><p>按照4.1 投产时序图示例进行系统的发布，详细步骤如下描述：</p>
+<h5 id="4-3-1-小程序发布"><a href="#4-3-1-小程序发布" class="headerlink" title="4.3.1 小程序发布"></a>4.3.1 小程序发布</h5><p>提交小程序的发布审核申请，直到审核通过。</p>
+<h5 id="4-3-2-数据库更新"><a href="#4-3-2-数据库更新" class="headerlink" title="4.3.2 数据库更新"></a>4.3.2 数据库更新</h5><p>整理本次更新投产的数据库变动内容，登录到阿里云控制台或登录生产局域网跳板机执行本次变动脚本，保证执行成功。</p>
+<h5 id="4-3-3-java服务端应用发布"><a href="#4-3-3-java服务端应用发布" class="headerlink" title="4.3.3 java服务端应用发布"></a>4.3.3 java服务端应用发布</h5><ol>
+<li><p>tag版本号的确认，并新增tag</p>
+</li>
+<li><p>在可以发布的本次更新分支上使用本地<code>mvn</code>打包或者使用<code>jenkins</code>进行打包，得到<code>control.war</code>（总控）与<code>node.war</code>（节点）应用包，注意使用生产环境配置。</p>
+<p>打包命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn clean install -P release</span><br></pre></td></tr></table></figure></li>
+<li><p>将<code>control.war</code>和<code>node.war</code>应用包上传到跳板服务器的<code>root</code>目录下，执行<code>copy-war.sh</code>脚本，会自动发布java应用，并把本次发布应用包以日期命名备份到<code>/root/backup</code>目录下。</p>
+<p>执行成功验证各服务应用状态。如果出现发布失败，立即把<code>/root/backup</code>下上一次发布的包拷贝重命名到<code>/root</code>下并执行<code>copy-war.sh</code>脚本恢复服务。</p>
+<p>执行copy-war.sh脚本命令。</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh copy-war.sh</span><br></pre></td></tr></table></figure>
+<p>copy-war.sh内容</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">cp /root/control.war /root/tomcat/webapps/control.war</span><br><span class="line">sleep 10</span><br><span class="line">scp /root/tomcat/webapps/control.war root@192.168.100.131:/root/tomcat/webapps/control.war</span><br><span class="line">sleep 10</span><br><span class="line">scp /root/tomcat/webapps/control.war root@192.168.100.134:/root/tomcat/webapps/control.war</span><br><span class="line">sleep 10</span><br><span class="line">scp /root/node.war root@192.168.100.130:/root/tomcat/webapps/node.war</span><br><span class="line">sleep 10</span><br><span class="line">scp /root/node.war root@192.168.100.133:/root/tomcat/webapps/node.war</span><br><span class="line">sleep 10</span><br><span class="line">scp /root/node.war root@192.168.100.128:/root/tomcat/webapps/node.war</span><br><span class="line">if [ ! -d "/root/backup" ];then</span><br><span class="line">  mkdir /root/backup</span><br><span class="line">fi</span><br><span class="line">date=$(date "+%Y.%m.%d.%H.%M.%S")</span><br><span class="line">mv /root/control.war /root/backup/control.war.bak.$date</span><br><span class="line">mv /root/node.war /root/backup/node.war.bak.$date</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h5 id="4-3-4-小程序发布"><a href="#4-3-4-小程序发布" class="headerlink" title="4.3.4 小程序发布"></a>4.3.4 小程序发布</h5><ol>
+<li>tag版本号的确认，并新增tag。</li>
+<li>在微信小程序后台发布小程序。</li>
+</ol>
+<h5 id="4-3-5-web管理端发布"><a href="#4-3-5-web管理端发布" class="headerlink" title="4.3.5 web管理端发布"></a>4.3.5 web管理端发布</h5><ol>
+<li>tag版本号的确认，并新增tag。</li>
+<li>本地打包web应用。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm run build</span><br></pre></td></tr></table></figure></li>
+<li>将应用文件上传到web管理端服务器<code>/home/html</code>下。</li>
+<li>在浏览器中验证发布状态。</li>
+</ol>
+<h5 id="4-3-6-H5发布"><a href="#4-3-6-H5发布" class="headerlink" title="4.3.6 H5发布"></a>4.3.6 H5发布</h5><ol>
+<li>tag版本号的确认，并新增tag。</li>
+<li>本地打包H5应用。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">npm run build</span><br></pre></td></tr></table></figure></li>
+<li>将应用文件上传到H5服务器<code>/home/html</code>下。</li>
+<li>在APP中验证发布状态。</li>
+</ol>
+<h4 id="4-4-常见异常与日志"><a href="#4-4-常见异常与日志" class="headerlink" title="4.4 常见异常与日志"></a>4.4 常见异常与日志</h4><h5 id="4-4-1-java服务端应用异常"><a href="#4-4-1-java服务端应用异常" class="headerlink" title="4.4.1 java服务端应用异常"></a>4.4.1 java服务端应用异常</h5><ol>
+<li><p>日志位置</p>
+<p>总控服务的日志存放位置为<code>${user.home}/control/control.log</code>，并按照时间命名策略存放。</p>
+<p>节点服务的日志存放位置为<code>${user.home}/node/node.log</code>，并按照时间命名策略存放。</p>
+</li>
+<li><p>检查tomcat应用是否启动，重启。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ps -ef|grep tomcat</span><br><span class="line">./startup.sh</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h5 id="4-4-2-web，h5应用异常"><a href="#4-4-2-web，h5应用异常" class="headerlink" title="4.4.2 web，h5应用异常"></a>4.4.2 web，h5应用异常</h5><ol>
+<li>检查nginx服务器是否启动，重启。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ps -ef|grep nginx</span><br><span class="line">service nginx start</span><br><span class="line">service nginx stop</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h4 id="4-5-开发期间遇到生产重大bug修复"><a href="#4-5-开发期间遇到生产重大bug修复" class="headerlink" title="4.5 开发期间遇到生产重大bug修复"></a>4.5 开发期间遇到生产重大bug修复</h4><p>在开发期间遇到生产重大<code>bug</code>需要紧急修复，需要从上一次的<code>release</code>分支，拉取新临时分支，并在临时分支修改测试到可发布状态，并发布。临时提交合并到开发分支。</p>
+<h3 id="5-全新部署"><a href="#5-全新部署" class="headerlink" title="5 全新部署"></a>5 全新部署</h3><p>在遇到需要迁移，或者部署新生产环境时，使用以下方法进行全新部署。</p>
+<h4 id="5-1-硬件设备及网络"><a href="#5-1-硬件设备及网络" class="headerlink" title="5.1 硬件设备及网络"></a>5.1 硬件设备及网络</h4><p>按照3.1部署图以及3.3服务器配置准备服务器硬件及网络环境。</p>
+<ol>
+<li>数据库mysql：最少配置俩台，分别为总控mysql数据库和节点mysql数据库，限制外网访问，应用从内网白名单访问。</li>
+<li>redis：最少配置一台，限制外网访问，应用从内网白名单访问。</li>
+<li>OSS：最少配置一个bucket，并可以从外网访问，公共读。</li>
+<li>总控服务端应用：最少配置一台，推荐配置三台。外网可出不可进，需从负载均衡（配置一台负载均衡）访问。</li>
+<li>节点服务端应用：最少配置一台，推荐配置三台。外网可出不可进，需从负载均衡（配置一台负载均衡）访问。</li>
+<li>H5，WEB端应用：最少配置一台，推荐配置俩台分别部署。外网开放，可视情况配置负载均衡，推荐配置俩台负载均衡。</li>
+</ol>
+<h4 id="5-2-操作系统及软件版本"><a href="#5-2-操作系统及软件版本" class="headerlink" title="5.2 操作系统及软件版本"></a>5.2 操作系统及软件版本</h4><ol>
+<li>Linux CentOS7.2</li>
+<li>MySQL5.7</li>
+<li>Redis5.0.7</li>
+<li>OSS</li>
+<li>Java8</li>
+<li>Tomcat9.0.37</li>
+<li>nginx1.16.1</li>
+</ol>
+<h4 id="5-3-服务器的安装"><a href="#5-3-服务器的安装" class="headerlink" title="5.3 服务器的安装"></a>5.3 服务器的安装</h4><h5 id="5-3-1-操作系统安装"><a href="#5-3-1-操作系统安装" class="headerlink" title="5.3.1 操作系统安装"></a>5.3.1 操作系统安装</h5><p>阿里云购买实例，阿里云自动根据设置的操作系统（Linux CentOS7.2）安装环境。</p>
+<h5 id="5-3-2-依赖与环境"><a href="#5-3-2-依赖与环境" class="headerlink" title="5.3.2 依赖与环境"></a>5.3.2 依赖与环境</h5><ol>
+<li>MySQL5.7：使用阿里云RDS服务</li>
+<li>Redis5.0.7：使用阿里云Redis服务</li>
+<li>OSS：使用阿里云OSS服务</li>
+<li>Java8：分别通过<code>ssh</code>登录到服务端的应用服务器。安装 java-1.8.0-openjdk-devel.x86_64，并在安装后验证安装结果。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install java-1.8.0-openjdk-devel.x86_64</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -version，</span><br></pre></td></tr></table></figure></li>
+<li>Tomcat9.0.37：在<a href="https://tomcat.apache.org/" target="_blank" rel="noopener"><code>tomcat官网</code></a>下载对应的安装包到<code>/home</code>下。解压安装包，修改配置文件<code>/home/apache-tomcat-9.0.11/conf/server.xml</code>端口号为80。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /home/apache-tomcat-9.0.11/conf/server.xml</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;Connector port="80" protocol="HTTP/1.1"</span><br><span class="line">              connectionTimeout="20000"</span><br><span class="line">              redirectPort="443" /&gt;</span><br></pre></td></tr></table></figure>
+在<code>/home/apache-tomcat-9.0.11/bin</code>下启动Tomcat并验证是否安装成功，验证成功后删除<code>/home/apache-tomcat-9.0.11/webapp/</code>下所有文件。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./startup.sh</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://localhost:80</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf /home/apache-tomcat-9.0.11/webapp/*</span><br></pre></td></tr></table></figure></li>
+<li>nginx1.16.1：通过yum方式安装nginx<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install nginx</span><br></pre></td></tr></table></figure>
+修改nginx配置文件<code>/etc/nginx/nginx.conf</code>，修改目录文件为<code>/home/html</code>，并结合实际情况修改端口和域名等信息。例如：<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">        listen       80 default_server;</span><br><span class="line">        listen       [::]:80 default_server;</span><br><span class="line">        server_name  sxpmerh5.tianquetech.com;</span><br><span class="line">        root         /home/html;</span><br><span class="line">        gzip on;</span><br><span class="line">        gzip_comp_level 4;</span><br><span class="line">        gzip_types text/plain application/javascript application/x-javascript text/css application/xml text/javascript</span><br><span class="line">        include /etc/nginx/default.d/*.conf;</span><br><span class="line"></span><br><span class="line">        location / &#123;</span><br><span class="line">            try_files $uri /index.html;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        error_page 404 /404.html;</span><br><span class="line">            location = /40x.html &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        error_page 500 502 503 504 /50x.html;</span><br><span class="line">            location = /50x.html &#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+在<code>/home</code>下创建<code>html</code>文件夹，并在<code>html</code>文件夹下创建测试<code>index.html</code>。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir /home/html</span><br></pre></td></tr></table></figure>
+启动nginx并验证是否安装成功<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service nginx start</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h5 id="5-3-3-编辑网络"><a href="#5-3-3-编辑网络" class="headerlink" title="5.3.3 编辑网络"></a>5.3.3 编辑网络</h5><ol>
+<li>mysql数据库：登录到阿里云RDS控制台，选择实例，点击左侧基本信息，点击设置白名单，将需要连接mysql数据库的应用服务器内网地址分组添加到白名单中。依次将所有实例白名单设置好。</li>
+<li>redis：登录到阿里云云数据库Redis版控制台，选择实例，点击左侧设置白名单，将需要连接redis的应用服务器内网地址分组添加到白名单中。</li>
+<li>应用服务器：登录到阿里云ESC服务器实例安全组需要设置入方向自定义TCP，22端口，全部ICMP(IP4)设置为-1即内网端口全开放。</li>
+</ol>
+<h5 id="5-3-4-账号与权限"><a href="#5-3-4-账号与权限" class="headerlink" title="5.3.4 账号与权限"></a>5.3.4 账号与权限</h5><ol>
+<li>mysql数据库：登录到阿里云RDS控制台，选择实例，选择左侧账号管理，并在账号管理界面中创建高权限账号（超级账号），同时创建应用使用的普通账号，并赋予普通账号权限。</li>
+<li>redis：登录到阿里云云数据库Redis版控制台，选择实例，点击左侧账号管理，在账号管理界面创建应用使用的普通账号，并赋予普通账号读写权限。</li>
+<li>应用服务器：未配置子账号使用。</li>
+</ol>
+<h4 id="5-4-系统部署"><a href="#5-4-系统部署" class="headerlink" title="5.4 系统部署"></a>5.4 系统部署</h4><ol>
+<li>数据库部署：使用高权限账号登录到阿里云数据库总控实例，并创建<code>sxf_control</code>数据库，字符集为<code>utf8mb4</code>。 创建好后点击数据方案中的导入，新增导入任务，选择导入文件类型为<code>.SQL</code>，取消忽略报错的勾选，并选择<code>sxf_control</code>数据库初始化脚本，进行导入，确保导入成功。重复步骤在节点数据库实例创建并导入<code>sxf_node</code>数据库。确保数据库部署完成。</li>
+<li>服务端应用部署：检查服务端应用配置文件。保证<code>mysql</code>，<code>redis</code>，<code>OSS</code>，<code>小程序参数</code>，<code>三方对接</code>等各类配置正确，参考<code>4.3.3 java服务端应⽤发布</code>将<code>control.war</code>，<code>node.war</code>分别部署到总控和节点应用服务器，并保证<code>tomcat</code>启动成功。</li>
+<li>负载均衡部署：登录到阿里云负载均衡控制台，点击进入实例，配置监听，添加<code>HTTPS:443</code>监听，并选择好使用的域名证书，添加监听虚拟服务器组，端口80，权重相同。添加<code>HTTP:80</code>监听并重定向到<code>HTTPS:443</code>。重复步骤设置好4个负载均衡。总控应用虚拟服务器组为所有总控应用服务器，节点应用虚拟服务器组为所有节点应用服务器，同理web，H5。</li>
+<li>web部署：检查web应用连接API服务器地址等配置信息，确保配置文件的正确。参考<code>4.3.5 web管理端发布</code>，将打包好的文件上传到web管理端服务器<code>/home/html</code>下，启动nginx。</li>
+<li>h5部署：检查h5应用连接API服务器地址等配置信息，确保配置文件的正确。参考<code>4.3.6 H5发布</code>将打包好的文件上传到web管理端服务器<code>/home/html</code>下，启动nginx。</li>
+<li>小程序部署：检查各类配置文件，以及微信小程序管理后台配置的白名单等配置信息正确，提交审核，等待审核通过后发布小程序。</li>
+</ol>
+<h4 id="5-5-系统验证"><a href="#5-5-系统验证" class="headerlink" title="5.5 系统验证"></a>5.5 系统验证</h4><p>查看各客户端应用是否正常运行。</p>
+<h4 id="5-6-系统监控及报警"><a href="#5-6-系统监控及报警" class="headerlink" title="5.6 系统监控及报警"></a>5.6 系统监控及报警</h4><ol>
+<li>监控：登录到阿里云控制台可查看各服务器的运行状态，负载情况，连接数等信息。</li>
+<li>报警：登录到阿里云云监控控制台，点击左侧报警服务，点击报警联系人，添加报警联系人姓名，电话，邮箱等信息。使用默认报警规则进行系统异常的报警。如：IOPS使用率，连接数使用率，CPU使用率，磁盘使用率。在服务器达到报警规则时，发送短信和邮箱进行系统报警。</li>
+</ol>
+<h3 id="6-维护"><a href="#6-维护" class="headerlink" title="6 维护"></a>6 维护</h3><p>系统日常维护主要为以下几点：</p>
+<ol>
+<li>保证服务器不会因为服务器到期，停止运行。服务器到期做提醒，以及时续费。</li>
+<li>在收到短信报警，查看报警原因，及时解决问题。如：磁盘使用率 &gt;=80%（及时清理磁盘，或者加磁盘），连接数使用率 &gt;=80%（是否是遭到攻击，是否需要加大配置，是否是应用出现bug）。</li>
+<li>服务器怠机，查看是否是操作系统问题，查看网络环境是否正常，查看<code>tomcat</code>进程是否正常运行，查看文件是否丢失，查看服务端系统日志是否为应用所依赖软件出现问题（如：<code>mysql</code>，<code>redis</code>），做出<code>reboot</code>，重启应用或者重新部署等动作。</li>
+<li>数据库mysql，redis，oss，负载均衡出现问题，及时登录到阿里云控制台检查情况，必要情况下联系阿里云客服。</li>
+</ol>
+<h3 id="7-Q-amp-A"><a href="#7-Q-amp-A" class="headerlink" title="7 Q&amp;A"></a>7 Q&amp;A</h3><ol>
+<li><p>Q：是否必须为java8?</p>
+<p>A：否，兼容最低版本为java8，可使用java11</p>
+</li>
+<li><p>Q：web端部署成功后，浏览器经常会跳转到404页面，如何解决？</p>
+<p>A：检查web端服务器nginx配置文件。查看域名配置是否正确。</p>
+</li>
+<li><p>Q：应用服务器连不到mysql，如何解决？</p>
+<p>A：检查应用配置是否正确。检查mysql和应用服务器是否在同一网段。检查mysql账号是否正确，是否有权限。检查mysql白名单配置是否正确。</p>
+</li>
+</ol>
+
+      </div>
+      <div class="post-copyright">
+    <p class="copyright-item">
+      <span>原文作者: </span>
+      <a href="http://sevndata.com">sevn</a>
+    </p>
+    <p class="copyright-item">
+      <span>原文链接: </span>
+      <a href="http://sevndata.com/2020/08/28/project-pro-framework/">http://sevndata.com/2020/08/28/project-pro-framework/</a>
+    </p>
+    <p class="copyright-item">
+      <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
+    </p>
+  </div>
+      <footer class="post-footer">
+        <div class="post-tags">
+            <a href="/tags/framework/">framework</a>
+            </div>
+        
+        <nav class="post-nav"><a class="next" href="/2019/12/01/spring-mvc-handlerAdapter/">
+        <span class="next-text nav-default">剖析Spring MVC:HandlerAdapter</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    </nav></footer>
+    </article></div><div class="comments" id="comments"></div></div>
+      </main>
+
+      <footer id="footer" class="footer"><div class="social-links"><a href="mailto:885119788@qq.com" target="_blank" rel="noopener" class="iconfont icon-email" title="email"></a>
+        <a href="https://github.com/sevndata" target="_blank" rel="noopener" class="iconfont icon-github" title="github"></a>
+        <a href="/atom.xml" class="iconfont icon-rss" title="rss"></a>
+    </div>
+  <script src='https://unpkg.com/mermaid@8.7.0/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize("");
+    }
+  </script>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/ahonn/hexo-theme-even" target="_blank" rel="noopener">Even</a>
+  </span>
+
+  <span class="copyright-year">&copy;2019 - 2020<span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">sevn</span>
+  </span>
+</div>
+</footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div><script type="text/javascript" src="/lib/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/src/even.js?v=2.11.0"></script>
+</body>
+</html>
