@@ -15,12 +15,16 @@
           
           <category> ShowDoc </category>
           
+          <category> python </category>
+          
       </categories>
       
       
         <tags>
             
             <tag> ShowDoc </tag>
+            
+            <tag> python </tag>
             
         </tags>
       
