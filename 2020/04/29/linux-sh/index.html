@@ -13,8 +13,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
 
-<meta name="description" content="brb,my cat killing my dog"/><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
-<link rel="canonical" href="http://sevndata.com/archives/2019/12/"/>
+<meta name="description" content="CentOS7开机自启动"/><meta name="keywords" content="Linux, sevndata" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2020/04/29/linux-sh/"/>
 
 <link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
 <link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
@@ -45,8 +45,7 @@
   window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
 </script>
 
-    <title>归档 - sevndata
-  </title>
+    <title>CentOS7开机自启动 - sevndata</title>
   </head>
 
   <body><div id="mobile-navbar" class="mobile-navbar">
@@ -113,25 +112,81 @@
 
       <main id="main" class="main">
         <div class="content-wrapper">
-          <div id="content" class="content"><section id="archive" class="archive"><div class="archive-title">
-          <span class="archive-post-counter">
-            目前共计 20 篇日志
-          </span>
+          <div id="content" class="content"><article class="post">
+    <header class="post-header">
+      <h1 class="post-title">CentOS7开机自启动
+        </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          2020-04-29
+        </span><span class="post-category">
+            <a href="/categories/Linux/">Linux</a>
+            </span>
         </div>
-      <div class="collection-title">
-            <h2 class="archive-year">2019</h2>
-          </div>
-        <div class="archive-post">
-        <span class="archive-post-time">
-          12-01
-          </span>
-        <span class="archive-post-title">
-          <a href="/2019/12/01/spring-mvc-handlerAdapter/" class="archive-post-link">
-            剖析Spring MVC:HandlerAdapter
-          </a>
-        </span>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+    <h2 class="post-toc-title">文章目录</h2>
+    <div class="post-toc-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#CentOS7开机自启动"><span class="toc-text">CentOS7开机自启动</span></a></li></ol>
+    </div>
+  </div><div class="post-content"><p>记录分享一些关于Linux操作。</p>
+<a id="more"></a>
+
+<h2 id="CentOS7开机自启动"><a href="#CentOS7开机自启动" class="headerlink" title="CentOS7开机自启动"></a>CentOS7开机自启动</h2><p>设置开机自启动程序有很多种方法。这里记录一种比较实用的方法。逻辑为：创建一个脚本，并在脚本中添加执行的命令，如redis,nginx,tomcat等启动命令，把该脚本设置为开机执行。</p>
+<ol>
+<li>创建脚本<code>server-start.sh</code></li>
+</ol>
+<p>如下等一些服务启动：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/bash</span></span><br><span class="line">/home/redis/src/redis-server /home/redis/redis.conf</span><br><span class="line">service nginx start</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>赋予执行权限</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod +x /home/server-start.sh</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li><code>/etc/rc.d/rc.local</code>赋予执行权限</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod +x /etc/rc.d/rc.local</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>在<code>/etc/rc.d/rc.local</code>添加<code>server-start.sh</code></li>
+</ol>
+<pre><code class="shell">/home/server-start.sh</code></pre>
+
       </div>
-    </section><nav class="pagination"></nav></div></div>
+      <div class="post-copyright">
+    <p class="copyright-item">
+      <span>原文作者: </span>
+      <a href="http://sevndata.com">sevn</a>
+    </p>
+    <p class="copyright-item">
+      <span>原文链接: </span>
+      <a href="http://sevndata.com/2020/04/29/linux-sh/">http://sevndata.com/2020/04/29/linux-sh/</a>
+    </p>
+    <p class="copyright-item">
+      <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
+    </p>
+  </div>
+      <footer class="post-footer">
+        <div class="post-tags">
+            <a href="/tags/Linux/">Linux</a>
+            </div>
+        
+        <nav class="post-nav"><a class="prev" href="/2020/08/28/project-pro-framework/">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">系统架构及投产部署分享</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    <a class="next" href="/2019/12/01/spring-mvc-handlerAdapter/">
+        <span class="next-text nav-default">剖析Spring MVC:HandlerAdapter</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    </nav></footer>
+    </article></div><div class="comments" id="comments"></div></div>
       </main>
 
       <footer id="footer" class="footer"><div class="social-links"><a href="mailto:885119788@qq.com" target="_blank" rel="noopener" class="iconfont icon-email" title="email"></a>

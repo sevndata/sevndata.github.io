@@ -194,7 +194,7 @@
 <ol start="2">
 <li>nginx端口号冲突导致启动异常</li>
 </ol>
-<p>本台服务器通过<code>nginx</code>代练很多其他服务。决定禁用<code>GitLab</code>自带<code>nginx</code>使用原有<code>nginx</code>。修改<code>GitLab</code>配置：</p>
+<p>本台服务器通过<code>nginx</code>代理很多其他服务。决定禁用<code>GitLab</code>自带<code>nginx</code>使用原有<code>nginx</code>。修改<code>GitLab</code>配置：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">external_url 'xxx'</span><br><span class="line">gitlab_workhorse['listen_network'] = "tcp"</span><br><span class="line">gitlab_workhorse['listen_addr'] = "127.0.0.1:18181"</span><br><span class="line">nginx['enable'] = false</span><br></pre></td></tr></table></figure>
 <p>修改原有<code>nginx</code>代理到该服务。启动后出现异常，手动关闭<code>GitLab</code>中<code>nginx</code>服务恢复正常。猜测与<code>external_url</code>有关系。可尝试注释掉<code>external_url</code>。</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">gitlab-ctl stop nginx</span><br></pre></td></tr></table></figure>
