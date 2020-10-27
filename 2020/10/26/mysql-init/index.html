@@ -158,7 +158,7 @@
 <li>使用<code>mysqldump</code>进行数据迁移，逻辑备份，此方案在数据量小时比较实用。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump -u root -p xxx tk_xx tk_xx2 tk_xx3 &gt; /home/tk_node.sql</span><br></pre></td></tr></table></figure></li>
 <li>使用<code>datadir</code>进行数据迁移。需停机，有风险。</li>
 <li>使用<code>navicat</code>等工具进行数据迁移。同样为逻辑备份恢复。</li>
-<li>使用<code>xtrabackup</code>进行数据迁移，物理备份恢复，不需要停机，不锁表，不影响正常业务，热更新，可增量备份，适用于大数据量迁移备份。</li>
+<li>使用<code>xtrabackup</code>进行数据迁移，物理备份恢复，速度快，不需要停机，不锁表，不影响正常业务，热更新，可增量备份，适用于大数据量迁移备份。</li>
 </ol>
 <p>所以，在生产环境少量数据时推荐使用<code>mysqldump</code>，大数据量时使用<code>xtrabackup</code>。</p>
 <h3 id="2-xtrabackup安装"><a href="#2-xtrabackup安装" class="headerlink" title="2. xtrabackup安装"></a>2. xtrabackup安装</h3><p>注意<code>xtrabackup</code>的版本。<code>xtrabackup</code>不同版本对应不同<code>MySQL</code>版本。在官方文档查找合适的版本。下文的版本为<code>xtrabackup8</code>对应<code>MySQL8</code>。</p>
