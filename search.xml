@@ -33,6 +33,31 @@
     
     
     <entry>
+      <title>CentOS7 ssh免密登录及失效问题</title>
+      <link href="/2020/09/30/linux-ssh/"/>
+      <url>/2020/09/30/linux-ssh/</url>
+      
+        <content type="html"><![CDATA[<p>分享ssh免密登录及失效问题</p><a id="more"></a><h2 id="1-ssh免密登录"><a href="#1-ssh免密登录" class="headerlink" title="1. ssh免密登录"></a>1. ssh免密登录</h2><p>通过配置本机公钥到目标服务器认证文件方式实现免密登录，常用于免密登录服务器，免密git等。</p><p>如:A服务器登录到B服务器，A生成公私钥，将A的公钥配置到B认证文件中，实现了A免密登录到B服务器。</p><h3 id="1-配置ssh免密登录"><a href="#1-配置ssh免密登录" class="headerlink" title="1. 配置ssh免密登录"></a>1. 配置ssh免密登录</h3><ol><li><p>生成秘钥</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa</span><br></pre></td></tr></table></figure></li><li><p>免密设置<br>将在用户目录下<code>.ssh</code>中生成<code>id_rsa</code>,<code>id_rsa.pub</code>公私钥，将<code>id_rsa.pub</code>公钥设置在目标服务器用户目录<code>.ssh</code>中认证文件<code>authorized_keys</code>尾部（可设置多个）。这样就实现了服务器间免密登录。</p></li></ol><h2 id="2-免密失效"><a href="#2-免密失效" class="headerlink" title="2. 免密失效"></a>2. 免密失效</h2><h3 id="1-修改密码IP"><a href="#1-修改密码IP" class="headerlink" title="1. 修改密码IP"></a>1. 修改密码IP</h3><p>因修改密码或IP等导致免密失效可删除<code>known_hosts</code>中对应<code>IP</code>信息。</p><h3 id="2-权限问题"><a href="#2-权限问题" class="headerlink" title="2. 权限问题"></a>2. 权限问题</h3><p>用户目录，<code>.ssh</code>目录，<code>authorized_keys</code>文件等文件权限会引起认证失效，可重新设置权限为<code>700</code></p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 700 authorized_keys</span><br></pre></td></tr></table></figure><h3 id="3-ssh配置文件"><a href="#3-ssh配置文件" class="headerlink" title="3. ssh配置文件"></a>3. ssh配置文件</h3><p>在<code>/etc/ssh/sshd_config</code>中检查<code>StrictModes</code>,<code>AuthorizedKeysFile</code>等配置是否正确。</p><h3 id="4-防火墙等问题"><a href="#4-防火墙等问题" class="headerlink" title="4. 防火墙等问题"></a>4. 防火墙等问题</h3><p>检查是否端口禁止访问等导致免密失效。</p><h3 id="5-ssh重启"><a href="#5-ssh重启" class="headerlink" title="5. ssh重启"></a>5. ssh重启</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service sshd restart</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> CentOS </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> CentOS </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>GitLab的安装使用及迁移</title>
       <link href="/2020/09/21/git-gitlab-init/"/>
       <url>/2020/09/21/git-gitlab-init/</url>

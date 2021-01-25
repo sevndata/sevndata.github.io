@@ -13,8 +13,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
 
-<meta name="description" content="浅析servlet"/><meta name="keywords" content="servlet, sevndata" /><meta name="baidu-site-verification" content="code-6XoX4V6p0R" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
-<link rel="canonical" href="http://sevndata.com/2019/11/08/java-servlet/"/>
+<meta name="description" content="CentOS7 ssh免密登录及失效问题"/><meta name="keywords" content="CentOS, sevndata" /><meta name="baidu-site-verification" content="code-6XoX4V6p0R" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2020/09/30/linux-ssh/"/>
 
 <link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
 <link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
@@ -45,7 +45,7 @@
   window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
 </script>
 
-    <title>浅析servlet - sevndata</title>
+    <title>CentOS7 ssh免密登录及失效问题 - sevndata</title>
   </head>
 
   <body><div id="mobile-navbar" class="mobile-navbar">
@@ -114,14 +114,14 @@
         <div class="content-wrapper">
           <div id="content" class="content"><article class="post">
     <header class="post-header">
-      <h1 class="post-title">浅析servlet
+      <h1 class="post-title">CentOS7 ssh免密登录及失效问题
         </h1>
 
       <div class="post-meta">
         <span class="post-time">
-          2019-11-08
+          2020-09-30
         </span><span class="post-category">
-            <a href="/categories/Java/">Java</a>
+            <a href="/categories/CentOS/">CentOS</a>
             </span>
         </div>
     </header>
@@ -129,71 +129,34 @@
     <div class="post-toc" id="post-toc">
     <h2 class="post-toc-title">文章目录</h2>
     <div class="post-toc-content">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-main"><span class="toc-text">1. main</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Wrapper"><span class="toc-text">2. Wrapper</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-ServletContainerInitializer"><span class="toc-text">3. ServletContainerInitializer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Listener"><span class="toc-text">4. Listener</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-Filter"><span class="toc-text">5. Filter</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-Asyn"><span class="toc-text">6. Asyn</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-ssh免密登录"><span class="toc-text">1. ssh免密登录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-配置ssh免密登录"><span class="toc-text">1. 配置ssh免密登录</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-免密失效"><span class="toc-text">2. 免密失效</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-修改密码IP"><span class="toc-text">1. 修改密码IP</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-权限问题"><span class="toc-text">2. 权限问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-ssh配置文件"><span class="toc-text">3. ssh配置文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-防火墙等问题"><span class="toc-text">4. 防火墙等问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-ssh重启"><span class="toc-text">5. ssh重启</span></a></li></ol></li></ol>
     </div>
-  </div><div class="post-content"><p>浅析在java web开发中使用的servlet。</p>
+  </div><div class="post-content"><p>分享ssh免密登录及失效问题</p>
 <a id="more"></a>
-<h2 id="1-main"><a href="#1-main" class="headerlink" title="1. main"></a>1. main</h2><pre class="mermaid">  graph BT
-  HttpServlet --> GenericServlet
-  GenericServlet -.-> Serializable
-  GenericServlet -.-> Servlet
-  GenericServlet -.-> ServletConfig</pre>
-<pre class="mermaid">  graph BT
-  HttpServletRequestWrapper -->ServletRequestWrapper
-  HttpServletRequestWrapper -.->HttpServletRequest
-  ServletRequestWrapper -.-> ServletRequest
-  HttpServletRequest --> ServletRequest
 
-  HttpServletResponseWrapper -->ServletResponseWrapper
-  HttpServletResponseWrapper -.->HttpServletResponse
-  ServletResponseWrapper -.-> ServletResponse 
-  HttpServletResponse --> ServletResponse</pre>
-<p>servlet实例化,服务。</p>
-<ol>
-<li><code>Servlet</code>: init,service,destroy</li>
-<li><code>GenericServlet</code></li>
-<li><code>HttpServlet</code>: doGet,doPost…</li>
-<li><code>ServletConfig</code>: Config</li>
-<li><code>ServletContext</code>: Context</li>
-<li><code>Request</code>: 请求</li>
-<li><code>Response</code>: 响应</li>
-</ol>
-<h2 id="2-Wrapper"><a href="#2-Wrapper" class="headerlink" title="2. Wrapper"></a>2. Wrapper</h2><p><code>ServletRequestWrapper</code>,<code>ServletResponseWrapper</code>,<code>HttpServletRequestWrapper</code>,<code>HttpServletResponseWrapper</code></p>
-<p>对于<code>ServletRequest</code>,<code>ServletResponse</code>,<code>HttpServletRequest</code>,<code>HttpServletResponse</code>，servlet提供给开发者wrapper装饰类。开发者可以使用改变属性，扩展功能等,例如验证参数，过滤数据，自定义功能等。</p>
-<h2 id="3-ServletContainerInitializer"><a href="#3-ServletContainerInitializer" class="headerlink" title="3. ServletContainerInitializer"></a>3. ServletContainerInitializer</h2><p>servlet 3.0提供开发者<code>ServletContainerInitializer</code>，可以通过实现<code>ServletContainerInitializer</code>接口来注册初始化应用，从而取代<code>web.xml</code>。</p>
-<ol>
-<li>使用<code>web.xml</code>时，web容器会寻找<code>web.xml</code>进行初始化应用。</li>
-<li>使用实现<code>ServletContainerInitializer</code>时，web容器会寻找<code>ServletContainerInitializer</code>的实现类，并调用<code>onStartup</code>进行初始化应用。</li>
-</ol>
-<p>可参考<code>SpringServletContainerInitializer</code>,<code>TomcatStarter</code></p>
-<h2 id="4-Listener"><a href="#4-Listener" class="headerlink" title="4. Listener"></a>4. Listener</h2><p>servlet有如下Listener：</p>
-<ol>
-<li><p><code>ServletContextListener</code>，<code>ServletContextAttributeListener</code>：</p>
-<p> 监听<code>ServletContext</code>，例如Spring中<code>ContextLoaderListener</code>创建<code>WebApplicationContext</code>。</p>
+<h2 id="1-ssh免密登录"><a href="#1-ssh免密登录" class="headerlink" title="1. ssh免密登录"></a>1. ssh免密登录</h2><p>通过配置本机公钥到目标服务器认证文件方式实现免密登录，常用于免密登录服务器，免密git等。</p>
+<p>如:A服务器登录到B服务器，A生成公私钥，将A的公钥配置到B认证文件中，实现了A免密登录到B服务器。</p>
+<h3 id="1-配置ssh免密登录"><a href="#1-配置ssh免密登录" class="headerlink" title="1. 配置ssh免密登录"></a>1. 配置ssh免密登录</h3><ol>
+<li><p>生成秘钥</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa</span><br></pre></td></tr></table></figure>
 </li>
-<li><p><code>ServletRequestListener</code>，<code>ServletRequestAttributeListener</code>：</p>
-<p> 监听<code>ServletRequest</code>，例如Spring中<code>RequestContextListener</code>，进行<code>setLocale</code>等。</p>
-</li>
-<li><p><code>AsyncListener</code></p>
-<p> 异步监听</p>
-</li>
-<li><p><code>HttpSessionListener</code>，<code>HttpSessionIdListener</code>，<code>HttpSessionAttributeListener</code> </p>
-<p>session的监听，创建，销毁，属性值变化，sessionIdChanged</p>
-</li>
-<li><p><code>HttpSessionActivationListener</code></p>
-<p>session序列化监听</p>
-</li>
-<li><p><code>HttpSessionBindingListener</code></p>
-<p><code>valueBound()</code>: 数据对象绑定到session监听</p>
-<p><code>valueUnbound</code>: 解绑监听</p>
-</li>
-<li><p><code>WriteListener</code>,<code>ReadListener</code></p>
+<li><p>免密设置<br>将在用户目录下<code>.ssh</code>中生成<code>id_rsa</code>,<code>id_rsa.pub</code>公私钥，将<code>id_rsa.pub</code>公钥设置在目标服务器用户目录<code>.ssh</code>中认证文件<code>authorized_keys</code>尾部（可设置多个）。这样就实现了服务器间免密登录。</p>
 </li>
 </ol>
-<p>名称以Listener结尾的一般为创建销毁监听，AttributeListener为属性变化监听。</p>
-<h2 id="5-Filter"><a href="#5-Filter" class="headerlink" title="5. Filter"></a>5. Filter</h2><p><code>Filter</code>,<code>FilterChain</code>,<code>FilterConfig</code></p>
-<h2 id="6-Asyn"><a href="#6-Asyn" class="headerlink" title="6. Asyn"></a>6. Asyn</h2><p>servlet3.0支持异步。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">start</span><span class="params">(Runnable run)</span></span>;</span><br></pre></td></tr></table></figure>
+<h2 id="2-免密失效"><a href="#2-免密失效" class="headerlink" title="2. 免密失效"></a>2. 免密失效</h2><h3 id="1-修改密码IP"><a href="#1-修改密码IP" class="headerlink" title="1. 修改密码IP"></a>1. 修改密码IP</h3><p>因修改密码或IP等导致免密失效可删除<code>known_hosts</code>中对应<code>IP</code>信息。</p>
+<h3 id="2-权限问题"><a href="#2-权限问题" class="headerlink" title="2. 权限问题"></a>2. 权限问题</h3><p>用户目录，<code>.ssh</code>目录，<code>authorized_keys</code>文件等文件权限会引起认证失效，可重新设置权限为<code>700</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 700 authorized_keys</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-ssh配置文件"><a href="#3-ssh配置文件" class="headerlink" title="3. ssh配置文件"></a>3. ssh配置文件</h3><p>在<code>/etc/ssh/sshd_config</code>中检查<code>StrictModes</code>,<code>AuthorizedKeysFile</code>等配置是否正确。</p>
+<h3 id="4-防火墙等问题"><a href="#4-防火墙等问题" class="headerlink" title="4. 防火墙等问题"></a>4. 防火墙等问题</h3><p>检查是否端口禁止访问等导致免密失效。</p>
+<h3 id="5-ssh重启"><a href="#5-ssh重启" class="headerlink" title="5. ssh重启"></a>5. ssh重启</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service sshd restart</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
 
       </div>
       <div class="post-copyright">
@@ -203,7 +166,7 @@
     </p>
     <p class="copyright-item">
       <span>原文链接: </span>
-      <a href="http://sevndata.com/2019/11/08/java-servlet/">http://sevndata.com/2019/11/08/java-servlet/</a>
+      <a href="http://sevndata.com/2020/09/30/linux-ssh/">http://sevndata.com/2020/09/30/linux-ssh/</a>
     </p>
     <p class="copyright-item">
       <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
@@ -211,16 +174,16 @@
   </div>
       <footer class="post-footer">
         <div class="post-tags">
-            <a href="/tags/servlet/">servlet</a>
+            <a href="/tags/CentOS/">CentOS</a>
             </div>
         
-        <nav class="post-nav"><a class="prev" href="/2019/11/12/spring-mvc1/">
+        <nav class="post-nav"><a class="prev" href="/2020/10/26/mysql-init/">
         <i class="iconfont icon-left"></i>
-        <span class="prev-text nav-default">浅析Spring MVC(1):DispatcherServlet</span>
+        <span class="prev-text nav-default">MySQL8搭建及数据迁移(xtrabackup)</span>
         <span class="prev-text nav-mobile">上一篇</span>
       </a>
-    <a class="next" href="/2019/11/07/python-email/">
-        <span class="next-text nav-default">python自动发送邮件</span>
+    <a class="next" href="/2020/09/21/git-gitlab-init/">
+        <span class="next-text nav-default">GitLab的安装使用及迁移</span>
         <span class="prev-text nav-mobile">下一篇</span>
         <i class="iconfont icon-right"></i>
       </a>
