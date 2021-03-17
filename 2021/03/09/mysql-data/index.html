@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="description" content="Mysql阻塞，修复损坏的innodb"/><meta name="keywords" content="Mysql, sevndata" /><meta name="baidu-site-verification" content="code-6XoX4V6p0R" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2021/03/09/mysql-data/"/>
+
+<link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
+
+<script id="baidu_analytics">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?51be18ea09d4d62a30bc6098cd0c26a1";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script><script id="baidu_push">
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+<script>
+  window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
+</script>
+
+    <title>Mysql阻塞，修复损坏的innodb - sevndata</title>
+  </head>
+
+  <body><div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/." class="logo">sevndata</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list"><a href="/">
+        <li class="mobile-menu-item">首页
+          </li>
+      </a><a href="/archives/">
+        <li class="mobile-menu-item">归档
+          </li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签
+          </li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类
+          </li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于
+          </li>
+      </a></ul>
+</nav>
+<div class="container" id="mobile-panel">
+      <header id="header" class="header"><div class="logo-wrapper">
+  <a href="/." class="logo">sevndata</a>
+</div>
+
+<nav class="site-navbar"><ul id="menu" class="menu"><li class="menu-item">
+          <a class="menu-item-link" href="/">
+            首页
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/archives/">
+            归档
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/tags/">
+            标签
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/categories/">
+            分类
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/about/">
+            关于
+            </a>
+        </li>
+      </ul></nav>
+</header>
+
+      <main id="main" class="main">
+        <div class="content-wrapper">
+          <div id="content" class="content"><article class="post">
+    <header class="post-header">
+      <h1 class="post-title">Mysql阻塞，修复损坏的innodb
+        </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          2021-03-09
+        </span><span class="post-category">
+            <a href="/categories/Mysql/">Mysql</a>
+            </span>
+        </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+    <h2 class="post-toc-title">文章目录</h2>
+    <div class="post-toc-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-事件起由"><span class="toc-text">1.事件起由</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-迁移方案"><span class="toc-text">2.迁移方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-造成阻塞"><span class="toc-text">3.造成阻塞</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-修复损坏的innodb"><span class="toc-text">4.修复损坏的innodb</span></a></li></ol>
+    </div>
+  </div><div class="post-content"><p>记录一次生产迁移数据造成生产事故及修复过程</p>
+<a id="more"></a>
+
+<h2 id="1-事件起由"><a href="#1-事件起由" class="headerlink" title="1.事件起由"></a>1.事件起由</h2><p>该系统是运行于中东国家的分布式多节点系统，维持约十万商户交易，每日交易额约为千亿本地货币。由于各种原因服务器硬件没有及时到位，只运行于一个节点，短短时间内，业务数据库达到了接近上亿级别的数据量，应用服务器也超过了负荷。在硬件到位后，我们扩容了4-5个节点，面临的问题就是需要把运行于第一个节点的商户平均分到4个节点上，减轻压力。应用服务器是简单的，数据库按照一定的规则将商户数据迁移到新数据库比较复杂。</p>
+<h2 id="2-迁移方案"><a href="#2-迁移方案" class="headerlink" title="2.迁移方案"></a>2.迁移方案</h2><p>我们确认了俩套方案去做数据库数据的迁移：</p>
+<ol>
+<li>编写脚本，以时间，id等因素迁移数据。</li>
+<li>一次性将节点一数据库全量备份恢复到其他节点，并且恢复交易，然后长期计划删除不属于该节点商户业务数据。</li>
+</ol>
+<p>通过评审确认了2方案为最后方案。原因为1方案涉及需要迁移的数据太多，太杂，稍有错误将会影响系统的运行，且系统每天只有4小时的可停机时间，1方案极可能迁移不完，需要二次迁移等，阻断交易风险巨大。而反向删除业务数据更加好做，且时间足够使用物理备份恢复数据库，删除数据可以分布去做，而不影响交易。</p>
+<p>实际中使用<code>xtrabackup</code>工具迁移数据。完美的迁移了数据并且恢复了业务。而问题出现在了删除数据环节。</p>
+<h2 id="3-造成阻塞"><a href="#3-造成阻塞" class="headerlink" title="3.造成阻塞"></a>3.造成阻塞</h2><p>数据恢复后，编写删除非该节点商户业务数据，准备删除脚本，并执行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> node_sku <span class="keyword">where</span> op_map_id <span class="keyword">not</span> <span class="keyword">in</span> (xxxx,xx,xxx);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nohup mysql -uroot -p -Dtk_biz &lt; exportSql/delete_sku.sql   //输入密码</span><br><span class="line">nohup mysql -uroot -p -Dtk_biz &lt; exportSql/delete_sku.sql &amp;   //会跳过输入密码，并报没有权限</span><br></pre></td></tr></table></figure>
+
+<p>经过停机时间，恢复后系统后，数据库响应变的非常慢，造成大面积商户不能使用问题。登录服务器发现数据库大量报错信息。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Lock wait timeout exceeded; try restarting transaction</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> information_schema.INNODB_TRX;</span><br></pre></td></tr></table></figure>
+
+<p>通过以上脚本发现有一条涉及800万数据的回滚。准备杀掉事务，设置一些锁参数等恢复了数据库。</p>
+<p>经过实践及大量资料的查阅，得知大量数据删除这样的操作的非常不可取的，一旦操作中断Rolling back将花费更多的时间，并造成数据库阻塞。可以通过将数据转移到临时表，使用truncate table tablename等方法，或者保证删除数据脚本的可用性，如数据量较小。</p>
+<p>之后减小了脚本删除的数据量及关闭了mysql日志又执行了一次删除数据操作</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// /etc/my.cnf</span><br><span class="line">skip-log-bin</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">autocommit=1 默认自动提交</span><br><span class="line">autocommit=0 手动提交</span><br></pre></td></tr></table></figure>
+<p>结果发生了第二次数据库阻塞，并且在业务方催的时候错误的执行了kill，reboot，断电操作，造成Mysql启动不起来。</p>
+<h2 id="4-修复损坏的innodb"><a href="#4-修复损坏的innodb" class="headerlink" title="4.修复损坏的innodb"></a>4.修复损坏的innodb</h2><p>查看<code>/var/log/mysql.log</code>，发现大量表innodb损坏，修复数据库：</p>
+<ol>
+<li><p>配置<code>my.cnf</code>中<code>innodb_force_recovery</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">innodb_force_recovery=1</span><br></pre></td></tr></table></figure>
+<p>设置为1，重启数据库，如果不成功则修改为2重启，1-6不同含义可参考<a href="https://dev.mysql.com/doc/refman/8.0/en/forcing-innodb-recovery.html" target="_blank" rel="noopener">mysql官网Forcing InnoDB Recovery</a>直到启动成功。</p>
+</li>
+<li><p>mysql启动后，损坏的表是只读状态<code>Can&#39;t lock file (errno: 165 - Table is read only)</code>。</p>
+</li>
+<li><p>将损坏的表的数据导出</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump -u root -p tk_biz node_sku --no-create-info --where=&quot;op_map_id in (&apos;xx&apos;,&apos;xxx&apos;,&apos;xxxx&apos;)&quot;&gt; /home/exportSql/sku.sql</span><br></pre></td></tr></table></figure></li>
+<li><p>将损坏表drop</p>
+</li>
+<li><p>删除<code>innodb_force_recovery</code>配置</p>
+</li>
+<li><p>启动mysql</p>
+</li>
+<li><p>将导出数据重新恢复到数据库中</p>
+</li>
+<li><p>恢复是可能出现丢失数据问题</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump: Error 2013: Lost connection to MySQL server during query when dumping table `node_payment` at row: 6060246</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>恢复innodb后会有错误：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">log sequence number is in the future</span><br></pre></td></tr></table></figure>
+<p>原因是InnoDB日志文件(重做日志)与数据文件不同步</p>
+</li>
+</ol>
+<p>致此数据恢复正常。分享记录了一些大的操作，有些其他细节也记不清了。</p>
+
+      </div>
+      <div class="post-copyright">
+    <p class="copyright-item">
+      <span>原文作者: </span>
+      <a href="http://sevndata.com">sevn</a>
+    </p>
+    <p class="copyright-item">
+      <span>原文链接: </span>
+      <a href="http://sevndata.com/2021/03/09/mysql-data/">http://sevndata.com/2021/03/09/mysql-data/</a>
+    </p>
+    <p class="copyright-item">
+      <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
+    </p>
+  </div>
+      <footer class="post-footer">
+        <div class="post-tags">
+            <a href="/tags/Mysql/">Mysql</a>
+            </div>
+        
+        <nav class="post-nav"><a class="next" href="/2021/01/25/spring-cors/">
+        <span class="next-text nav-default">Spring CORS原理解析</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    </nav></footer>
+    </article></div><div class="comments" id="comments"></div></div>
+      </main>
+
+      <footer id="footer" class="footer"><div class="social-links"><a href="mailto:885119788@qq.com" target="_blank" rel="noopener" class="iconfont icon-email" title="email"></a>
+        <a href="https://github.com/sevndata" target="_blank" rel="noopener" class="iconfont icon-github" title="github"></a>
+        <a href="/atom.xml" class="iconfont icon-rss" title="rss"></a>
+    </div>
+  <script src='https://unpkg.com/mermaid@8.7.0/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize("");
+    }
+  </script>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/ahonn/hexo-theme-even" target="_blank" rel="noopener">Even</a>
+  </span>
+
+  <span class="copyright-year">&copy;2019 - 2021<span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">sevn</span>
+  </span>
+</div>
+</footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div><script type="text/javascript" src="/lib/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/src/even.js?v=2.11.0"></script>
+</body>
+</html>

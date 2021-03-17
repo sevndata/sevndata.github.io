@@ -132,7 +132,7 @@
     <div class="post-toc-content">
       <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-同源策略"><span class="toc-text">1. 同源策略</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-跨域方案"><span class="toc-text">2. 跨域方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-CORS简介"><span class="toc-text">3. CORS简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Spring-MVC"><span class="toc-text">4. Spring MVC</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-Spring-Security"><span class="toc-text">5. Spring Security</span></a></li></ol>
     </div>
-  </div><div class="post-content"><p>本文分享了跨域，CORS原理解析等内容。</p>
+  </div><div class="post-content"><p>本文分享了跨域，CORS原理解析等内容。阐述了CORS在Spring MVC和Spring Security中实现原理。</p>
 <a id="more"></a>
 
 <h2 id="1-同源策略"><a href="#1-同源策略" class="headerlink" title="1. 同源策略"></a>1. 同源策略</h2><p>同源策略是一种约定，缺少同源策略浏览器容易受到XSS，CSFR等攻击，为了安全，浏览器会限制非同源的请求。同源为协议，域名，端口三者相同，任意一者不同则为非同源。</p>
@@ -202,7 +202,12 @@
             <a href="/tags/CORS/">CORS</a>
             </div>
         
-        <nav class="post-nav"><a class="next" href="/2020/10/26/mysql-init/">
+        <nav class="post-nav"><a class="prev" href="/2021/03/09/mysql-data/">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Mysql阻塞，修复损坏的innodb</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    <a class="next" href="/2020/10/26/mysql-init/">
         <span class="next-text nav-default">MySQL8搭建及数据迁移(xtrabackup)</span>
         <span class="prev-text nav-mobile">下一篇</span>
         <i class="iconfont icon-right"></i>
