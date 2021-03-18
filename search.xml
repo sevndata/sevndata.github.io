@@ -4,23 +4,23 @@
   
     
     <entry>
-      <title>Mysql阻塞，修复损坏的innodb</title>
+      <title>MySQL阻塞，修复损坏的innodb</title>
       <link href="/2021/03/09/mysql-data/"/>
       <url>/2021/03/09/mysql-data/</url>
       
-        <content type="html"><![CDATA[<p>记录一次生产迁移数据造成生产事故及修复过程</p><a id="more"></a><h2 id="1-事件起由"><a href="#1-事件起由" class="headerlink" title="1.事件起由"></a>1.事件起由</h2><p>该系统是运行于中东国家的分布式多节点系统，维持约十万商户交易，每日交易额约为千亿本地货币。由于各种原因服务器硬件没有及时到位，只运行于一个节点，短短时间内，业务数据库达到了接近上亿级别的数据量，应用服务器也超过了负荷。在硬件到位后，我们扩容了4-5个节点，面临的问题就是需要把运行于第一个节点的商户平均分到4个节点上，减轻压力。应用服务器是简单的，数据库按照一定的规则将商户数据迁移到新数据库比较复杂。</p><h2 id="2-迁移方案"><a href="#2-迁移方案" class="headerlink" title="2.迁移方案"></a>2.迁移方案</h2><p>我们确认了俩套方案去做数据库数据的迁移：</p><ol><li>编写脚本，以时间，id等因素迁移数据。</li><li>一次性将节点一数据库全量备份恢复到其他节点，并且恢复交易，然后长期计划删除不属于该节点商户业务数据。</li></ol><p>通过评审确认了2方案为最后方案。原因为1方案涉及需要迁移的数据太多，太杂，稍有错误将会影响系统的运行，且系统每天只有4小时的可停机时间，1方案极可能迁移不完，需要二次迁移等，阻断交易风险巨大。而反向删除业务数据更加好做，且时间足够使用物理备份恢复数据库，删除数据可以分布去做，而不影响交易。</p><p>实际中使用<code>xtrabackup</code>工具迁移数据。完美的迁移了数据并且恢复了业务。而问题出现在了删除数据环节。</p><h2 id="3-造成阻塞"><a href="#3-造成阻塞" class="headerlink" title="3.造成阻塞"></a>3.造成阻塞</h2><p>数据恢复后，编写删除非该节点商户业务数据，准备删除脚本，并执行</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> node_sku <span class="keyword">where</span> op_map_id <span class="keyword">not</span> <span class="keyword">in</span> (xxxx,xx,xxx);</span><br></pre></td></tr></table></figure><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nohup mysql -uroot -p -Dtk_biz &lt; exportSql/delete_sku.sql   //输入密码</span><br><span class="line">nohup mysql -uroot -p -Dtk_biz &lt; exportSql/delete_sku.sql &amp;   //会跳过输入密码，并报没有权限</span><br></pre></td></tr></table></figure><p>经过停机时间，恢复后系统后，数据库响应变的非常慢，造成大面积商户不能使用问题。登录服务器发现数据库大量报错信息。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Lock wait timeout exceeded; try restarting transaction</span><br></pre></td></tr></table></figure><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> information_schema.INNODB_TRX;</span><br></pre></td></tr></table></figure><p>通过以上脚本发现有一条涉及800万数据的回滚。准备杀掉事务，设置一些锁参数等恢复了数据库。</p><p>经过实践及大量资料的查阅，得知大量数据删除这样的操作的非常不可取的，一旦操作中断Rolling back将花费更多的时间，并造成数据库阻塞。可以通过将数据转移到临时表，使用truncate table tablename等方法，或者保证删除数据脚本的可用性，如数据量较小。</p><p>之后减小了脚本删除的数据量及关闭了mysql日志又执行了一次删除数据操作</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// /etc/my.cnf</span><br><span class="line">skip-log-bin</span><br></pre></td></tr></table></figure><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">autocommit=1 默认自动提交</span><br><span class="line">autocommit=0 手动提交</span><br></pre></td></tr></table></figure><p>结果发生了第二次数据库阻塞，并且在业务方催的时候错误的执行了kill，reboot，断电操作，造成Mysql启动不起来。</p><h2 id="4-修复损坏的innodb"><a href="#4-修复损坏的innodb" class="headerlink" title="4.修复损坏的innodb"></a>4.修复损坏的innodb</h2><p>查看<code>/var/log/mysql.log</code>，发现大量表innodb损坏，修复数据库：</p><ol><li><p>配置<code>my.cnf</code>中<code>innodb_force_recovery</code></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">innodb_force_recovery=1</span><br></pre></td></tr></table></figure><p>设置为1，重启数据库，如果不成功则修改为2重启，1-6不同含义可参考<a href="https://dev.mysql.com/doc/refman/8.0/en/forcing-innodb-recovery.html" target="_blank" rel="noopener">mysql官网Forcing InnoDB Recovery</a>直到启动成功。</p></li><li><p>mysql启动后，损坏的表是只读状态<code>Can&#39;t lock file (errno: 165 - Table is read only)</code>。</p></li><li><p>将损坏的表的数据导出</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump -u root -p tk_biz node_sku --no-create-info --where=&quot;op_map_id in (&apos;xx&apos;,&apos;xxx&apos;,&apos;xxxx&apos;)&quot;&gt; /home/exportSql/sku.sql</span><br></pre></td></tr></table></figure></li><li><p>将损坏表drop</p></li><li><p>删除<code>innodb_force_recovery</code>配置</p></li><li><p>启动mysql</p></li><li><p>将导出数据重新恢复到数据库中</p></li><li><p>恢复是可能出现丢失数据问题</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump: Error 2013: Lost connection to MySQL server during query when dumping table `node_payment` at row: 6060246</span><br></pre></td></tr></table></figure></li><li><p>恢复innodb后会有错误：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">log sequence number is in the future</span><br></pre></td></tr></table></figure><p>原因是InnoDB日志文件(重做日志)与数据文件不同步</p></li></ol><p>致此数据恢复正常。分享记录了一些大的操作，有些其他细节也记不清了。</p>]]></content>
+        <content type="html"><![CDATA[<p>记录一次生产迁移数据造成生产事故及修复过程</p><a id="more"></a><h2 id="1-事件起由"><a href="#1-事件起由" class="headerlink" title="1.事件起由"></a>1.事件起由</h2><p>该系统是运行于中东国家的分布式多节点系统，维持近十万商户交易。由于服务器硬件没有及时到位，只运行于一个节点，短时间内，业务数据库达到了接近上亿级别的数据量，应用服务器也超过了负荷。在硬件到位后，扩容了4-5个节点，面临的问题需要把运行于第一个节点的商户平均分到4个节点上，减轻压力。应用服务器比较容易处理，而数据库按照一定的规则将商户数据迁移到新数据库则比较复杂。</p><h2 id="2-迁移方案"><a href="#2-迁移方案" class="headerlink" title="2.迁移方案"></a>2.迁移方案</h2><p>确认了俩套方案去做数据库数据的迁移：</p><ol><li>编写脚本，以时间，id等因素迁移数据。</li><li>一次性将节点一数据库全量备份恢复到其他节点，并且恢复交易，然后长期计划删除不属于该节点商户业务数据。</li></ol><p>通过评审确认了2方案为最后方案。原因为1方案涉及需要迁移的数据太多，太杂，稍有错误将会影响系统的运行，且系统每天只有4小时的可停机时间，1方案极可能迁移不完，需要二次迁移等，阻断交易风险巨大。而反向删除业务数据更加好做，且时间足够使用物理备份恢复数据库，删除数据可以分布去做，而不影响交易。</p><p>实际中使用<code>xtrabackup</code>工具迁移数据。完美的迁移了数据并且恢复了业务。而问题出现在了删除数据环节。</p><h2 id="3-造成阻塞"><a href="#3-造成阻塞" class="headerlink" title="3.造成阻塞"></a>3.造成阻塞</h2><p>数据恢复后，编写删除非该节点商户业务数据，准备删除脚本，并执行</p><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">delete</span> <span class="keyword">from</span> node_sku <span class="keyword">where</span> op_map_id <span class="keyword">not</span> <span class="keyword">in</span> (xxxx,xx,xxx);</span><br></pre></td></tr></table></figure><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nohup mysql -uroot -p -Dtk_biz &lt; exportSql/delete_sku.sql   //输入密码</span><br><span class="line">nohup mysql -uroot -p -Dtk_biz &lt; exportSql/delete_sku.sql &amp;   //会跳过输入密码，并报没有权限</span><br></pre></td></tr></table></figure><p>经过停机时间，恢复后系统后，数据库响应变的非常慢，造成大面积商户不能使用问题。登录服务器发现数据库大量报错信息。</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Lock wait timeout exceeded; try restarting transaction</span><br></pre></td></tr></table></figure><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> information_schema.INNODB_TRX;</span><br></pre></td></tr></table></figure><p>通过以上脚本发现有一条涉及800万数据的回滚。准备杀掉事务，设置一些锁参数等恢复了数据库。</p><p>经过实践及大量资料的查阅，得知大量数据删除这样的操作的非常不可取的，一旦操作中断Rolling back将花费更多的时间，并造成数据库阻塞。可以通过将数据转移到临时表，使用truncate table tablename等方法，或者保证删除数据脚本的可用性，如数据量较小。</p><p>之后减小了脚本删除的数据量及关闭了mysql日志又执行了一次删除数据操作</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// /etc/my.cnf</span><br><span class="line">skip-log-bin</span><br></pre></td></tr></table></figure><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">autocommit=1 默认自动提交</span><br><span class="line">autocommit=0 手动提交</span><br></pre></td></tr></table></figure><p>结果发生了第二次数据库阻塞，并且在业务方催的时候错误的执行了kill，reboot，断电操作，造成Mysql启动不起来。</p><h2 id="4-修复损坏的innodb"><a href="#4-修复损坏的innodb" class="headerlink" title="4.修复损坏的innodb"></a>4.修复损坏的innodb</h2><p>查看<code>/var/log/mysql.log</code>，发现大量表innodb损坏，修复数据库：</p><ol><li><p>配置<code>my.cnf</code>中<code>innodb_force_recovery</code></p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">innodb_force_recovery=1</span><br></pre></td></tr></table></figure><p>设置为1，重启数据库，如果不成功则修改为2重启，1-6不同含义可参考<a href="https://dev.mysql.com/doc/refman/8.0/en/forcing-innodb-recovery.html" target="_blank" rel="noopener">mysql官网Forcing InnoDB Recovery</a>直到启动成功。</p></li><li><p>mysql启动后，损坏的表是只读状态<code>Can&#39;t lock file (errno: 165 - Table is read only)</code>。</p></li><li><p>将损坏的表的数据导出</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump -u root -p tk_biz node_sku --no-create-info --where=&quot;op_map_id in (&apos;xx&apos;,&apos;xxx&apos;,&apos;xxxx&apos;)&quot;&gt; /home/exportSql/sku.sql</span><br></pre></td></tr></table></figure></li><li><p>将损坏表drop</p></li><li><p>删除<code>innodb_force_recovery</code>配置</p></li><li><p>启动mysql</p></li><li><p>将导出数据重新恢复到数据库中</p></li><li><p>恢复是可能出现丢失数据问题</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump: Error 2013: Lost connection to MySQL server during query when dumping table `node_payment` at row: 6060246</span><br></pre></td></tr></table></figure></li><li><p>恢复innodb后会有错误：</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">log sequence number is in the future</span><br></pre></td></tr></table></figure><p>原因是InnoDB日志文件(重做日志)与数据文件不同步</p></li></ol><p>致此数据恢复正常。分享记录了一些大的操作，有些其他细节也记不清了。</p>]]></content>
       
       
       <categories>
           
-          <category> Mysql </category>
+          <category> MySQL </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> Mysql </tag>
+            <tag> MySQL </tag>
             
         </tags>
       
@@ -220,6 +220,62 @@
     
     
     <entry>
+      <title>忽略eslint检查</title>
+      <link href="/2020/06/02/js-reactjs-eslint/"/>
+      <url>/2020/06/02/js-reactjs-eslint/</url>
+      
+        <content type="html"><![CDATA[<p>本文分享了忽略eslint检查提交代码。</p><a id="more"></a><p>前端同学反映代码提交不上去，查看后是<code>eslint</code>阻止了提交，而整个项目规范化需要大量人力只能跳过<code>eslint</code>检查。如下几种方法：</p><ol><li>设置<code>eslint</code>忽略文件提交</li><li>git commit –no-verify -m commigmessage</li><li>删除预提交文件。.git/pre-commit</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> ReactJS </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> ReactJS </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>ShardingSphere-JDBC进行数据分片</title>
+      <link href="/2020/05/28/mysql-sharding/"/>
+      <url>/2020/05/28/mysql-sharding/</url>
+      
+        <content type="html"><![CDATA[<p>分享在实战中分表分库的策略。</p><a id="more"></a><h2 id="1-数据量评估与策略"><a href="#1-数据量评估与策略" class="headerlink" title="1. 数据量评估与策略"></a>1. 数据量评估与策略</h2><p>数据量评估和并发评估是项目的至关重要的环节，数据量的多少决定项目的架构，技术的选取。</p><p>很多同学往往会进入误区，认为某个技术就是比另一个技术好，微服务就是比单系统好。而事实上技术最终都可归结为资源问题，技术大多数是业务演变而形成。</p><p>选取合适的技术非常重要，盲目的追求技术将会加大人力，财力等资源消耗。</p><p>应对不同的数据量并发性简单分享下关于数据库几种应对策略：</p><ol><li>读写分离</li><li>垂直分库，垂直分表</li><li>水平分库，水平分表</li><li>其他方式：跑批数据转移等策略</li></ol><h2 id="2-ShardingSphere-JDBC"><a href="#2-ShardingSphere-JDBC" class="headerlink" title="2. ShardingSphere-JDBC"></a>2. ShardingSphere-JDBC</h2><p>简单分享使用<code>ShardingSphere-JDBC</code>做数据分片，<code>ShardingSphere-JDBC</code>是<code>Apache ShardingSphere</code>中的一个模块，更加详细的内容请参阅(Apache ShardingSphere文档)[<a href="https://shardingsphere.apache.org/document/legacy/4.x/document/en/overview/],以下为在`Spring" target="_blank" rel="noopener">https://shardingsphere.apache.org/document/legacy/4.x/document/en/overview/],以下为在`Spring</a> Boot`中使用：</p><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.shardingsphere<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>sharding-jdbc-spring-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>&#123;last.version&#125;<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">spring.jpa.database=mysql</span><br><span class="line">spring.datasource.url=jdbc:mysql:<span class="comment">//jdbc:mysql://xxx.xxx.xxx.xxx:3306/xxx</span></span><br><span class="line">spring.datasource.username=username</span><br><span class="line">spring.datasource.password=password</span><br><span class="line">spring.datasource.driver-<span class="class"><span class="keyword">class</span>-<span class="title">name</span></span>=com.mysql.cj.jdbc.Driver</span><br><span class="line"></span><br><span class="line">spring.shardingsphere.datasource.name=master</span><br><span class="line">spring.shardingsphere.datasource.master.type=com.zaxxer.hikari.HikariDataSource</span><br><span class="line">spring.shardingsphere.datasource.master.drive-<span class="class"><span class="keyword">class</span>-<span class="title">name</span></span>=com.mysql.cj.jdbc.Driver</span><br><span class="line">spring.shardingsphere.datasource.master.jdbc-url=jdbc:mysql:<span class="comment">//jdbc:mysql://xxx.xxx.xxx.xxx:3306/xxx</span></span><br><span class="line">spring.shardingsphere.datasource.master.username=username</span><br><span class="line">spring.shardingsphere.datasource.master.password=password</span><br><span class="line"></span><br><span class="line">spring.shardingsphere.sharding.<span class="keyword">default</span>-data-source-name=master</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_user.actual-data-nodes=master.vip_user$&#123;<span class="number">0</span>..<span class="number">19</span>&#125;</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_user.table-strategy.inline.sharding-column=id</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_user.table-strategy.inline.algorithm-expression=vip_user$&#123;id % <span class="number">20</span>&#125;</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_user.key-generator.column=id</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_user.key-generator.type=SNOWFLAKE</span><br><span class="line"></span><br><span class="line">spring.shardingsphere.sharding.tables.vip_addr.actual-data-nodes=master.vip_addr$&#123;<span class="number">0</span>..<span class="number">19</span>&#125;</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_addr.table-strategy.inline.algorithm-expression=vip_addr$&#123;id % <span class="number">20</span>&#125;</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_addr.table-strategy.inline.sharding-column=id</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_addr.key-generator.type=SNOWFLAKE</span><br><span class="line">spring.shardingsphere.sharding.tables.vip_addr.key-generator.column=id</span><br></pre></td></tr></table></figure><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Table</span>(name =<span class="string">"vip_addr"</span>)</span><br><span class="line"><span class="meta">@Entity</span></span><br><span class="line"><span class="meta">@Getter</span></span><br><span class="line"><span class="meta">@Setter</span></span><br><span class="line"><span class="meta">@NoArgsConstructor</span></span><br><span class="line"><span class="meta">@ToString</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Addr</span>  <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID =  <span class="number">2200950815215875003L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * id</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Column</span>(name = <span class="string">"id"</span>)</span><br><span class="line">    <span class="meta">@GeneratedValue</span>(strategy=GenerationType.IDENTITY)</span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="meta">@JsonFormat</span>(shape = JsonFormat.Shape.STRING)</span><br><span class="line">    <span class="keyword">private</span> Long id;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * </span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Column</span>(name = <span class="string">"user_map_id"</span>, updatable = <span class="keyword">false</span>)</span><br><span class="line">    <span class="keyword">private</span> Integer userMapId;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>在数据库中创建<code>vip_user0</code>,<code>vip_user1</code>…<code>vip_user19</code>20个表。这样就将数据水平分割到20个表中。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+          <category> MySQL </category>
+          
+          <category> spring </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> MySQL </tag>
+            
+            <tag> spring </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Tomcat9安装使用</title>
       <link href="/2020/05/22/tomcat-init/"/>
       <url>/2020/05/22/tomcat-init/</url>
@@ -262,6 +318,31 @@
         <tags>
             
             <tag> Linux </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Jackson时区问题</title>
+      <link href="/2020/03/28/spring-jackson/"/>
+      <url>/2020/03/28/spring-jackson/</url>
+      
+        <content type="html"><![CDATA[<p>本文分享jackson时区问题</p><a id="more"></a><h2 id="1-问题"><a href="#1-问题" class="headerlink" title="1.问题"></a>1.问题</h2><p><code>Spring Boot</code>项目中发现时间差8小时问题，猜测<code>Jackson</code>序列化时间出现问题。</p><h2 id="2-解决"><a href="#2-解决" class="headerlink" title="2.解决"></a>2.解决</h2><p>设置<code>Jackson</code>时区：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">spring.jackson.locale=zh_CN</span><br><span class="line">spring.jackson.time-zone=GMT+<span class="number">8</span></span><br></pre></td></tr></table></figure><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Jackson2ObjectMapperBuilderCustomizer <span class="title">jacksonObjectMapperCustomization</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> jacksonObjectMapperBuilder -&gt;</span><br><span class="line">        jacksonObjectMapperBuilder.timeZone(TimeZone.getTimeZone(<span class="string">"GMT+8"</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@JsonFormat</span>(timezone=<span class="string">"GMT+8"</span>)</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
+      <categories>
+          
+          <category> Java </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Java </tag>
             
         </tags>
       
@@ -379,7 +460,7 @@
       
       <categories>
           
-          <category> Spring MCV </category>
+          <category> Spring MVC </category>
           
       </categories>
       
