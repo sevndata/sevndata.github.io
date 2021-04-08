@@ -319,9 +319,9 @@
       
         <tags>
             
-            <tag> Spring </tag>
-            
             <tag> MySQL </tag>
+            
+            <tag> Spring </tag>
             
         </tags>
       
@@ -405,7 +405,7 @@
     
     
     <entry>
-      <title>Spring MVC默认异常处理器过程解析</title>
+      <title>Spring MVC默认异常处理器及异常处理过程解析</title>
       <link href="/2019/07/12/spring-defaultexception/"/>
       <url>/2019/07/12/spring-defaultexception/</url>
       
@@ -750,9 +750,9 @@
       
         <tags>
             
-            <tag> Mybatis </tag>
-            
             <tag> Git </tag>
+            
+            <tag> Mybatis </tag>
             
         </tags>
       
