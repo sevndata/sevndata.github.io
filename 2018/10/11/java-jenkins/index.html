@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="description" content="使用jenkins实现自动部署"/><meta name="keywords" content="jenkins, sevndata" /><meta name="baidu-site-verification" content="code-6XoX4V6p0R" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2018/10/11/java-jenkins/"/>
+
+<link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
+
+<script id="baidu_analytics">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?51be18ea09d4d62a30bc6098cd0c26a1";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script><script id="baidu_push">
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+<script>
+  window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
+</script>
+
+    <title>使用jenkins实现自动部署 - sevndata</title>
+  </head>
+
+  <body><div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/." class="logo">sevndata</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list"><a href="/">
+        <li class="mobile-menu-item">首页
+          </li>
+      </a><a href="/archives/">
+        <li class="mobile-menu-item">归档
+          </li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签
+          </li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类
+          </li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于
+          </li>
+      </a></ul>
+</nav>
+<div class="container" id="mobile-panel">
+      <header id="header" class="header"><div class="logo-wrapper">
+  <a href="/." class="logo">sevndata</a>
+</div>
+
+<nav class="site-navbar"><ul id="menu" class="menu"><li class="menu-item">
+          <a class="menu-item-link" href="/">
+            首页
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/archives/">
+            归档
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/tags/">
+            标签
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/categories/">
+            分类
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/about/">
+            关于
+            </a>
+        </li>
+      </ul></nav>
+</header>
+
+      <main id="main" class="main">
+        <div class="content-wrapper">
+          <div id="content" class="content"><article class="post">
+    <header class="post-header">
+      <h1 class="post-title">使用jenkins实现自动部署
+        </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          2018-10-11
+        </span><span class="post-category">
+            <a href="/categories/Java/">Java</a>
+            </span>
+        </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+    <h2 class="post-toc-title">文章目录</h2>
+    <div class="post-toc-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-安装"><span class="toc-text">1. 安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-使用"><span class="toc-text">2. 使用</span></a></li></ol>
+    </div>
+  </div><div class="post-content"><p>Jenkins是一款开源 CI&amp;CD 软件，用于自动化各种任务，包括构建、测试和部署软件。<br>Jenkins 支持各种运行方式，可通过系统包、Docker 或者通过一个独立的 Java 程序。</p>
+<a id="more"></a>
+
+<p>在实际开发中，特别是在开发测试环境中，频繁的修改部署是一件特别烦的事情。同样生产环境中数量过多的服务器部署，手动操作非常容易出现错误，所以可以使用<code>jenkins</code>实现自动部署。当然使用<code>jenkins</code>可以实现更多的功能。</p>
+<p>可以查看<a href="https://jenkins.io/doc/" target="_blank" rel="noopener">jenkins官方文档</a></p>
+<h2 id="1-安装"><a href="#1-安装" class="headerlink" title="1. 安装"></a>1. 安装</h2><p>可以使用<code>Docker</code>,<code>WAR</code>等各种方式安装<code>jenkins</code>，这里使用最简单的<code>WAR</code>方式：</p>
+<ol>
+<li>安装Java</li>
+<li><a href="http://mirrors.jenkins.io/war-stable/latest/jenkins.war" target="_blank" rel="noopener">下载Jenkins.war</a></li>
+<li>使用<code>java -jar</code>或者web容器启动</li>
+<li>客户端浏览器输入地址访问</li>
+<li>初次访问需要解锁<code>jenkins</code>,需要从日志中找到生成的秘钥输入到浏览器中并激活<code>jenkins</code></li>
+<li>创建用户正式使用<code>jenkins</code></li>
+</ol>
+<h2 id="2-使用"><a href="#2-使用" class="headerlink" title="2. 使用"></a>2. 使用</h2><ol>
+<li>创建一个新的<code>item</code>,选择<code>Freestyle project</code>(还有别的选项,该选项自由)</li>
+<li>设置名称描述等信息</li>
+<li>设置代码库。填写<code>Repository URL</code>,<code>Credentials</code>,<code>Branch Specifier</code>等信息</li>
+<li>设置构建触发器。设置<code>Poll SCM</code>的<code>Schedule</code>为<code>* * * * *</code>(设置一分钟检查一次代码是否更新并开始构建,开发环境中检测到更新就会开始构建)</li>
+<li>设置环境，可以不设置</li>
+<li>设置构建方式。使用<code>Execute shell</code>,加入<code>shell</code>命令,下面为示例，可以自由变化。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#进入工作目录下</span></span><br><span class="line"><span class="built_in">cd</span> /root/.jenkins/<span class="built_in">jobs</span>/demo/workspace</span><br><span class="line"><span class="comment">#maven打包（服务器需要安装maven），也可以使用npm等</span></span><br><span class="line">mvn clean install -Pdev</span><br><span class="line"><span class="comment">#执行远程命令（需要设置服务器间免密登录）</span></span><br><span class="line">ssh root@ip <span class="string">" sh /bin/shutdown.sh"</span></span><br><span class="line"><span class="comment">#上传文件等</span></span><br><span class="line">scp -r /root/.jenkins/<span class="built_in">jobs</span>/demo/workspace/demo/target/demo.war root@ip:/home/webapp/demo/webapps/demo.war</span><br></pre></td></tr></table></figure></li>
+<li>添加构建后流程。这里添加<code>Delete workspace when build is done</code>（删除构建后的文件）</li>
+<li>保存后可看到新的<code>item</code>,可以看到构建过程，次数，日志，状态，可手动执行等，详见web。</li>
+</ol>
+
+      </div>
+      <div class="post-copyright">
+    <p class="copyright-item">
+      <span>原文作者: </span>
+      <a href="http://sevndata.com">sevn</a>
+    </p>
+    <p class="copyright-item">
+      <span>原文链接: </span>
+      <a href="http://sevndata.com/2018/10/11/java-jenkins/">http://sevndata.com/2018/10/11/java-jenkins/</a>
+    </p>
+    <p class="copyright-item">
+      <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
+    </p>
+  </div>
+      <footer class="post-footer">
+        <div class="post-tags">
+            <a href="/tags/jenkins/">jenkins</a>
+            </div>
+        
+        <nav class="post-nav"><a class="prev" href="/2018/11/27/spring-mvc-do/">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">剖析Spring MVC:处理一个请求</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    <a class="next" href="/2018/10/10/mybatis-sign/">
+        <span class="next-text nav-default">MyBatis中的#和$</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    </nav></footer>
+    </article></div><div class="comments" id="comments"></div></div>
+      </main>
+
+      <footer id="footer" class="footer"><div class="social-links"><a href="mailto:885119788@qq.com" target="_blank" rel="noopener" class="iconfont icon-email" title="email"></a>
+        <a href="/atom.xml" class="iconfont icon-rss" title="rss"></a>
+    </div>
+  <script src='https://unpkg.com/mermaid@8.7.0/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize("");
+    }
+  </script>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/ahonn/hexo-theme-even" target="_blank" rel="noopener">Even</a>
+  </span>
+
+  <span class="copyright-year">&copy;2016 - 2021<span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">sevn</span>
+  </span>
+</div>
+</footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div><script type="text/javascript" src="/lib/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/src/even.js?v=2.11.0"></script>
+</body>
+</html>

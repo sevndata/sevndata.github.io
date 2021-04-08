@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head><meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+<meta name="description" content="剖析Spring MVC:HandlerAdapter"/><meta name="keywords" content="springmvc, sevndata" /><meta name="baidu-site-verification" content="code-6XoX4V6p0R" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2018/12/01/spring-mvc-handlerAdapter/"/>
+
+<link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
+
+<script id="baidu_analytics">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?51be18ea09d4d62a30bc6098cd0c26a1";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script><script id="baidu_push">
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+<script>
+  window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
+</script>
+
+    <title>剖析Spring MVC:HandlerAdapter - sevndata</title>
+  </head>
+
+  <body><div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/." class="logo">sevndata</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list"><a href="/">
+        <li class="mobile-menu-item">首页
+          </li>
+      </a><a href="/archives/">
+        <li class="mobile-menu-item">归档
+          </li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">标签
+          </li>
+      </a><a href="/categories/">
+        <li class="mobile-menu-item">分类
+          </li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">关于
+          </li>
+      </a></ul>
+</nav>
+<div class="container" id="mobile-panel">
+      <header id="header" class="header"><div class="logo-wrapper">
+  <a href="/." class="logo">sevndata</a>
+</div>
+
+<nav class="site-navbar"><ul id="menu" class="menu"><li class="menu-item">
+          <a class="menu-item-link" href="/">
+            首页
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/archives/">
+            归档
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/tags/">
+            标签
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/categories/">
+            分类
+            </a>
+        </li>
+      <li class="menu-item">
+          <a class="menu-item-link" href="/about/">
+            关于
+            </a>
+        </li>
+      </ul></nav>
+</header>
+
+      <main id="main" class="main">
+        <div class="content-wrapper">
+          <div id="content" class="content"><article class="post">
+    <header class="post-header">
+      <h1 class="post-title">剖析Spring MVC:HandlerAdapter
+        </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          2018-12-01
+        </span><span class="post-category">
+            <a href="/categories/Spring-MVC/">Spring MVC</a>
+            </span>
+        </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+    <h2 class="post-toc-title">文章目录</h2>
+    <div class="post-toc-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-HttpRequestHandlerAdapter"><span class="toc-text">1. HttpRequestHandlerAdapter</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-SimpleControllerHandlerAdapter"><span class="toc-text">2. SimpleControllerHandlerAdapter</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-SimpleServletHandlerAdapter"><span class="toc-text">3. SimpleServletHandlerAdapter</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-RequestMappingHandlerAdapter"><span class="toc-text">4. RequestMappingHandlerAdapter</span></a></li></ol>
+    </div>
+  </div><div class="post-content"><p>剖析Spring MVC,介绍Spring MVC中的HandlerAdapter。</p>
+<a id="more"></a>
+
+<p>在前面文章中，<code>DispatcherServlet</code>接收到请求后通过<code>HandlerMapping</code>,<code>HandlerAdapter</code>来处理请求，这一章先来看<code>HandlerAdapter</code>是如何工作的。</p>
+<pre class="mermaid">  graph BT
+  AbstractHandlerMethodAdapter -.-> HandlerAdapter
+  HttpRequestHandlerAdapter -.-> HandlerAdapter
+  SimpleControllerHandlerAdapter -.-> HandlerAdapter
+  SimpleServletHandlerAdapter -.-> HandlerAdapter
+  RequestMappingHandlerAdapter -->AbstractHandlerMethodAdapter</pre>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">HandlerAdapter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">boolean</span> <span class="title">supports</span><span class="params">(Object handler)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Nullable</span></span><br><span class="line">	<span class="function">ModelAndView <span class="title">handle</span><span class="params">(HttpServletRequest request, HttpServletResponse response, Object handler)</span> <span class="keyword">throws</span> Exception</span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">long</span> <span class="title">getLastModified</span><span class="params">(HttpServletRequest request, Object handler)</span></span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>HandlerAdapter</code>包含三个方法分别为：是否支持handler，使用handler处理请求，获取资源的LastModified值。</p>
+<p>在处理一个请求时。<code>DispatcherServlet</code>中的<code>doDispatch</code>会获取<code>handler</code>,然后通过<code>handler</code>获取<code>HandlerAdapter</code>,获取到<code>HandlerAdapter</code>后调用<code>handle</code>方法，获取<code>ModelAndView</code>，返回请求。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取HandlerAdapter</span></span><br><span class="line">HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> HandlerAdapter <span class="title">getHandlerAdapter</span><span class="params">(Object handler)</span> <span class="keyword">throws</span> ServletException </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.handlerAdapters != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (HandlerAdapter ha : <span class="keyword">this</span>.handlerAdapters) &#123;</span><br><span class="line">      <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">        logger.trace(<span class="string">"Testing handler adapter ["</span> + ha + <span class="string">"]"</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//使用supports方法寻找合适的适配器子类</span></span><br><span class="line">      <span class="keyword">if</span> (ha.supports(handler)) &#123;</span><br><span class="line">        <span class="keyword">return</span> ha;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> ServletException(<span class="string">"No adapter for handler ["</span> + handler +</span><br><span class="line">      <span class="string">"]: The DispatcherServlet configuration needs to include a HandlerAdapter that supports this handler"</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//获取lastModified</span></span><br><span class="line"><span class="keyword">long</span> lastModified = ha.getLastModified(request, mappedHandler.getHandler());</span><br><span class="line"><span class="comment">//获取ModelAndView</span></span><br><span class="line">mv = ha.handle(processedRequest, response, mappedHandler.getHandler());</span><br></pre></td></tr></table></figure>
+<p>以上基本解释了HandlerAdapter的这三个方法。再来看他的实现。</p>
+<h2 id="1-HttpRequestHandlerAdapter"><a href="#1-HttpRequestHandlerAdapter" class="headerlink" title="1. HttpRequestHandlerAdapter"></a>1. HttpRequestHandlerAdapter</h2><p> 适配HTTP请求处理器适配器，适配HttpRequest类型handler。</p>
+<ol>
+<li>supports：<code>handler instanceof HttpRequestHandler</code>，适配HttpRequestHandler。</li>
+<li>handle：调用<code>HttpRequestHandler</code>的handleRequest方法。</li>
+</ol>
+<h2 id="2-SimpleControllerHandlerAdapter"><a href="#2-SimpleControllerHandlerAdapter" class="headerlink" title="2. SimpleControllerHandlerAdapter"></a>2. SimpleControllerHandlerAdapter</h2><p>适配Controller类型的handler(实现Controller)。</p>
+<ol>
+<li>supports：<code>handler instanceof Controller</code>，适配Controller。</li>
+<li>handle：调用<code>Controller</code>的handleRequest方法。 </li>
+</ol>
+<h2 id="3-SimpleServletHandlerAdapter"><a href="#3-SimpleServletHandlerAdapter" class="headerlink" title="3. SimpleServletHandlerAdapter"></a>3. SimpleServletHandlerAdapter</h2><p>适配servlet类型的handler。</p>
+<ol>
+<li>supports：<code>handler instanceof Servlet</code>，适配Servlet。</li>
+<li>handle：调用<code>Servlet</code>的service方法。 </li>
+</ol>
+<h2 id="4-RequestMappingHandlerAdapter"><a href="#4-RequestMappingHandlerAdapter" class="headerlink" title="4. RequestMappingHandlerAdapter"></a>4. RequestMappingHandlerAdapter</h2><p><code>AbstractHandlerMethodAdapter</code>,<code>RequestMappingHandlerAdapter</code>：注解方式，适配HandlerMethod。</p>
+<p><code>RequestMappingHandlerAdapter</code>继承<code>AbstractHandlerMethodAdapter</code>，AbstractHandlerMethodAdapter为一个抽象模板模板。</p>
+<ol>
+<li>supports：<code>handler instanceof HandlerMethod &amp;&amp; supportsInternal((HandlerMethod) handler)</code>,适配HandlerMethod，supportsInternal为抽象模板方法，在子类中直接返回了true。</li>
+<li>handle：调用本类中<code>handleInternal</code>抽象方法。在子类中<code>RequestMappingHandlerAdapter</code>实现。</li>
+</ol>
+<p>下面详细看RequestMappingHandlerAdapter，</p>
+<ol>
+<li><p>RequestMappingHandlerAdapter的创建：<br><code>RequestMappingHandlerAdapter</code>实现<code>InitializingBean</code>,</p>
+</li>
+<li><p>RequestMappingHandlerAdapter的使用：</p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> ModelAndView <span class="title">handleInternal</span><span class="params">(HttpServletRequest request,</span></span></span><br><span class="line"><span class="function"><span class="params">    HttpServletResponse response, HandlerMethod handlerMethod)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">  ModelAndView mav;</span><br><span class="line">  checkRequest(request);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Execute invokeHandlerMethod in synchronized block if required.</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.synchronizeOnSession) &#123;</span><br><span class="line">    HttpSession session = request.getSession(<span class="keyword">false</span>);</span><br><span class="line">    <span class="keyword">if</span> (session != <span class="keyword">null</span>) &#123;</span><br><span class="line">      Object mutex = WebUtils.getSessionMutex(session);</span><br><span class="line">      <span class="keyword">synchronized</span> (mutex) &#123;</span><br><span class="line">        mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// No HttpSession available -&gt; no mutex necessary</span></span><br><span class="line">      mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// No synchronization on session demanded at all...</span></span><br><span class="line">    mav = invokeHandlerMethod(request, response, handlerMethod);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!response.containsHeader(HEADER_CACHE_CONTROL)) &#123;</span><br><span class="line">    <span class="keyword">if</span> (getSessionAttributesHandler(handlerMethod).hasSessionAttributes()) &#123;</span><br><span class="line">      applyCacheSeconds(response, <span class="keyword">this</span>.cacheSecondsForSessionAttributeHandlers);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">      prepareResponse(response);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> mav;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      </div>
+      <div class="post-copyright">
+    <p class="copyright-item">
+      <span>原文作者: </span>
+      <a href="http://sevndata.com">sevn</a>
+    </p>
+    <p class="copyright-item">
+      <span>原文链接: </span>
+      <a href="http://sevndata.com/2018/12/01/spring-mvc-handlerAdapter/">http://sevndata.com/2018/12/01/spring-mvc-handlerAdapter/</a>
+    </p>
+    <p class="copyright-item">
+      <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
+    </p>
+  </div>
+      <footer class="post-footer">
+        <div class="post-tags">
+            <a href="/tags/springmvc/">springmvc</a>
+            </div>
+        
+        <nav class="post-nav"><a class="prev" href="/2019/04/07/mybatis-plus-generator/">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">使用mybatis-plus-generator,freemarker模板生成代码</span>
+        <span class="prev-text nav-mobile">上一篇</span>
+      </a>
+    <a class="next" href="/2018/11/28/spring-mvc-handler/">
+        <span class="next-text nav-default">剖析Spring MVC:HandlerMapping</span>
+        <span class="prev-text nav-mobile">下一篇</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    </nav></footer>
+    </article></div><div class="comments" id="comments"></div></div>
+      </main>
+
+      <footer id="footer" class="footer"><div class="social-links"><a href="mailto:885119788@qq.com" target="_blank" rel="noopener" class="iconfont icon-email" title="email"></a>
+        <a href="/atom.xml" class="iconfont icon-rss" title="rss"></a>
+    </div>
+  <script src='https://unpkg.com/mermaid@8.7.0/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize("");
+    }
+  </script>
+
+<div class="copyright">
+  <span class="power-by">
+    由 <a class="hexo-link" href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> 强力驱动
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    主题 - 
+    <a class="theme-link" href="https://github.com/ahonn/hexo-theme-even" target="_blank" rel="noopener">Even</a>
+  </span>
+
+  <span class="copyright-year">&copy;2016 - 2021<span class="heart">
+      <i class="iconfont icon-heart"></i>
+    </span>
+    <span class="author">sevn</span>
+  </span>
+</div>
+</footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div><script type="text/javascript" src="/lib/jquery/jquery.min.js"></script>
+  <script type="text/javascript" src="/lib/slideout/slideout.js"></script>
+  <script type="text/javascript" src="/lib/fancybox/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/src/even.js?v=2.11.0"></script>
+</body>
+</html>
