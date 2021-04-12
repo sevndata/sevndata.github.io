@@ -811,6 +811,31 @@
     
     
     <entry>
+      <title>在Ubuntu下开启ssh</title>
+      <link href="/2018/05/10/ubuntu-ssh/"/>
+      <url>/2018/05/10/ubuntu-ssh/</url>
+      
+        <content type="html"><![CDATA[<p>本文分享了在Ubuntu下开启ssh。</p><a id="more"></a><p>安装启动</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt-get install openssh-server</span><br></pre></td></tr></table></figure><p>修改配置文件<code>/etc/ssh/sshd_config</code><br>将注释的<code>Port 22</code>放开<br>重启<code>ssh</code>服务</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Ubuntu </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Ubuntu </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>浅析Spring MVC:Controller</title>
       <link href="/2018/04/13/spring-mvc2/"/>
       <url>/2018/04/13/spring-mvc2/</url>
