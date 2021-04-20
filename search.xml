@@ -13,14 +13,16 @@
       
       <categories>
           
-          <category> Spring </category>
+          <category> Mybatis </category>
           
       </categories>
       
       
         <tags>
             
-            <tag> Spring </tag>
+            <tag> Mybatis </tag>
+            
+            <tag> Spring Boot </tag>
             
         </tags>
       
@@ -369,9 +371,9 @@
       
         <tags>
             
-            <tag> MySQL </tag>
-            
             <tag> Spring </tag>
+            
+            <tag> MySQL </tag>
             
         </tags>
       
@@ -800,9 +802,9 @@
       
         <tags>
             
-            <tag> Git </tag>
-            
             <tag> Mybatis </tag>
+            
+            <tag> Git </tag>
             
         </tags>
       
