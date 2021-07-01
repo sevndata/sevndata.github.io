@@ -13,8 +13,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
 
-<meta name="description" content="blog"/><meta name="baidu-site-verification" content="code-6XoX4V6p0R" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
-<link rel="canonical" href="http://sevndata.com/archives/"/>
+<meta name="description" content="Grafana重置密码"/><meta name="keywords" content="Grafana, sevndata" /><meta name="baidu-site-verification" content="code-6XoX4V6p0R" /><link rel="alternate" href="/default" title="sevndata"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2.11.0" />
+<link rel="canonical" href="http://sevndata.com/2021/05/31/grafana-reset/"/>
 
 <link rel="stylesheet" type="text/css" href="/lib/fancybox/jquery.fancybox.css" />
 <link rel="stylesheet" type="text/css" href="/css/style.css?v=2.11.0" />
@@ -45,8 +45,7 @@
   window.config = {"leancloud":{"app_id":null,"app_key":null},"toc":true,"fancybox":true,"pjax":"","latex":false};
 </script>
 
-    <title>归档 - sevndata
-  </title>
+    <title>Grafana重置密码 - sevndata</title>
   </head>
 
   <body><div id="mobile-navbar" class="mobile-navbar">
@@ -113,122 +112,70 @@
 
       <main id="main" class="main">
         <div class="content-wrapper">
-          <div id="content" class="content"><section id="archive" class="archive"><div class="archive-title">
-          <span class="archive-post-counter">
-            目前共计 39 篇日志
-          </span>
+          <div id="content" class="content"><article class="post">
+    <header class="post-header">
+      <h1 class="post-title">Grafana重置密码
+        </h1>
+
+      <div class="post-meta">
+        <span class="post-time">
+          2021-05-31
+        </span><span class="post-category">
+            <a href="/categories/Grafana/">Grafana</a>
+            </span>
         </div>
-      <div class="collection-title">
-            <h2 class="archive-year">2021</h2>
-          </div>
-        <div class="archive-post">
-        <span class="archive-post-time">
-          05-31
-          </span>
-        <span class="archive-post-title">
-          <a href="/2021/05/31/grafana-reset/" class="archive-post-link">
-            Grafana重置密码
-          </a>
-        </span>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+    <h2 class="post-toc-title">文章目录</h2>
+    <div class="post-toc-content">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#重置密码"><span class="toc-text">重置密码</span></a></li></ol>
+    </div>
+  </div><div class="post-content"><p>分享<code>Grafana</code>忘记密码后如何重置密码。</p>
+<a id="more"></a>
+
+<h2 id="重置密码"><a href="#重置密码" class="headerlink" title="重置密码"></a>重置密码</h2><p>逻辑：修改<code>Grafana sqlite</code>中用户表密码</p>
+<ol>
+<li>找到<code>grafana.db</code></li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">find / -name "grafana.db"</span><br><span class="line"><span class="comment">-- /var/lib/grafana/grafana.db</span></span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>进入<code>sqlite</code>修改数据</li>
+</ol>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">--进入数据库</span></span><br><span class="line">sqlite3 /var/lib/grafana/grafana.db</span><br><span class="line"><span class="comment">--显示所有表</span></span><br><span class="line">.tables</span><br><span class="line"><span class="comment">--查询表user数据</span></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> <span class="keyword">user</span>;</span><br><span class="line"><span class="comment">--修改admin密码为admin</span></span><br><span class="line"><span class="keyword">update</span> <span class="keyword">user</span> <span class="keyword">set</span> <span class="keyword">password</span> = <span class="string">'59acf18b94d7eb0694c61e60ce44c110c7a683ac6a8f09580d626f90f4a242000746579358d77dd9e570e83fa24faa88a8a6'</span>, <span class="keyword">salt</span> = <span class="string">'F3FAxVm33R'</span> <span class="keyword">where</span> login = <span class="string">'admin'</span>;</span><br><span class="line"><span class="comment">--退出</span></span><br><span class="line">.exit</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>重启<code>Grafana</code></li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">systemctl stop grafana-server.service</span><br><span class="line">systemctl start grafana-server.service</span><br></pre></td></tr></table></figure>
+
+
+
       </div>
-    <div class="archive-post">
-        <span class="archive-post-time">
-          04-07
-          </span>
-        <span class="archive-post-title">
-          <a href="/2021/04/07/spring-boot-mybatis/" class="archive-post-link">
-            Spring Boot自定义框架starter方式引入
-          </a>
-        </span>
-      </div>
-    <div class="archive-post">
-        <span class="archive-post-time">
-          03-30
-          </span>
-        <span class="archive-post-title">
-          <a href="/2021/03/30/algo-totp/" class="archive-post-link">
-            支付动态码设计及TOTP算法Luhm算法过程解析
-          </a>
-        </span>
-      </div>
-    <div class="archive-post">
-        <span class="archive-post-time">
-          03-24
-          </span>
-        <span class="archive-post-title">
-          <a href="/2021/03/24/ubuntu-wechat/" class="archive-post-link">
-            在Ubuntu中使用微信(deepin-wine)
-          </a>
-        </span>
-      </div>
-    <div class="archive-post">
-        <span class="archive-post-time">
-          03-20
-          </span>
-        <span class="archive-post-title">
-          <a href="/2021/03/20/jdk-ubuntu/" class="archive-post-link">
-            在Ubuntu中编译OpenJDK11
-          </a>
-        </span>
-      </div>
-    <div class="archive-post">
-        <span class="archive-post-time">
-          03-09
-          </span>
-        <span class="archive-post-title">
-          <a href="/2021/03/09/mysql-data/" class="archive-post-link">
-            MySQL阻塞，修复损坏的innodb
-          </a>
-        </span>
-      </div>
-    <div class="archive-post">
-        <span class="archive-post-time">
-          01-25
-          </span>
-        <span class="archive-post-title">
-          <a href="/2021/01/25/spring-cors/" class="archive-post-link">
-            Spring CORS原理解析
-          </a>
-        </span>
-      </div>
-    <div class="collection-title">
-            <h2 class="archive-year">2020</h2>
-          </div>
-        <div class="archive-post">
-        <span class="archive-post-time">
-          10-26
-          </span>
-        <span class="archive-post-title">
-          <a href="/2020/10/26/mysql-init/" class="archive-post-link">
-            MySQL8搭建及数据迁移(xtrabackup)
-          </a>
-        </span>
-      </div>
-    <div class="archive-post">
-        <span class="archive-post-time">
-          09-30
-          </span>
-        <span class="archive-post-title">
-          <a href="/2020/09/30/linux-ssh/" class="archive-post-link">
-            CentOS7 ssh免密登录及失效问题
-          </a>
-        </span>
-      </div>
-    <div class="archive-post">
-        <span class="archive-post-time">
-          09-21
-          </span>
-        <span class="archive-post-title">
-          <a href="/2020/09/21/git-gitlab-init/" class="archive-post-link">
-            GitLab的安装使用及迁移
-          </a>
-        </span>
-      </div>
-    </section><nav class="pagination"><a class="next" href="/archives/page/2/">
-        <span class="next-text">下一页</span>
+      <div class="post-copyright">
+    <p class="copyright-item">
+      <span>原文作者: </span>
+      <a href="http://sevndata.com">sevn</a>
+    </p>
+    <p class="copyright-item">
+      <span>原文链接: </span>
+      <a href="http://sevndata.com/2021/05/31/grafana-reset/">http://sevndata.com/2021/05/31/grafana-reset/</a>
+    </p>
+    <p class="copyright-item">
+      <span>许可协议: </span><a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC-BY-NC-SA协议</a>
+    </p>
+  </div>
+      <footer class="post-footer">
+        <div class="post-tags">
+            <a href="/tags/Grafana/">Grafana</a>
+            </div>
+        
+        <nav class="post-nav"><a class="next" href="/2021/04/07/spring-boot-mybatis/">
+        <span class="next-text nav-default">Spring Boot自定义框架starter方式引入</span>
+        <span class="prev-text nav-mobile">下一篇</span>
         <i class="iconfont icon-right"></i>
       </a>
-    </nav></div></div>
+    </nav></footer>
+    </article></div><div class="comments" id="comments"></div></div>
       </main>
 
       <footer id="footer" class="footer"><div class="social-links"><a href="mailto:885119788@qq.com" target="_blank" rel="noopener" class="iconfont icon-email" title="email"></a>
