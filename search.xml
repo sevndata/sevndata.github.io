@@ -54,31 +54,6 @@
     
     
     <entry>
-      <title>spring-session</title>
-      <link href="/2022/04/28/spirng-session-redis/"/>
-      <url>/2022/04/28/spirng-session-redis/</url>
-      
-        <content type="html"><![CDATA[<p>本文分享了Java在使用递归时，不建议使用对象参数</p><span id="more"></span><p>redis<br>mongo<br>lock<br>aop anon<br>锁 redis-son<br>spirng-session<br>license<br>国际化</p>]]></content>
-      
-      
-      <categories>
-          
-          <category> Java </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> Java </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Java递归不建议使用对象参数本身</title>
       <link href="/2022/03/28/java-recursion/"/>
       <url>/2022/03/28/java-recursion/</url>

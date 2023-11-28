@@ -1,8 +1,212 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>ShowDoc的导入与安装</title>
+<meta name="keywords" content="ShowDoc的导入与安装, sevndata">
+<meta name="description" content="本文分享了ShowDoc安装，使用及导入。
+
+
+分享一款好用的在线文档分享工具。一直在寻找一款好用的接口文档工具，曾经尝试过Swagger，YApi，gitLab wiki都差强人意。发现ShowDoc后十分惊喜，并且它可以私有化部署。
+简">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="ShowDoc的导入与安装">
+<meta property="og:description" content="本文分享了ShowDoc安装，使用及导入。
+
+
+分享一款好用的在线文档分享工具。一直在寻找一款好用的接口文档工具，曾经尝试过Swagger，YApi，gitLab wiki都差强人意。发现ShowDoc后十分惊喜，并且它可以私有化部署。
+简">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">ShowDoc的导入与安装</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-09-09</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/ShowDoc/">
+              ShowDoc
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/python/">
+              python
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了ShowDoc安装，使用及导入。</p>
+<span id="more"></span>
+
+<p>分享一款好用的在线文档分享工具。一直在寻找一款好用的接口文档工具，曾经尝试过<code>Swagger</code>，<code>YApi</code>，<code>gitLab wiki</code>都差强人意。发现<code>ShowDoc</code>后十分惊喜，并且它可以私有化部署。</p>
+<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>ShowDoc是一个非常适合IT团队的在线文档分享工具，可以访问<a target="_blank" rel="noopener" href="https://github.com/star7th/showdoc">github</a>详细了解。同时可以参考<a target="_blank" rel="noopener" href="https://www.showdoc.cc/help">帮助文档</a>进行私有化部署。下文主要为私有化部署过程，导入的分享。</p>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>官方提供了自动脚本部署，Docker部署，PHP部署，二次开发等方法进行私有化部署，强烈推荐使用自动脚本部署，<a target="_blank" rel="noopener" href="https://www.showdoc.com.cn/script/showdoc">详细脚本内容</a>下载查看</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">下载脚本并赋予权限</span></span><br><span class="line"> wget https://www.showdoc.com.cn/script/showdoc;</span><br><span class="line"> chmod +x showdoc;</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">默认安装中文版。如果想安装英文版，请加上en参数，如 ./showdoc en</span></span><br><span class="line">./showdoc</span><br></pre></td></tr></table></figure>
+
+<h3 id="md导入"><a href="#md导入" class="headerlink" title="md导入"></a>md导入</h3><p>安装完成后登录到web可以看到简洁的文档操作界面。然而碰到一个问题，原有的文档在gitLab wiki中，查找到官方没有提供导入<code>.md</code>的功能，但是提供了<a target="_blank" rel="noopener" href="https://www.showdoc.com.cn/page/102098">开放API接口</a>，可以利用此接口导入。</p>
+<p>以下为通过python读取文件下的<code>.md</code>文件，并通过开放API接口导入到<code>ShowDoc</code>中</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> urllib.parse</span><br><span class="line"><span class="keyword">import</span> urllib.request</span><br><span class="line"><span class="keyword">import</span> fileinput</span><br><span class="line"><span class="keyword">import</span> operator</span><br><span class="line"></span><br><span class="line"><span class="comment"># 需要导入的文件夹地址</span></span><br><span class="line">wiki_dir = <span class="string">&#x27;/Users/xx/work/doc&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># showdoc开放API参数</span></span><br><span class="line">data = &#123;</span><br><span class="line">    <span class="string">&#x27;api_key&#x27;</span> : <span class="string">&#x27;xx&#x27;</span>, </span><br><span class="line">    <span class="string">&#x27;api_token&#x27;</span> : <span class="string">&#x27;xx&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;cat_name&#x27;</span> : <span class="string">&#x27;API&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;page_title&#x27;</span> : <span class="string">&#x27;&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;page_content&#x27;</span> : <span class="string">&#x27;&#x27;</span></span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment"># showdoc开放API地址</span></span><br><span class="line">url = <span class="string">&#x27;http://xxx.com/server/index.php?s=/api/item/updateByApi&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_filelist</span>(<span class="params"><span class="built_in">dir</span></span>):</span><br><span class="line">    <span class="comment"># 获取文件夹中所有文件，去除mac下.DS_Store文件。并排序文件</span></span><br><span class="line">    <span class="keyword">for</span> home, dirs, files <span class="keyword">in</span> os.walk(<span class="built_in">dir</span>):</span><br><span class="line">        <span class="keyword">for</span> <span class="built_in">dir</span> <span class="keyword">in</span> dirs:</span><br><span class="line">            <span class="built_in">print</span>(<span class="built_in">dir</span>)</span><br><span class="line">        <span class="keyword">if</span> <span class="string">&#x27;.DS_Store&#x27;</span> <span class="keyword">in</span> files:</span><br><span class="line">            files.remove(<span class="string">&#x27;.DS_Store&#x27;</span>)</span><br><span class="line">        files.sort()</span><br><span class="line">        <span class="keyword">for</span> filename <span class="keyword">in</span> files:</span><br><span class="line">            fullname = os.path.join(home, filename)</span><br><span class="line">            get_file(filename,fullname)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">get_file</span>(<span class="params">filename,fullname</span>):</span><br><span class="line">    <span class="comment"># 读取文件，拼接showdoc参数</span></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="keyword">with</span> <span class="built_in">open</span>(fullname, encoding=<span class="string">&#x27;utf-8&#x27;</span>) <span class="keyword">as</span> file_obj:</span><br><span class="line">            lines = file_obj.read()</span><br><span class="line">        data[<span class="string">&#x27;page_title&#x27;</span>] = filename.replace(<span class="string">&#x27;.md&#x27;</span>,<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">        data[<span class="string">&#x27;page_content&#x27;</span>] = lines</span><br><span class="line">        do_post(data)</span><br><span class="line">    <span class="keyword">except</span> UnicodeDecodeError:</span><br><span class="line">        <span class="built_in">print</span>(fullname)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">do_post</span>(<span class="params">data</span>):</span><br><span class="line">    <span class="comment"># 请求showdoc开放API</span></span><br><span class="line">    data = urllib.parse.urlencode(data)</span><br><span class="line">    req = urllib.request.Request(url, data.encode())</span><br><span class="line">    opener = urllib.request.urlopen(req)</span><br><span class="line">    json.loads(opener.read().decode())</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:</span><br><span class="line">    get_filelist(wiki_dir)</span><br></pre></td></tr></table></figure>
+
+<h3 id="数据库字典导入"><a href="#数据库字典导入" class="headerlink" title="数据库字典导入"></a>数据库字典导入</h3><p>官方提供了数据库字典的导入方法。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://www.showdoc.cc/script/showdoc_db.sh</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh showdoc_db.sh</span><br></pre></td></tr></table></figure>
+
+<p>需要修改脚本内容后执行<code>showdoc_db.sh</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"></span><br><span class="line">host=&quot;xxx&quot;				#数据库所在地址。默认是localhost</span><br><span class="line">port=3306						#数据库所在端口。默认是3306</span><br><span class="line">user=&quot;xxx&quot;   	 			#数据库的用户名</span><br><span class="line">password=&quot;xxx&quot; 			#密码</span><br><span class="line">db=&quot;xxx&quot; 					#要同步的数据库名。要同步多个db可以将本脚本复制多份</span><br><span class="line">api_key=&quot;xxx&quot; 			#api_key</span><br><span class="line">api_token=&quot;xxx&quot; 	#api_token</span><br><span class="line">cat_name=&quot;xxx&quot; 	#可选。如果想把生成的文档都放在项目的子目录下，则这里填写子目录名。</span><br><span class="line">url=&quot;http://xxx.com/server/index.php?s=/api/open/updateDbItem&quot; #可选。同步到的url。如果是使用www.showdoc.com.cn ，则不需要再改此项。如果是部署私有版版showdoc，请改此项为http://xx.com/server/index.php?s=/api/open/updateDbItem 。其中xx.com为你的部署域名</span><br><span class="line"></span><br><span class="line">export MYSQL_PWD=$&#123;password&#125;</span><br><span class="line">COMMAND=&quot;set names utf8;select TABLE_NAME ,TABLE_COMMENT from tables where TABLE_SCHEMA =&#x27;$&#123;db&#125;&#x27;  &quot;</span><br><span class="line">declare table_info=`mysql -h$&#123;host&#125; -P$&#123;port&#125; -u$&#123;user&#125;  --show-warnings=false -D information_schema -e &quot;$&#123;COMMAND&#125;&quot; `</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$table_info</span></span></span><br><span class="line">COMMAND=&quot;set names utf8;select TABLE_NAME ,COLUMN_NAME, COLUMN_DEFAULT ,IS_NULLABLE ,COLUMN_TYPE ,COLUMN_COMMENT from COLUMNS where TABLE_SCHEMA =&#x27;$&#123;db&#125;&#x27;  &quot;</span><br><span class="line">declare table_detail=`mysql -h$&#123;host&#125; -P$&#123;port&#125; -u$&#123;user&#125;  --show-warnings=false -D information_schema -e &quot;$&#123;COMMAND&#125;&quot; `</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="built_in">echo</span> <span class="variable">$table_detail</span></span></span><br><span class="line">table_info2=$&#123;table_info//&amp;/_this_and_change_&#125;</span><br><span class="line">table_detail2=$&#123;table_detail//&amp;/_this_and_change_&#125;</span><br><span class="line">curl -H &#x27;Content-Type: application/x-www-form-urlencoded; charset=UTF-8&#x27;  &quot;$&#123;url&#125;&quot; --data-binary @- &lt;&lt;CURL_DATA</span><br><span class="line">from=shell&amp;table_info=$&#123;table_info2&#125;&amp;table_detail=$&#123;table_detail2&#125;&amp;api_key=$&#123;api_key&#125;&amp;api_token=$&#123;api_token&#125;&amp;cat_name=$&#123;cat_name&#125;</span><br><span class="line">CURL_DATA</span><br><span class="line">export MYSQL_PWD=&quot;&quot;</span><br></pre></td></tr></table></figure>
+
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#%E7%AE%80%E4%BB%8B"><span class="top-box-text">简介</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#%E5%AE%89%E8%A3%85"><span class="top-box-text">安装</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#md%E5%AF%BC%E5%85%A5"><span class="top-box-text">md导入</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AD%97%E5%85%B8%E5%AF%BC%E5%85%A5"><span class="top-box-text">数据库字典导入</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/08/31/spring-boot-actuator/">
+          <h3 class="post-title">
+            下一篇：基于Spring Boot Actuator制作炫酷可视化系统监控
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

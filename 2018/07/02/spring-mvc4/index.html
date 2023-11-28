@@ -1,8 +1,220 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>浅析Spring MVC:CORS URI Asyn 缓存</title>
+<meta name="keywords" content="浅析Spring MVC:CORS URI Asyn 缓存, sevndata">
+<meta name="description" content="使用Spring Web MVC，开发者可以直接访问官方文档Spring Web MVC文档Version 5.2.1.RELEASE，本文及Spring MVC系列文章都参考于此文档及源码。
+这一节来看Spring MVC更多使用方法。
+">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="浅析Spring MVC:CORS URI Asyn 缓存">
+<meta property="og:description" content="使用Spring Web MVC，开发者可以直接访问官方文档Spring Web MVC文档Version 5.2.1.RELEASE，本文及Spring MVC系列文章都参考于此文档及源码。
+这一节来看Spring MVC更多使用方法。
+">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">浅析Spring MVC:CORS URI Asyn 缓存</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2018-07-02</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Spring-MVC/">
+              Spring MVC
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>使用Spring Web MVC，开发者可以直接访问官方文档<a target="_blank" rel="noopener" href="https://docs.spring.io/spring/docs/5.2.1.RELEASE/spring-framework-reference/web.html#mvc">Spring Web MVC文档Version 5.2.1.RELEASE</a>，本文及Spring MVC系列文章都参考于此文档及源码。</p>
+<p>这一节来看Spring MVC更多使用方法。</p>
+<span id="more"></span>
+<h2 id="1-CORS"><a href="#1-CORS" class="headerlink" title="1. CORS"></a>1. CORS</h2><p>可以看到文档是怎么介绍的：</p>
+<p>For security reasons, browsers prohibit AJAX calls to resources outside the current origin. For example, you could have your bank account in one tab and evil.com in another. Scripts from evil.com should not be able to make AJAX requests to your bank API with your credentials — for example withdrawing money from your account!</p>
+<p>Cross-Origin Resource Sharing (CORS) is a <code>W3C</code> specification implemented by most browsers that lets you specify what kind of cross-domain requests are authorized, rather than using less secure and less powerful workarounds based on <code>IFRAME</code> or <code>JSONP</code>.</p>
+<p>浏览器禁止跨域，可以使用W3C规范的CORS，而不是使用安全性低，功能弱的变通方法IFRAME或者JSONP。</p>
+<ol>
+<li>@CrossOrigin<br>可以使用<code>@CrossOrigin</code>允许跨域访问，例如：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@CrossOrigin(maxAge = 3600)</span></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping(&quot;/account&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">AccountController</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@CrossOrigin(&quot;https://domain2.com&quot;)</span></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/&#123;id&#125;&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> Account <span class="title function_">retrieve</span><span class="params">(<span class="meta">@PathVariable</span> Long id)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@DeleteMapping(&quot;/&#123;id&#125;&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">remove</span><span class="params">(<span class="meta">@PathVariable</span> Long id)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>全局配置<br>可以使用WebMvcConfigurer全局配置如：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableWebMvc</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">WebConfig</span> <span class="keyword">implements</span> <span class="title class_">WebMvcConfigurer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addCorsMappings</span><span class="params">(CorsRegistry registry)</span> &#123;</span><br><span class="line"></span><br><span class="line">        registry.addMapping(<span class="string">&quot;/api/**&quot;</span>)</span><br><span class="line">            .allowedOrigins(<span class="string">&quot;https://domain2.com&quot;</span>)</span><br><span class="line">            .allowedMethods(<span class="string">&quot;PUT&quot;</span>, <span class="string">&quot;DELETE&quot;</span>)</span><br><span class="line">            .allowedHeaders(<span class="string">&quot;header1&quot;</span>, <span class="string">&quot;header2&quot;</span>, <span class="string">&quot;header3&quot;</span>)</span><br><span class="line">            .exposedHeaders(<span class="string">&quot;header1&quot;</span>, <span class="string">&quot;header2&quot;</span>)</span><br><span class="line">            .allowCredentials(<span class="literal">true</span>).maxAge(<span class="number">3600</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Add more mappings...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+还可以xml进行全局配置<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">mvc:cors</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">mvc:mapping</span> <span class="attr">path</span>=<span class="string">&quot;/api/**&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">allowed-origins</span>=<span class="string">&quot;https://domain1.com, https://domain2.com&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">allowed-methods</span>=<span class="string">&quot;GET, PUT&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">allowed-headers</span>=<span class="string">&quot;header1, header2, header3&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">exposed-headers</span>=<span class="string">&quot;header1, header2&quot;</span> <span class="attr">allow-credentials</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">max-age</span>=<span class="string">&quot;123&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">mvc:mapping</span> <span class="attr">path</span>=<span class="string">&quot;/resources/**&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">allowed-origins</span>=<span class="string">&quot;https://domain1.com&quot;</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">mvc:cors</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li>拦截器实现<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">CorsConfiguration</span> <span class="variable">config</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CorsConfiguration</span>();</span><br><span class="line"></span><br><span class="line"><span class="comment">// Possibly...</span></span><br><span class="line"><span class="comment">// config.applyPermitDefaultValues()</span></span><br><span class="line"></span><br><span class="line">config.setAllowCredentials(<span class="literal">true</span>);</span><br><span class="line">config.addAllowedOrigin(<span class="string">&quot;https://domain1.com&quot;</span>);</span><br><span class="line">config.addAllowedHeader(<span class="string">&quot;*&quot;</span>);</span><br><span class="line">config.addAllowedMethod(<span class="string">&quot;*&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="type">UrlBasedCorsConfigurationSource</span> <span class="variable">source</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UrlBasedCorsConfigurationSource</span>();</span><br><span class="line">source.registerCorsConfiguration(<span class="string">&quot;/**&quot;</span>, config);</span><br><span class="line"></span><br><span class="line"><span class="type">CorsFilter</span> <span class="variable">filter</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CorsFilter</span>(source);</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h2 id="2-URI"><a href="#2-URI" class="headerlink" title="2. URI"></a>2. URI</h2><ol>
+<li><p>可以是用<code>UriComponentsBuilder</code>创建<code>UriComponents</code>,<code>URI</code>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">UriComponents</span> <span class="variable">uriComponents</span> <span class="operator">=</span> UriComponentsBuilder</span><br><span class="line">        .fromUriString(<span class="string">&quot;https://example.com/hotels/&#123;hotel&#125;&quot;</span>)  </span><br><span class="line">        .queryParam(<span class="string">&quot;q&quot;</span>, <span class="string">&quot;&#123;q&#125;&quot;</span>)  </span><br><span class="line">        .encode() </span><br><span class="line">        .build(); </span><br><span class="line"></span><br><span class="line"><span class="type">URI</span> <span class="variable">uri</span> <span class="operator">=</span> uriComponents.expand(<span class="string">&quot;Westin&quot;</span>, <span class="string">&quot;123&quot;</span>).toUri(); </span><br></pre></td></tr></table></figure>
+<p>也可以使用<code>UriBuilder</code>,<code>UriBuilderFactory</code>,<code>UriComponentsBuilder</code>实现了<code>UriBuilder</code>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">baseUrl</span> <span class="operator">=</span> <span class="string">&quot;https://example.org&quot;</span>;</span><br><span class="line"><span class="type">DefaultUriBuilderFactory</span> <span class="variable">factory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">DefaultUriBuilderFactory</span>(baseUrl);</span><br><span class="line">factory.setEncodingMode(EncodingMode.TEMPLATE_AND_VALUES);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用<code>RestTemplate</code>或者<code>WebClient</code>操作URI:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">RestTemplate</span> <span class="variable">restTemplate</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RestTemplate</span>();</span><br><span class="line">restTemplate.setUriTemplateHandler(factory);</span><br><span class="line"></span><br><span class="line"><span class="type">WebClient</span> <span class="variable">client</span> <span class="operator">=</span> WebClient.builder().uriBuilderFactory(factory).build();</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h2 id="3-Asyn"><a href="#3-Asyn" class="headerlink" title="3. Asyn"></a>3. Asyn</h2><p>Spring MVC提供了异步接口使用。</p>
+<ol>
+<li><p>DeferredResult</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GetMapping(&quot;/quotes&quot;)</span></span><br><span class="line"><span class="meta">@ResponseBody</span></span><br><span class="line"><span class="keyword">public</span> DeferredResult&lt;String&gt; <span class="title function_">quotes</span><span class="params">()</span> &#123;</span><br><span class="line">    DeferredResult&lt;String&gt; deferredResult = <span class="keyword">new</span> <span class="title class_">DeferredResult</span>&lt;String&gt;();</span><br><span class="line">    <span class="comment">// Save the deferredResult somewhere..</span></span><br><span class="line">    <span class="keyword">return</span> deferredResult;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// From some other thread...</span></span><br><span class="line">deferredResult.setResult(result);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Callable</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@PostMapping</span></span><br><span class="line"><span class="keyword">public</span> Callable&lt;String&gt; <span class="title function_">processUpload</span><span class="params">(<span class="keyword">final</span> MultipartFile file)</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">Callable</span>&lt;String&gt;() &#123;</span><br><span class="line">        <span class="keyword">public</span> String <span class="title function_">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">            <span class="comment">// ...</span></span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;someView&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h2 id="4-缓存"><a href="#4-缓存" class="headerlink" title="4. 缓存"></a>4. 缓存</h2><p><code>CacheControl</code>提供对配置与<code>Cache-Control</code>标头相关的设置的支持。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Cache for an hour - &quot;Cache-Control: max-age=3600&quot;</span></span><br><span class="line"><span class="type">CacheControl</span> <span class="variable">ccCacheOneHour</span> <span class="operator">=</span> CacheControl.maxAge(<span class="number">1</span>, TimeUnit.HOURS);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Prevent caching - &quot;Cache-Control: no-store&quot;</span></span><br><span class="line"><span class="type">CacheControl</span> <span class="variable">ccNoStore</span> <span class="operator">=</span> CacheControl.noStore();</span><br><span class="line"></span><br><span class="line"><span class="comment">// Cache for ten days in public and private caches,</span></span><br><span class="line"><span class="comment">// public caches should not transform the response</span></span><br><span class="line"><span class="comment">// &quot;Cache-Control: max-age=864000, public, no-transform&quot;</span></span><br><span class="line"><span class="type">CacheControl</span> <span class="variable">ccCustom</span> <span class="operator">=</span> CacheControl.maxAge(<span class="number">10</span>, TimeUnit.DAYS).noTransform().cachePublic();</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GetMapping(&quot;/book/&#123;id&#125;&quot;)</span></span><br><span class="line"><span class="keyword">public</span> ResponseEntity&lt;Book&gt; <span class="title function_">showBook</span><span class="params">(<span class="meta">@PathVariable</span> Long id)</span> &#123;</span><br><span class="line"></span><br><span class="line"><span class="type">Book</span> <span class="variable">book</span> <span class="operator">=</span> findBook(id);</span><br><span class="line"><span class="type">String</span> <span class="variable">version</span> <span class="operator">=</span> book.getVersion();</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> ResponseEntity</span><br><span class="line">        .ok()</span><br><span class="line">        .cacheControl(CacheControl.maxAge(<span class="number">30</span>, TimeUnit.DAYS))</span><br><span class="line">        .eTag(version) <span class="comment">// lastModified is also available</span></span><br><span class="line">        .body(book);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-CORS"><span class="top-box-text">1. CORS</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-URI"><span class="top-box-text">2. URI</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-Asyn"><span class="top-box-text">3. Asyn</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-%E7%BC%93%E5%AD%98"><span class="top-box-text">4. 缓存</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2018/06/16/mybatis-generator/">
+          <h3 class="post-title">
+            下一篇：使用mybatis-generator及git生成代码
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

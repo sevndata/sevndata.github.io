@@ -1,8 +1,183 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>shell获取CPU使用率信息并重启应用</title>
+<meta name="keywords" content="shell获取CPU使用率信息并重启应用, sevndata">
+<meta name="description" content="本文分享了在linux下通过shell脚本获取CPU使用率，超过预警值后重新启动异常应用。
+
+代码12345678910111213141516171819202122232425262728293031323334353637383940">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="shell获取CPU使用率信息并重启应用">
+<meta property="og:description" content="本文分享了在linux下通过shell脚本获取CPU使用率，超过预警值后重新启动异常应用。
+
+代码12345678910111213141516171819202122232425262728293031323334353637383940">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">shell获取CPU使用率信息并重启应用</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-01-02</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/shell/">
+              shell
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了在<code>linux</code>下通过<code>shell</code>脚本获取<code>CPU</code>使用率，超过预警值后重新启动异常应用。</p>
+<span id="more"></span>
+<h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!bin/bash</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">监控程序</span></span><br><span class="line">process=&quot;java&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">输出文件</span></span><br><span class="line">output_file=&quot;mn_info.log&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">一分钟探测一次</span></span><br><span class="line">TIME_INTERVAL=10</span><br><span class="line">TIME_SLEEP=50</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">记录连续超过告警值的次数</span></span><br><span class="line">init_count=0</span><br><span class="line">count_step=1</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">告警值</span></span><br><span class="line">cpu_top=80</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">连续超过多少次执行操作</span></span><br><span class="line">top_count=5</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">持续监控</span></span><br><span class="line">while true;do</span><br><span class="line">    time=$(date &quot;+%Y-%m-%d %H:%M:%S&quot;)</span><br><span class="line">    LAST_CPU_INFO=$(cat /proc/stat | grep -w cpu | awk &#x27;&#123;print $2,$3,$4,$5,$6,$7,$8&#125;&#x27;)</span><br><span class="line">    LAST_SYS_IDLE=$(echo $LAST_CPU_INFO | awk &#x27;&#123;print $4&#125;&#x27;)</span><br><span class="line">    LAST_TOTAL_CPU_T=$(echo $LAST_CPU_INFO | awk &#x27;&#123;print $1+$2+$3+$4+$5+$6+$7&#125;&#x27;)</span><br><span class="line">    sleep $&#123;TIME_INTERVAL&#125;</span><br><span class="line">    NEXT_CPU_INFO=$(cat /proc/stat | grep -w cpu | awk &#x27;&#123;print $2,$3,$4,$5,$6,$7,$8&#125;&#x27;)</span><br><span class="line">    NEXT_SYS_IDLE=$(echo $NEXT_CPU_INFO | awk &#x27;&#123;print $4&#125;&#x27;)</span><br><span class="line">    NEXT_TOTAL_CPU_T=$(echo $NEXT_CPU_INFO | awk &#x27;&#123;print $1+$2+$3+$4+$5+$6+$7&#125;&#x27;)</span><br><span class="line"></span><br><span class="line">    SYSTEM_IDLE=`echo $&#123;NEXT_SYS_IDLE&#125; $&#123;LAST_SYS_IDLE&#125; | awk &#x27;&#123;print $1-$2&#125;&#x27;`</span><br><span class="line">    TOTAL_TIME=`echo $&#123;NEXT_TOTAL_CPU_T&#125; $&#123;LAST_TOTAL_CPU_T&#125; | awk &#x27;&#123;print $1-$2&#125;&#x27;`</span><br><span class="line">    CPU_USAGE=`echo $&#123;SYSTEM_IDLE&#125; $&#123;TOTAL_TIME&#125; | awk &#x27;&#123;printf &quot;%.2f&quot;, 100-$1/$2*100&#125;&#x27;`</span><br><span class="line">    cpu=`echo &quot;$CPU_USAGE&quot; | cut -d &quot;.&quot; -f 1`</span><br><span class="line"></span><br><span class="line">    #记录CPU过高</span><br><span class="line">    if [ &quot;$&#123;cpu&#125;&quot; -gt &quot;$&#123;cpu_top&#125;&quot; ];then</span><br><span class="line">        init_count=$(($init_count+1))</span><br><span class="line">        echo &quot;$&#123;time&#125;连续第$&#123;init_count&#125;次发生cpu使用率过高$&#123;cpu&#125;%&quot; &gt;&gt; $output_file</span><br><span class="line">    else</span><br><span class="line">        init_count=0</span><br><span class="line">    fi</span><br><span class="line">    #超过次数触发重启</span><br><span class="line">    if [ &quot;$&#123;top_count&#125;&quot; -le &quot;$&#123;init_count&#125;&quot;  ];then</span><br><span class="line">        echo &quot;触发重启行为：$&#123;time&#125;连续第$&#123;init_count&#125;次发生cpu使用率过高$&#123;cpu&#125;%&quot; &gt;&gt; $output_file</span><br><span class="line">        init_count=0</span><br><span class="line">        pid=$(pgrep $process)</span><br><span class="line">        kill -9 $&#123;pid&#125;</span><br><span class="line">        sh startup.sh</span><br><span class="line">        sleep 120</span><br><span class="line">    fi</span><br><span class="line">    sleep &quot;$&#123;TIME_SLEEP&#125;&quot;</span><br><span class="line">done</span><br></pre></td></tr></table></figure>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#%E4%BB%A3%E7%A0%81"><span class="top-box-text">代码</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2021/05/31/grafana-reset/">
+          <h3 class="post-title">
+            下一篇：Grafana重置密码
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

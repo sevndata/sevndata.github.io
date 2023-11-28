@@ -1,8 +1,217 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>使用mybatis-generator及git生成代码</title>
+<meta name="keywords" content="使用mybatis-generator及git生成代码, sevndata">
+<meta name="description" content="在基于Spring,Spring MVC,mybatis进行java web开发时，往往会需要写大量的重复性代码，可以使用mybatis-generator及git配合生成重复代码。
+
+
+mybatis-generator
+git提交一次模">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="使用mybatis-generator及git生成代码">
+<meta property="og:description" content="在基于Spring,Spring MVC,mybatis进行java web开发时，往往会需要写大量的重复性代码，可以使用mybatis-generator及git配合生成重复代码。
+
+
+mybatis-generator
+git提交一次模">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">使用mybatis-generator及git生成代码</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2018-06-16</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Git/">
+              Git
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/Mybatis/">
+              Mybatis
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>在基于Spring,Spring MVC,mybatis进行java web开发时，往往会需要写大量的重复性代码，可以使用mybatis-generator及git配合生成重复代码。</p>
+<span id="more"></span>
+<ol>
+<li>mybatis-generator</li>
+<li>git提交一次模板代码</li>
+<li>提取模板patch</li>
+<li>生成相关patch</li>
+<li>合并patch到分支</li>
+<li>修改可能产生的错误</li>
+</ol>
+<h2 id="1-mybatis-generator"><a href="#1-mybatis-generator" class="headerlink" title="1. mybatis-generator"></a>1. mybatis-generator</h2><p>可以通过mybatis-generator jar方式执行生成DAO，这里通过maven方式生成</p>
+<ol>
+<li>创建generatorConfig.xml文件<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">generatorConfiguration</span> </span></span><br><span class="line"><span class="meta">        <span class="keyword">PUBLIC</span> <span class="string">&quot;-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN&quot;</span></span></span><br><span class="line"><span class="meta">        <span class="string">&quot;http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">generatorConfiguration</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">classPathEntry</span></span></span><br><span class="line"><span class="tag">            <span class="attr">location</span>=<span class="string">&quot;mysql-connector-java-x.x.x.jar path&quot;</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">context</span> <span class="attr">id</span>=<span class="string">&quot;zq_mysql_tables&quot;</span> <span class="attr">targetRuntime</span>=<span class="string">&quot;MyBatis3&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">plugin</span> <span class="attr">type</span>=<span class="string">&quot;org.mybatis.generator.plugins.SerializablePlugin&quot;</span>/&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">commentGenerator</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;suppressAllComments&quot;</span> <span class="attr">value</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;suppressDate&quot;</span> <span class="attr">value</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">commentGenerator</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">jdbcConnection</span> <span class="attr">driverClass</span>=<span class="string">&quot;com.mysql.jdbc.Driver&quot;</span></span></span><br><span class="line"><span class="tag">                        <span class="attr">connectionURL</span>=<span class="string">&quot;mysql url&quot;</span></span></span><br><span class="line"><span class="tag">                        <span class="attr">userId</span>=<span class="string">&quot;mysql username&quot;</span></span></span><br><span class="line"><span class="tag">                        <span class="attr">password</span>=<span class="string">&quot;mysql userpassword&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">jdbcConnection</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">javaTypeResolver</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;forceBigDecimals&quot;</span> <span class="attr">value</span>=<span class="string">&quot;false&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">javaTypeResolver</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">javaModelGenerator</span> <span class="attr">targetPackage</span>=<span class="string">&quot;domian package&quot;</span> <span class="attr">targetProject</span>=<span class="string">&quot;src&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;enableSubPackages&quot;</span> <span class="attr">value</span>=<span class="string">&quot;false&quot;</span>/&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;trimStrings&quot;</span> <span class="attr">value</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">javaModelGenerator</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">sqlMapGenerator</span> <span class="attr">targetPackage</span>=<span class="string">&quot;mapper package&quot;</span> <span class="attr">targetProject</span>=<span class="string">&quot;src&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;enableSubPackages&quot;</span> <span class="attr">value</span>=<span class="string">&quot;false&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">sqlMapGenerator</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">javaClientGenerator</span> <span class="attr">type</span>=<span class="string">&quot;XMLMAPPER&quot;</span> <span class="attr">targetPackage</span>=<span class="string">&quot;xml package&quot;</span> <span class="attr">targetProject</span>=<span class="string">&quot;src&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">&quot;enableSubPackages&quot;</span> <span class="attr">value</span>=<span class="string">&quot;false&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">javaClientGenerator</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">table</span> <span class="attr">tableName</span>=<span class="string">&quot;tableName&quot;</span> <span class="attr">domainObjectName</span>=<span class="string">&quot;DomainName&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">generatedKey</span> <span class="attr">column</span>=<span class="string">&quot;private key&quot;</span> <span class="attr">sqlStatement</span>=<span class="string">&quot;MySql&quot;</span> <span class="attr">identity</span>=<span class="string">&quot;true&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">table</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">context</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">generatorConfiguration</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li>引入build，pom.xml如下：<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">finalName</span>&gt;</span>name<span class="tag">&lt;/<span class="name">finalName</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.mybatis.generator<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>mybatis-generator-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>x.x.x<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">verbose</span>&gt;</span>true<span class="tag">&lt;/<span class="name">verbose</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">overwrite</span>&gt;</span>true<span class="tag">&lt;/<span class="name">overwrite</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br></pre></td></tr></table></figure></li>
+<li>执行maven命令<br>mybatis-generator:generate -e<br>这样就会生成DAO。</li>
+</ol>
+<h2 id="2-git提交一次模板代码"><a href="#2-git提交一次模板代码" class="headerlink" title="2. git提交一次模板代码"></a>2. git提交一次模板代码</h2><p>写好Controller,Service等相关代码，然后做一次提交。</p>
+<h2 id="3-提取模板patch"><a href="#3-提取模板patch" class="headerlink" title="3. 提取模板patch"></a>3. 提取模板patch</h2><p>执行git format-patch HEAD^提取提交的patch文件</p>
+<h2 id="4-生成相关patch"><a href="#4-生成相关patch" class="headerlink" title="4. 生成相关patch"></a>4. 生成相关patch</h2><ol>
+<li>创建GenerateCode.java如下：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">GenerateCode</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">PATCH_PATH</span> <span class="operator">=</span> <span class="string">&quot;模板patch文件地址&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">PATCH_BASE_PATH</span> <span class="operator">=</span> <span class="string">&quot;目标patch生成地址&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> BufferedReader reader;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> List&lt;String[]&gt; allKeys;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">GenerateCode</span><span class="params">()</span> <span class="keyword">throws</span> FileNotFoundException &#123;</span><br><span class="line">        <span class="built_in">this</span>.reader = getBufferedReader();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        List&lt;String[]&gt; allKeys = <span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;&gt;();</span><br><span class="line">        <span class="comment">//新表，定义新的内容（将要替换的内容），每个表都需要添加</span></span><br><span class="line">        allKeys.add(<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;表前缀&quot;</span>, <span class="string">&quot;表model名&quot;</span>, <span class="string">&quot;详细描述&quot;</span>&#125;);</span><br><span class="line">        allKeys.add(<span class="keyword">new</span> <span class="title class_">String</span>[]&#123;<span class="string">&quot;表前缀&quot;</span>, <span class="string">&quot;表model名&quot;</span>, <span class="string">&quot;详细描述&quot;</span>&#125;);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="type">GenerateCode</span> <span class="variable">generateCode</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">GenerateCode</span>();</span><br><span class="line">            generateCode.setAllKeys(allKeys);</span><br><span class="line">            generateCode.generatePatch();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">generatePatch</span><span class="params">()</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="type">File</span> <span class="variable">file</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">File</span>(PATCH_BASE_PATH);</span><br><span class="line">        file.mkdirs();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (String[] keys : allKeys) &#123;</span><br><span class="line">            reader = getBufferedReader();</span><br><span class="line">            replacePatch(keys);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">replacePatch</span><span class="params">(String[] keys)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">        <span class="type">StringBuilder</span> <span class="variable">newStrs</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringBuilder</span>();</span><br><span class="line"></span><br><span class="line">        <span class="type">String</span> <span class="variable">lineStr</span> <span class="operator">=</span> <span class="literal">null</span>;</span><br><span class="line">        <span class="keyword">while</span> ((lineStr = reader.readLine()) != <span class="literal">null</span>) &#123;</span><br><span class="line">            newStrs.append(replaceStr(lineStr, keys)).append(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        writePatch(newStrs.toString(), keys[<span class="number">1</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">writePatch</span><span class="params">(String string, String fileName)</span> <span class="keyword">throws</span> FileNotFoundException &#123;</span><br><span class="line">        <span class="type">FileOutputStream</span> <span class="variable">outputStream</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileOutputStream</span>(<span class="keyword">new</span> <span class="title class_">File</span>(PATCH_BASE_PATH + File.separator + fileName + <span class="string">&quot;.patch&quot;</span>));</span><br><span class="line">        <span class="type">PrintStream</span> <span class="variable">ps</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PrintStream</span>(outputStream);</span><br><span class="line">        ps.append(string);</span><br><span class="line">        ps.close();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> BufferedReader <span class="title function_">getBufferedReader</span><span class="params">()</span> <span class="keyword">throws</span> FileNotFoundException &#123;</span><br><span class="line">        <span class="type">FileReader</span> <span class="variable">fileReader</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FileReader</span>(<span class="keyword">new</span> <span class="title class_">File</span>(PATCH_PATH));</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">BufferedReader</span>(fileReader);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String <span class="title function_">replaceStr</span><span class="params">(String originStr, String[] keys)</span> &#123;</span><br><span class="line">        <span class="comment">//原来的内容，要被替换掉的内容</span></span><br><span class="line">        <span class="keyword">return</span> originStr.replace(<span class="string">&quot;表前缀&quot;</span>, keys[<span class="number">0</span>])</span><br><span class="line">                .replace(<span class="string">&quot;表model名 Foo&quot;</span>, keys[<span class="number">1</span>])</span><br><span class="line">                .replace(<span class="string">&quot;表model名变量名 foo&quot;</span>, toLowerCaseFirstOne(keys[<span class="number">1</span>]))</span><br><span class="line">                .replace(<span class="string">&quot;文字描述&quot;</span>, keys[<span class="number">2</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> List&lt;String[]&gt; getAllKeys() &#123;</span><br><span class="line">        <span class="keyword">return</span> allKeys;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setAllKeys</span><span class="params">(List&lt;String[]&gt; allKeys)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.allKeys = allKeys;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">toLowerCaseFirstOne</span><span class="params">(String s)</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (Character.isLowerCase(s.charAt(<span class="number">0</span>)))</span><br><span class="line">            <span class="keyword">return</span> s;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="keyword">return</span> (<span class="keyword">new</span> <span class="title class_">StringBuilder</span>()).append(Character.toLowerCase(s.charAt(<span class="number">0</span>))).append(s.substring(<span class="number">1</span>)).toString();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>执行main方法，生成patch文件<br>原理为：生成模板patch，然后通过构建新表的对象名，描述等信息替换模板patch中的关键字内容并生成新的patch文件。</li>
+</ol>
+<h2 id="5-合并patch到分支"><a href="#5-合并patch到分支" class="headerlink" title="5. 合并patch到分支"></a>5. 合并patch到分支</h2><p>执行git am *.patch，将新生成的patch文件合并到代码分支</p>
+<h2 id="6-修改可能产生的错误"><a href="#6-修改可能产生的错误" class="headerlink" title="6. 修改可能产生的错误"></a>6. 修改可能产生的错误</h2><p>批量生成避免不了产生语法错误的代码，稍做修改并完善即可。</p>
+<p>这样就快速的生成了代码，大大提高了生产力。</p>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-mybatis-generator"><span class="top-box-text">1. mybatis-generator</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-git%E6%8F%90%E4%BA%A4%E4%B8%80%E6%AC%A1%E6%A8%A1%E6%9D%BF%E4%BB%A3%E7%A0%81"><span class="top-box-text">2. git提交一次模板代码</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-%E6%8F%90%E5%8F%96%E6%A8%A1%E6%9D%BFpatch"><span class="top-box-text">3. 提取模板patch</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-%E7%94%9F%E6%88%90%E7%9B%B8%E5%85%B3patch"><span class="top-box-text">4. 生成相关patch</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#5-%E5%90%88%E5%B9%B6patch%E5%88%B0%E5%88%86%E6%94%AF"><span class="top-box-text">5. 合并patch到分支</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#6-%E4%BF%AE%E6%94%B9%E5%8F%AF%E8%83%BD%E4%BA%A7%E7%94%9F%E7%9A%84%E9%94%99%E8%AF%AF"><span class="top-box-text">6. 修改可能产生的错误</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2018/05/18/spring-mvc3/">
+          <h3 class="post-title">
+            下一篇：浅析Spring MVC:自定义配置
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

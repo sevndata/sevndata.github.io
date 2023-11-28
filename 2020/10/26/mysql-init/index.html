@@ -1,8 +1,246 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>MySQL8搭建，调优及数据迁移(xtrabackup)</title>
+<meta name="keywords" content="MySQL8搭建，调优及数据迁移(xtrabackup), sevndata">
+<meta name="description" content="记一次国外项目MySQL生产环境搭建，并使用xtrabackup8对大数量数据进行迁移过程。
+
+
+本文使用的操作系统为CentOS7。更多详细的内容请查看MySQL官网，MySQL下载，xtrabackup官网。
+mysql升级到8可能出现">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="MySQL8搭建，调优及数据迁移(xtrabackup)">
+<meta property="og:description" content="记一次国外项目MySQL生产环境搭建，并使用xtrabackup8对大数量数据进行迁移过程。
+
+
+本文使用的操作系统为CentOS7。更多详细的内容请查看MySQL官网，MySQL下载，xtrabackup官网。
+mysql升级到8可能出现">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">MySQL8搭建，调优及数据迁移(xtrabackup)</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-10-26</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/MySQL/">
+              MySQL
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/xtrabackup/">
+              xtrabackup
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>记一次国外项目MySQL生产环境搭建，并使用xtrabackup8对大数量数据进行迁移过程。</p>
+<span id="more"></span>
+
+<p>本文使用的操作系统为<code>CentOS7</code>。更多详细的内容请查看<a target="_blank" rel="noopener" href="https://www.mysql.com">MySQL官网</a>，<a target="_blank" rel="noopener" href="https://dev.mysql.com/downloads/mysql">MySQL下载</a>，<a target="_blank" rel="noopener" href="https://www.percona.com/doc/percona-xtrabackup/8.0/index.html">xtrabackup官网</a>。</p>
+<p>mysql升级到8可能出现一些连不上的问题，可升级连接驱动解决。如：<code>com.mysql.jdbc.Driver</code>版本升级。</p>
+<p>生产环境数据库应隐藏到内网中，外网不可连接。</p>
+<h2 id="1-MySQL8安装及使用"><a href="#1-MySQL8安装及使用" class="headerlink" title="1. MySQL8安装及使用"></a>1. MySQL8安装及使用</h2><h3 id="1-卸载"><a href="#1-卸载" class="headerlink" title="1. 卸载"></a>1. 卸载</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yum list mysql*</span><br><span class="line"></span><br><span class="line">yum remove mysql*</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-安装"><a href="#2-安装" class="headerlink" title="2. 安装"></a>2. 安装</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">wget https://repo.mysql.com//mysql80-community-release-el7-6.noarch.rpm</span><br><span class="line"></span><br><span class="line">yum install mysql80-community-release-el7-6.noarch.rpm</span><br><span class="line"></span><br><span class="line">yum install mysql-community-server</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">失败可添加参数 --nogpgcheck</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">可能缺少glib等依赖 安装及可</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">过期访问https://dev.mysql.com/downloads/repo/yum/</span></span><br></pre></td></tr></table></figure>
+<h3 id="3-配置，调优"><a href="#3-配置，调优" class="headerlink" title="3. 配置，调优"></a>3. 配置，调优</h3><p>配置文件在<code>/etc/my.cnf</code>目录下。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">datadir=/var/lib/mysql</span><br><span class="line">socket=/var/lib/mysql/mysql.sock</span><br><span class="line">log-error=/var/log/mysqld.log</span><br><span class="line">pid-file=/var/run/mysqld/mysqld.pid</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">sql_mode 模式，sql语法，数据校验，可能出现有的项目中sql报错等</span></span><br><span class="line">sql_mode=NO_ENGINE_SUBSTITUTION</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">updateTime自动更新必要参数</span></span><br><span class="line">explicit_defaults_for_timestamp=false</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">mysql调优参数</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">缓存数据内容大小</span></span><br><span class="line">innodb_buffer_pool_chunk_size=1073741824</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">缓存池大小，应为上方参数的倍数</span></span><br><span class="line">innodb_buffer_pool_size=10737418240</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">默认设置为1024，数据量大达到1024后会报错Too many open files</span></span><br><span class="line">open_files_limit=10000</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">innoDB 存储引擎使用一个指定大小的Redo <span class="built_in">log</span>空间,Redo <span class="built_in">log</span>越大会导致在断电，数据崩溃下需要越长的时间恢复</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">1G预估恢复速度为5分钟</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">参数影响写入速度，测试产生文件大小调整此参数大小</span></span><br><span class="line">innodb_log_file_size=1G</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">缓存池数量</span></span><br><span class="line">innodb_buffer_pool_instances=10</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-启动"><a href="#4-启动" class="headerlink" title="4. 启动"></a>4. 启动</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">启动</span></span><br><span class="line">systemctl start mysqld.service</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">停止</span></span><br><span class="line">systemctl stop mysqld.service</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看运行状态</span></span><br><span class="line">systemctl status mysqld.service</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-初次连接"><a href="#5-初次连接" class="headerlink" title="5. 初次连接"></a>5. 初次连接</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">尝试登陆，登陆不成功</span></span><br><span class="line">mysql -u root -p</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">获取初始密码</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">A temporary password is generated <span class="keyword">for</span> root@localhost: ;y*(uKZQ,4rq</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">;y*(uKZQ,4rq则为初始密码</span></span><br><span class="line">grep ‘temporary password’ /var/log/mysqld.log</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">再次尝试用新密码登陆</span></span><br><span class="line">mysql -u root -p</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">强制修改初始密码，mysql8中密码都必须至少有三种字符，可大小写符号三种拼接</span></span><br><span class="line">alter user user() identified by ‘dD_d’</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-创建应用使用账号"><a href="#6-创建应用使用账号" class="headerlink" title="6. 创建应用使用账号"></a>6. 创建应用使用账号</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 创建修改用户，注意mysql8引进新的加密方式caching_sha2_password，这种加密方式客户端不支持，需要制定mysql_native_password加密方式</span></span><br><span class="line"><span class="comment">-- 在生产环境中，每个应用服务器需单独设置可连数据库账号</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> <span class="string">&#x27;tk_node&#x27;</span>@<span class="string">&#x27;10.0.10.70&#x27;</span> IDENTIFIED <span class="keyword">WITH</span> mysql_native_password <span class="keyword">BY</span> <span class="string">&#x27;dD_d&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">USER</span> <span class="string">&#x27;tk_node&#x27;</span>@<span class="string">&#x27;10.0.10.70&#x27;</span> IDENTIFIED <span class="keyword">WITH</span> mysql_native_password <span class="keyword">BY</span> <span class="string">&#x27;dD_d&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-赋予权限"><a href="#7-赋予权限" class="headerlink" title="7. 赋予权限"></a>7. 赋予权限</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 一般我们赋予应用服务器SELECT, INSERT,UPDATE,DELETE这些权限。可依据实际情况赋予权限</span></span><br><span class="line"><span class="comment">-- *.*是为目标库</span></span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">SELECT</span>, <span class="keyword">INSERT</span>,<span class="keyword">UPDATE</span>,<span class="keyword">DELETE</span> <span class="keyword">ON</span> <span class="operator">*</span>.<span class="operator">*</span> <span class="keyword">TO</span> <span class="string">&#x27;tk_node&#x27;</span>@<span class="string">&#x27;10.0.10.70&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-数据库操作"><a href="#8-数据库操作" class="headerlink" title="8. 数据库操作"></a>8. 数据库操作</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> DATABASE tk_control <span class="keyword">default</span> charset utf8 <span class="keyword">COLLATE</span> utf8_general_ci;</span><br><span class="line">USE tk_control;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-使用xtrabackup8数据迁移"><a href="#2-使用xtrabackup8数据迁移" class="headerlink" title="2. 使用xtrabackup8数据迁移"></a>2. 使用xtrabackup8数据迁移</h2><h3 id="1-数据迁移方案"><a href="#1-数据迁移方案" class="headerlink" title="1. 数据迁移方案"></a>1. 数据迁移方案</h3><ol>
+<li>使用<code>mysqldump</code>进行数据迁移，逻辑备份，<del>此方案在数据量小时比较实用</del>。实战效果在千万级别数据下，<code>mysqldump</code>有非常好的性能。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysqldump -u root -p xxx tk_xx tk_xx2 tk_xx3 &gt; /home/tk_node.sql</span><br></pre></td></tr></table></figure></li>
+<li>使用<code>datadir</code>进行数据迁移。需停机，有风险。</li>
+<li>使用<code>navicat</code>等工具进行数据迁移。同样为逻辑备份恢复。</li>
+<li>使用<code>xtrabackup</code>进行数据迁移，物理备份恢复，速度快，不需要停机，不锁表，不影响正常业务，热更新，可增量备份，适用于大数据量迁移备份。</li>
+</ol>
+<p>所以，<del>在生产环境少量数据时推荐使用<code>mysqldump</code></del>，<code>mysqldump</code>比较推荐，<del>大数据量时使用<code>xtrabackup</code></del>,优选<code>mysqldump</code>次选<code>xtrabackup</code>。</p>
+<h3 id="2-xtrabackup安装"><a href="#2-xtrabackup安装" class="headerlink" title="2. xtrabackup安装"></a>2. xtrabackup安装</h3><p>注意<code>xtrabackup</code>的版本。<code>xtrabackup</code>不同版本对应不同<code>MySQL</code>版本。在官方文档查找合适的版本。下文的版本为<code>xtrabackup8</code>对应<code>MySQL8</code>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm</span><br><span class="line"></span><br><span class="line">percona-release enable-only tools release</span><br><span class="line"></span><br><span class="line">yum install percona-xtrabackup-80</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">压缩备份工具</span></span><br><span class="line">yum install qpress</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-xtrabackup所需要的权限"><a href="#3-xtrabackup所需要的权限" class="headerlink" title="3. xtrabackup所需要的权限"></a>3. xtrabackup所需要的权限</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">USER</span> <span class="string">&#x27;bkpuser&#x27;</span>@<span class="string">&#x27;localhost&#x27;</span> IDENTIFIED <span class="keyword">BY</span> <span class="string">&#x27;xxx&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">GRANT</span> BACKUP_ADMIN, PROCESS, RELOAD, LOCK TABLES, REPLICATION CLIENT <span class="keyword">ON</span> <span class="operator">*</span>.<span class="operator">*</span> <span class="keyword">TO</span> <span class="string">&#x27;bkpuser&#x27;</span>@<span class="string">&#x27;localhost&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">GRANT</span> <span class="keyword">SELECT</span> <span class="keyword">ON</span> performance_schema.log_status <span class="keyword">TO</span> <span class="string">&#x27;bkpuser&#x27;</span>@<span class="string">&#x27;localhost&#x27;</span>;</span><br><span class="line"></span><br><span class="line">FLUSH PRIVILEGES;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-xtrabackup全量备份"><a href="#4-xtrabackup全量备份" class="headerlink" title="4. xtrabackup全量备份"></a>4. xtrabackup全量备份</h3><p>压缩备份：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">defaults-file:mysql配置文件， compress-threads：线程数</span></span><br><span class="line">xtrabackup --defaults-file=/etc/my.cnf --host=localhost --user=bkpuser --password=xxx --port=3306 --backup --compress --compress-threads=10 --target-dir=/home/compressed/</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="5-可能出现的报错"><a href="#5-可能出现的报错" class="headerlink" title="5. 可能出现的报错"></a>5. 可能出现的报错</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">问题1：</span><br><span class="line">Please upgrade PXB, if a new version is available. To continue with risk, use the option --no-server-version-check.</span><br><span class="line">解决：添加参数 --no-server-version-check</span><br><span class="line">xtrabackup --defaults-file=/etc/my.cnf --host=localhost --user=bkpuser --password=xxx --port=3306 --backup --compress --compress-threads=10 --target-dir=/home/compressed/ --no-server-version-check</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">问题2：</span><br><span class="line">Error: failed to execute query &#x27;SELECT lower(STATUS_KEY), STATUS_VALUE FROM performance_schema.keyring_component_status&#x27;: 1142 (42000) SELECT command denied to user &#x27;bkpuserxz&#x27;@&#x27;localhost&#x27; for table &#x27;keyring_component_status&#x27;</span><br><span class="line">解决：添加权限</span><br><span class="line">GRANT SELECT ON performance_schema.keyring_component_status TO bkpuserxz@&#x27;localhost&#x27;;</span><br><span class="line">FLUSH PRIVILEGES;</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-xtrabackup还原"><a href="#6-xtrabackup还原" class="headerlink" title="6. xtrabackup还原"></a>6. xtrabackup还原</h3><ol>
+<li>把全量备份文件上传到目标服务器，进行备份恢复。</li>
+<li>目标MySQL服务停止<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl stop mysqld.service</span><br></pre></td></tr></table></figure></li>
+<li>解压备份文件<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xtrabackup --decompress --target-dir=/home/compressed/</span><br></pre></td></tr></table></figure></li>
+<li>备份还原<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xtrabackup --copy-back --target-dir=/home/compressed/</span><br></pre></td></tr></table></figure>
+还原过程中出现错误<code>/var/lib/mysql is not empty!</code>，可删除<code>/var/lib/mysql</code>下所有文件。<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf /var/lib/mysql/*</span><br></pre></td></tr></table></figure></li>
+<li>赋于权限<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chown -R mysql:mysql /var/lib/mysql</span><br></pre></td></tr></table></figure></li>
+<li>启动MySQL服务<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start mysqld.service</span><br></pre></td></tr></table></figure></li>
+<li>启动不成功<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">若启动不成功，查看 /var/log/mysql.log文件具体查看启动不成功原因。</span><br><span class="line">若文件损坏，innodb损坏等问题。需使用innodb_force_recovery=1进行详细纠错，可见本网MySQL阻塞，修复损坏的innodb一文</span><br></pre></td></tr></table></figure></li>
+<li>检查恢复是否正常</li>
+</ol>
+<h3 id="7-xtrabackup增量备份"><a href="#7-xtrabackup增量备份" class="headerlink" title="7. xtrabackup增量备份"></a>7. xtrabackup增量备份</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">xtrabackup --backup --target-dir = /data/backups/base</span><br><span class="line">xtrabackup --backup --target-dir = /data/backups/inc1 --incremental-basedir = /data/backups/base</span><br><span class="line">xtrabackup --backup --target-dir = /data/backups/inc2 --incremental-basedir = /data/backups/inc1</span><br><span class="line"></span><br><span class="line">xtrabackup --prepare --apply-log-only --target-dir=/data/backups/base</span><br><span class="line">xtrabackup --prepare --apply-log-only --target-dir=/data/backups/base --incremental-dir=/data/backups/inc1</span><br><span class="line">xtrabackup --prepare --target-dir=/data/backups/base --incremental-dir=/data/backups/inc2</span><br><span class="line">xtrabackup --prepare --apply-log-only --target-dir = /data/backups/base -incremental-dir = /data/backups/inc1</span><br></pre></td></tr></table></figure>
+
+<p>更多xtrabackup功能详见<a target="_blank" rel="noopener" href="https://www.percona.com/doc/percona-xtrabackup/8.0/index.html">xtrabackup官方文档</a></p>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-MySQL8%E5%AE%89%E8%A3%85%E5%8F%8A%E4%BD%BF%E7%94%A8"><span class="top-box-text">1. MySQL8安装及使用</span></a><ol class="top-box-child"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-%E5%8D%B8%E8%BD%BD"><span class="top-box-text">1. 卸载</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#2-%E5%AE%89%E8%A3%85"><span class="top-box-text">2. 安装</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#3-%E9%85%8D%E7%BD%AE%EF%BC%8C%E8%B0%83%E4%BC%98"><span class="top-box-text">3. 配置，调优</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#4-%E5%90%AF%E5%8A%A8"><span class="top-box-text">4. 启动</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#5-%E5%88%9D%E6%AC%A1%E8%BF%9E%E6%8E%A5"><span class="top-box-text">5. 初次连接</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#6-%E5%88%9B%E5%BB%BA%E5%BA%94%E7%94%A8%E4%BD%BF%E7%94%A8%E8%B4%A6%E5%8F%B7"><span class="top-box-text">6. 创建应用使用账号</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#7-%E8%B5%8B%E4%BA%88%E6%9D%83%E9%99%90"><span class="top-box-text">7. 赋予权限</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#8-%E6%95%B0%E6%8D%AE%E5%BA%93%E6%93%8D%E4%BD%9C"><span class="top-box-text">8. 数据库操作</span></a></li></ol></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-%E4%BD%BF%E7%94%A8xtrabackup8%E6%95%B0%E6%8D%AE%E8%BF%81%E7%A7%BB"><span class="top-box-text">2. 使用xtrabackup8数据迁移</span></a><ol class="top-box-child"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-%E6%95%B0%E6%8D%AE%E8%BF%81%E7%A7%BB%E6%96%B9%E6%A1%88"><span class="top-box-text">1. 数据迁移方案</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#2-xtrabackup%E5%AE%89%E8%A3%85"><span class="top-box-text">2. xtrabackup安装</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#3-xtrabackup%E6%89%80%E9%9C%80%E8%A6%81%E7%9A%84%E6%9D%83%E9%99%90"><span class="top-box-text">3. xtrabackup所需要的权限</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#4-xtrabackup%E5%85%A8%E9%87%8F%E5%A4%87%E4%BB%BD"><span class="top-box-text">4. xtrabackup全量备份</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#5-%E5%8F%AF%E8%83%BD%E5%87%BA%E7%8E%B0%E7%9A%84%E6%8A%A5%E9%94%99"><span class="top-box-text">5. 可能出现的报错</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#6-xtrabackup%E8%BF%98%E5%8E%9F"><span class="top-box-text">6. xtrabackup还原</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#7-xtrabackup%E5%A2%9E%E9%87%8F%E5%A4%87%E4%BB%BD"><span class="top-box-text">7. xtrabackup增量备份</span></a></li></ol></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/09/30/linux-ssh/">
+          <h3 class="post-title">
+            下一篇：CentOS7 ssh免密登录及失效问题
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

@@ -1,8 +1,254 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>浅析Spring MVC:Controller</title>
+<meta name="keywords" content="浅析Spring MVC:Controller, sevndata">
+<meta name="description" content="使用Spring Web MVC，开发者可以直接访问官方文档Spring Web MVC文档Version 5.2.1.RELEASE，本文及Spring MVC系列文章都参考于此文档及源码。
+这一节来看Spring MVC具体使用方法。
+">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="浅析Spring MVC:Controller">
+<meta property="og:description" content="使用Spring Web MVC，开发者可以直接访问官方文档Spring Web MVC文档Version 5.2.1.RELEASE，本文及Spring MVC系列文章都参考于此文档及源码。
+这一节来看Spring MVC具体使用方法。
+">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">浅析Spring MVC:Controller</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2018-04-13</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Spring-MVC/">
+              Spring MVC
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>使用Spring Web MVC，开发者可以直接访问官方文档<a target="_blank" rel="noopener" href="https://docs.spring.io/spring/docs/5.2.1.RELEASE/spring-framework-reference/web.html#mvc">Spring Web MVC文档Version 5.2.1.RELEASE</a>，本文及Spring MVC系列文章都参考于此文档及源码。</p>
+<p>这一节来看Spring MVC具体使用方法。</p>
+<span id="more"></span>
+<h2 id="1-Controller"><a href="#1-Controller" class="headerlink" title="1. @Controller"></a>1. @Controller</h2><h3 id="1-Controller-1"><a href="#1-Controller-1" class="headerlink" title="1. @Controller"></a>1. @Controller</h3><p>Spring MVC provides an annotation-based programming model where <code>@Controller</code> and <code>@RestController</code> components use annotations to express request mappings, request input, exception handling, and more. Annotated controllers have flexible method signatures and do not have to extend base classes nor implement specific interfaces. </p>
+<p>使用<code>@Controller</code>，<code>@RestController</code>就可以实现一个接口，不需要继承或者实现base。</p>
+<p>The following example shows a controller defined by annotations：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HelloController</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/hello&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">handle</span><span class="params">(Model model)</span> &#123;</span><br><span class="line">        model.addAttribute(<span class="string">&quot;message&quot;</span>, <span class="string">&quot;Hello World!&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;index&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-声明"><a href="#2-声明" class="headerlink" title="2. 声明"></a>2. 声明</h3><p>需要配置configuration来自动扫描<code>@Controller</code>beans。</p>
+<ol>
+<li>java configuration<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ComponentScan(&quot;org.example.web&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">WebConfig</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>spring.xml<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">beans</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://www.springframework.org/schema/beans&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:p</span>=<span class="string">&quot;http://www.springframework.org/schema/p&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:context</span>=<span class="string">&quot;http://www.springframework.org/schema/context&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;</span></span></span><br><span class="line"><span class="string"><span class="tag">        http://www.springframework.org/schema/beans</span></span></span><br><span class="line"><span class="string"><span class="tag">        https://www.springframework.org/schema/beans/spring-beans.xsd</span></span></span><br><span class="line"><span class="string"><span class="tag">        http://www.springframework.org/schema/context</span></span></span><br><span class="line"><span class="string"><span class="tag">        https://www.springframework.org/schema/context/spring-context.xsd&quot;</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">context:component-scan</span> <span class="attr">base-package</span>=<span class="string">&quot;org.example.web&quot;</span>/&gt;</span></span><br><span class="line">    <span class="comment">&lt;!-- more --&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">beans</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>引申内容</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> RestController &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//@AliasFor互为别名</span></span><br><span class="line">	<span class="meta">@AliasFor(annotation = Controller.class)</span></span><br><span class="line">	String <span class="title function_">value</span><span class="params">()</span> <span class="keyword">default</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="3-映射"><a href="#3-映射" class="headerlink" title="3. 映射"></a>3. 映射</h3><ol>
+<li><p>可以使用<code>@RequestMapping</code>映射request到方法上，也可以使用<code>@RequestMapping</code>的其他注解：<code>@GetMapping</code>,<code>@PostMapping</code>…</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping(&quot;/persons&quot;)</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">PersonController</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/&#123;id&#125;&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> Person <span class="title function_">getPerson</span><span class="params">(<span class="meta">@PathVariable</span> Long id)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@PostMapping</span></span><br><span class="line">    <span class="meta">@ResponseStatus(HttpStatus.CREATED)</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">add</span><span class="params">(<span class="meta">@RequestBody</span> Person person)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>可以使用通配符来映射如:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="meta">@RequestMapping(&quot;/owners/&#123;ownerId&#125;&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">OwnerController</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/pets/&#123;petId&#125;&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> Pet <span class="title function_">findPet</span><span class="params">(<span class="meta">@PathVariable</span> Long ownerId, <span class="meta">@PathVariable</span> Long petId)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>也可以使用<code>@GetMapping(&quot;/&#123;name:[a-z-]+&#125;-&#123;version:\\d\\.\\d\\.\\d&#125;&#123;ext:\\.[a-z]+&#125;&quot;)</code>。多种模式匹配，会进行最优匹配。</p>
+</li>
+<li><p>注解中还一些其他参数：<code>consumes</code>,<code>produces</code>,<code>params</code></p>
+</li>
+<li><p>Spring MVC还支持带有自定义请求匹配逻辑的自定义请求映射属性。需要<code>RequestMappingHandlerMapping</code>对<code>getCustomMethodCondition</code>方法进行覆盖，可以在其中检查<code>custom</code>属性并返回您自己的方法<code>RequestCondition</code>。</p>
+</li>
+<li><p>可以通过代码注册</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MyConfig</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setHandlerMapping</span><span class="params">(RequestMappingHandlerMapping mapping, UserHandler handler)</span> </span><br><span class="line">            <span class="keyword">throws</span> NoSuchMethodException &#123;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">//映射数据</span></span><br><span class="line">        <span class="type">RequestMappingInfo</span> <span class="variable">info</span> <span class="operator">=</span> RequestMappingInfo</span><br><span class="line">                .paths(<span class="string">&quot;/user/&#123;id&#125;&quot;</span>).methods(RequestMethod.GET).build(); </span><br><span class="line">        </span><br><span class="line">        <span class="comment">//方法数据</span></span><br><span class="line">        <span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> UserHandler.class.getMethod(<span class="string">&quot;getUser&quot;</span>, Long.class); </span><br><span class="line"></span><br><span class="line">        <span class="comment">//注册方法映射</span></span><br><span class="line">        mapping.registerMapping(info, handler, method); </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h3 id="4-处理方法"><a href="#4-处理方法" class="headerlink" title="4. 处理方法"></a>4. 处理方法</h3><p>Spring MVC提供许多注解和参数供我们使用，详细可参照官方文档。这里简单的介绍一部分内容</p>
+<ol>
+<li><p>@PathVariable: 用于访问URI模板变量。</p>
+</li>
+<li><p>@MatrixVariable: 用于访问URI路径段中的名称/值对。</p>
+</li>
+<li><p>@RequestParam: 用于访问Servlet请求参数，包括Multipart。</p>
+</li>
+<li><p>@RequestHeader: 用于访问请求头。</p>
+</li>
+<li><p>@CookieValue: 用于访问cookie。</p>
+</li>
+<li><p>@RequestBody: 用于访问HTTP请求Body。通过使用<code>HttpMessageConverter</code>实现转换，具体方法见下文。</p>
+</li>
+<li><p>@RequestPart: 用于<code>multipart/form-data</code>请求中的内容。</p>
+</li>
+<li><p>@ResponseBody: 用于返回值通过<code>HttpMessageConverter</code>实现进行转换并写入响应。</p>
+</li>
+</ol>
+<p>这里简单举个例子：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Controller</span></span><br><span class="line"><span class="meta">@RequestMapping(&quot;/pets&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">EditPetForm</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">setupForm</span><span class="params">(<span class="meta">@RequestParam(&quot;petId&quot;)</span> <span class="type">int</span> petId, Model model)</span> &#123; </span><br><span class="line">        <span class="type">Pet</span> <span class="variable">pet</span> <span class="operator">=</span> <span class="built_in">this</span>.clinic.loadPet(petId);</span><br><span class="line">        model.addAttribute(<span class="string">&quot;pet&quot;</span>, pet);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;petForm&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>更加常用的是通过<code>HttpMessageConverter</code>序列化和反序列化到对象。<code>@RequestBody</code>,<code>@ResponseBody</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@PostMapping(&quot;/accounts&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@ResponseBody</span> Account <span class="title function_">handle</span><span class="params">(<span class="meta">@RequestBody</span> Account account)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> account;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以覆盖<code>HttpMessageConverter</code>中<code>configureMessageConverters()</code>方法或者<code>extendMessageConverters()</code>方法进行配置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableWebMvc</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">WebConfiguration</span> <span class="keyword">implements</span> <span class="title class_">WebMvcConfigurer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">configureMessageConverters</span><span class="params">(List&lt;HttpMessageConverter&lt;?&gt;&gt; converters)</span> &#123;</span><br><span class="line">        <span class="type">Jackson2ObjectMapperBuilder</span> <span class="variable">builder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Jackson2ObjectMapperBuilder</span>()</span><br><span class="line">                .indentOutput(<span class="literal">true</span>)</span><br><span class="line">                .dateFormat(<span class="keyword">new</span> <span class="title class_">SimpleDateFormat</span>(<span class="string">&quot;yyyy-MM-dd&quot;</span>))</span><br><span class="line">                .modulesToInstall(<span class="keyword">new</span> <span class="title class_">ParameterNamesModule</span>());</span><br><span class="line">        converters.add(<span class="keyword">new</span> <span class="title class_">MappingJackson2HttpMessageConverter</span>(builder.build()));</span><br><span class="line">        converters.add(<span class="keyword">new</span> <span class="title class_">MappingJackson2XmlHttpMessageConverter</span>(builder.createXmlMapper(<span class="literal">true</span>).build()));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol start="9">
+<li><p>@ModelAttribute: 可以注解在参数等地方，简单的理解就是作为一个模板覆盖或者实例化请求参数对象或者其他的对象。</p>
+</li>
+<li><p>@InitBinder: 可以继承<code>PropertyEditorSupport</code>自定义</p>
+</li>
+<li><p>@ExceptionHandler: 异常处理</p>
+</li>
+</ol>
+<p><code>@ExceptionHandler</code>,<code>@InitBinder</code>和<code>@ModelAttribute</code>应该使用在Base中，这样就可以做到跨控制器。如果我们需要更加全局的使用，则可以是用<code>@ControllerAdvice</code>或者<code>@RestControllerAdvice</code>。</p>
+<p>默认情况下，<code>@ControllerAdvice</code>方法适用于每个请求。当然也可以缩小范围:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Target all Controllers annotated with @RestController</span></span><br><span class="line"><span class="meta">@ControllerAdvice(annotations = RestController.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ExampleAdvice1</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Target all Controllers within specific packages</span></span><br><span class="line"><span class="meta">@ControllerAdvice(&quot;org.example.controllers&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ExampleAdvice2</span> &#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Target all Controllers assignable to specific classes</span></span><br><span class="line"><span class="meta">@ControllerAdvice(assignableTypes = &#123;ControllerInterface.class, AbstractController.class&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ExampleAdvice3</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-Controller"><span class="top-box-text">1. @Controller</span></a><ol class="top-box-child"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-Controller-1"><span class="top-box-text">1. @Controller</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#2-%E5%A3%B0%E6%98%8E"><span class="top-box-text">2. 声明</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#3-%E6%98%A0%E5%B0%84"><span class="top-box-text">3. 映射</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#4-%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95"><span class="top-box-text">4. 处理方法</span></a></li></ol></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2018/04/01/spring-mvc1/">
+          <h3 class="post-title">
+            下一篇：浅析Spring MVC:DispatcherServlet
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

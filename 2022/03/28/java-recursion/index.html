@@ -1,8 +1,213 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>Java递归不建议使用对象参数本身</title>
+<meta name="keywords" content="Java递归不建议使用对象参数本身, sevndata">
+<meta name="description" content="本文分享了Java在使用递归时，不建议使用对象参数本身。
+
+
+开发反映一个奇怪现象，菜单列表出现奇怪错误，此环境使用spring-data-jpa，现象如下：
+正常为：
+X:一级菜单A1-二级菜单A2
+
+Y:一级菜单A1-二级菜单A2-三级">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Java递归不建议使用对象参数本身">
+<meta property="og:description" content="本文分享了Java在使用递归时，不建议使用对象参数本身。
+
+
+开发反映一个奇怪现象，菜单列表出现奇怪错误，此环境使用spring-data-jpa，现象如下：
+正常为：
+X:一级菜单A1-二级菜单A2
+
+Y:一级菜单A1-二级菜单A2-三级">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">Java递归不建议使用对象参数本身</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-03-28</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Java/">
+              Java
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了Java在使用递归时，不建议使用对象参数本身。</p>
+<span id="more"></span>
+
+<p>开发反映一个奇怪现象，菜单列表出现奇怪错误，此环境使用<code>spring-data-jpa</code>，现象如下：</p>
+<p>正常为：</p>
+<pre><code>X:一级菜单A1-二级菜单A2
+
+Y:一级菜单A1-二级菜单A2-三级菜单A3</code></pre><p>错误显示：</p>
+<pre><code>X:二级菜单A2-三级菜单A3    //出错
+
+Y:一级菜单A1-二级菜单A2-三级菜单A3</code></pre><p>查看代码后，发现使用<code>setDetailData</code>此递归获取拼接的菜单名称。出错在<code>X</code>上，原因是如下：</p>
+<ol>
+<li>递归<code>X</code>对象，获取到菜单名称为<code>一级菜单A1-二级菜单A2</code>,正确</li>
+<li>递归<code>Y</code>对象，再递归到第二级时获取对象<code>menu</code>其实为<code>X</code>，拼接菜单名称使用<code>setDetailMenuName</code>，导致<code>X</code>对象发生改变，所以已经做完递归的<code>X</code>数据变化为错误数据<code>二级菜单A2-三级菜单A3</code>。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> String <span class="title function_">setDetailData</span><span class="params">(Menu menu)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (menu.getMenuPid() == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> menu.getDetailMenuName();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Optional&lt;Menu&gt; optionalMenu = getJpaRepository().findByMenuId(menu.getMenuPid());</span><br><span class="line">        <span class="keyword">if</span> (optionalMenu.isPresent()) &#123;</span><br><span class="line">            <span class="type">Menu</span> <span class="variable">menuTemp</span> <span class="operator">=</span> optionalMenu.get();</span><br><span class="line">            menuTemp.setDetailMenuName(menuTemp.getMenuTitle() + <span class="string">&quot;-&quot;</span> + menu.getDetailMenuName());</span><br><span class="line">            <span class="keyword">return</span> setDetailData(menuTemp);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> menu.getDetailMenuName();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>此错误类似于遍历数组时修改数组本身，此问题只要简单将<code>Menu</code>对象更换即可修复，如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> String <span class="title function_">setDetailData</span><span class="params">(String detailMenuName, Integer menuPid)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (menuPid == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> detailMenuName;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Optional&lt;Menu&gt; optionalMenu = getJpaRepository().findByMenuId(menuPid);</span><br><span class="line">        <span class="keyword">if</span> (optionalMenu.isPresent()) &#123;</span><br><span class="line">            <span class="type">Menu</span> <span class="variable">menuTemp</span> <span class="operator">=</span> optionalMenu.get();</span><br><span class="line">            <span class="keyword">if</span> (menuTemp.getMenuPid().equals(menuTemp.getMenuId())) &#123;</span><br><span class="line">                <span class="comment">//todo 死循环情况处理</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> setDetailData(menuTemp.getMenuTitle() + <span class="string">&quot;-&quot;</span> + detailMenuName, menuTemp.getMenuPid());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> detailMenuName;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+        </div>
+          
+        <div class="top-div">
+          
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2022/01/20/java-spf/">
+          <h3 class="post-title">
+            下一篇：防止任意邮件伪造-SPF
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

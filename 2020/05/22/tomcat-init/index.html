@@ -1,8 +1,207 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>Tomcat9安装使用</title>
+<meta name="keywords" content="Tomcat9安装使用, sevndata">
+<meta name="description" content="记录分享Tomcat9安装使用过程
+
+
+1. java环境安装使用openjdk,注意openjdk与jdk是有区别的。如使用到sun.misc.BASE64Decoder等jdk中有而openjdk中没有的则不能使用openjdk。
+12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Tomcat9安装使用">
+<meta property="og:description" content="记录分享Tomcat9安装使用过程
+
+
+1. java环境安装使用openjdk,注意openjdk与jdk是有区别的。如使用到sun.misc.BASE64Decoder等jdk中有而openjdk中没有的则不能使用openjdk。
+12">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">Tomcat9安装使用</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-05-22</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Tomcat/">
+              Tomcat
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>记录分享Tomcat9安装使用过程</p>
+<span id="more"></span>
+
+<h3 id="1-java环境安装"><a href="#1-java环境安装" class="headerlink" title="1. java环境安装"></a>1. java环境安装</h3><p>使用<code>openjdk</code>,注意<code>openjdk</code>与<code>jdk</code>是有区别的。如使用到<code>sun.misc.BASE64Decoder</code>等<code>jdk</code>中有而<code>openjdk</code>中没有的则不能使用<code>openjdk</code>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">yum search java</span><br><span class="line"></span><br><span class="line">yum install java-1.8.0-openjdk.x86_64</span><br><span class="line"></span><br><span class="line">java -version</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-tomcat使用"><a href="#2-tomcat使用" class="headerlink" title="2. tomcat使用"></a>2. tomcat使用</h3><h4 id="1-下载解压"><a href="#1-下载解压" class="headerlink" title="1. 下载解压"></a>1. 下载解压</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">wget https://mirror.bit.edu.cn/apache/tomcat/tomcat-9/v9.0.38/bin/apache-tomcat-9.0.38.tar.gz</span><br><span class="line"></span><br><span class="line">tar zxvf apache-tomcat-9.0.38.tar.gz</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="2-配置文件"><a href="#2-配置文件" class="headerlink" title="2. 配置文件"></a>2. 配置文件</h4><p>配置文件在conf下，列举俩个常用的配置，其他配置如<code>web.xml</code>,<code>logging.properties</code>,<code>catalina.properties</code>详见配置文件中内容。</p>
+<ol>
+<li>修改端口，修改server.xml</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;Connector port=&quot;80&quot; protocol=&quot;HTTP/1.1&quot;</span><br><span class="line">               connectionTimeout=&quot;20000&quot;</span><br><span class="line">               redirectPort=&quot;8443&quot; /&gt;</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>https配置，修改server.xml</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;Connector port=&quot;443&quot; protocol=&quot;HTTP/1.1&quot;</span><br><span class="line">maxThreads=&quot;150&quot; SSLEnabled=&quot;true&quot; scheme=&quot;https&quot; secure=&quot;true&quot;</span><br><span class="line">keystoreFile=&quot;/home/webapp/xxxx.pfx&quot;</span><br><span class="line">keystoreType=&quot;PKCS12&quot;</span><br><span class="line">keystorePass=&quot;xxxxxxx&quot;</span><br><span class="line">clientAuth=&quot;false&quot; sslProtocol=&quot;TLS&quot; /&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-设置tomcat不产生大量日志"><a href="#3-设置tomcat不产生大量日志" class="headerlink" title="3. 设置tomcat不产生大量日志"></a>3. 设置tomcat不产生大量日志</h4><p>生产环境中因会有大量业务日志生成，tomcat也会产生大量日志，通常我们会有日志系统或者应用日志，不需要tomcat产生日志，可以设置tomcat不产生大量日志。修改<code>bin/catalina.sh</code>中：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">if [ -z &quot;$CATALINA_OUT&quot; ] ; then</span><br><span class="line">  CATALINA_OUT=/dev/null</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-启动与停止"><a href="#4-启动与停止" class="headerlink" title="4. 启动与停止"></a>4. 启动与停止</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">./startup.sh</span><br><span class="line"></span><br><span class="line">./shutdown.sh</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-java%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85"><span class="top-box-text">1. java环境安装</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#2-tomcat%E4%BD%BF%E7%94%A8"><span class="top-box-text">2. tomcat使用</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/04/29/linux-sh/">
+          <h3 class="post-title">
+            下一篇：CentOS7开机自启动
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

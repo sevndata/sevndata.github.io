@@ -1,16 +1,222 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/archive.swig' as archive_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%}
-  {%- if page.archive -%}
-    {{ __('menu.archives') }} - {{ config.title }}
-  {%- elif page.tag -%}
-    {{ page.tag }} · {{ config.title }}
-  {%- elif page.category -%}
-    {{ page.category }} · {{ config.title }}
-  {%- endif -%}
-{%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ archive_template.render() }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>sevndata</title>
+<meta name="keywords" content="sevndata, sevndata">
+<meta name="description" content="blog">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="sevndata">
+<meta property="og:description" content="blog">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+<div class="content-container">
+
+  <div class="current-tag-container">
+    <h2 class="title">
+      <i class="icon icon-pricetags-outline"></i> Spring
+    </h2>
+  </div>
+
+  
+
+<section class="post-item">
+    <div class="content">
+      <a href="/2021/01/25/spring-cors/">
+        <h2 class="post-title">Spring CORS原理解析</h2>
+      </a>
+      <a href="/2021/01/25/spring-cors/">
+          <div class="post-abstract">
+            
+			    本文分享了跨域，CORS原理解析等内容。阐述了CORS在Spring MVC和Spring Security中实现原理。
+
+
+1. 同源策略同源策略是一种约定，缺少同源策略浏览器容易受到XSS，CSFR等攻击，为了安全，浏览器会限制非同源的
+            
+          </div>
+      </a>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2021-01-25</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+
+                Spring
+                
+                  ，
+                
+            
+
+                CORS
+                
+            
+          </span>
+        
+      </div>
+    </div>
+  </section>
+
+
+
+<section class="post-item">
+    <div class="content">
+      <a href="/2020/05/28/mysql-sharding/">
+        <h2 class="post-title">ShardingSphere-JDBC进行数据分片</h2>
+      </a>
+      <a href="/2020/05/28/mysql-sharding/">
+          <div class="post-abstract">
+            
+			    分享在实战中分表分库的策略。
+
+
+1. 数据量评估与策略数据量评估和并发评估是项目的至关重要的环节，数据量的多少决定项目的架构，技术的选取。
+很多同学往往会进入误区，认为某个技术就是比另一个技术好，微服务就是比单系统好。而事实上技术最终都可
+            
+          </div>
+      </a>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-05-28</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+
+                MySQL
+                
+                  ，
+                
+            
+
+                Spring
+                
+            
+          </span>
+        
+      </div>
+    </div>
+  </section>
+
+
+
+
+
+
+</div>
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = false; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+
+

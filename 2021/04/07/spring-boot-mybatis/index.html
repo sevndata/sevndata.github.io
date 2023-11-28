@@ -1,8 +1,230 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>Spring Boot自定义框架starter方式引入</title>
+<meta name="keywords" content="Spring Boot自定义框架starter方式引入, sevndata">
+<meta name="description" content="本文分享了Spring Boot自定义框架starter方式引入，以mybatis-spring-boot-starter源码作为示例。
+
+
+1. 简介分享了如何优雅的将自定义框架以starter形式引入到项目中，本文以mybatis-sp">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Spring Boot自定义框架starter方式引入">
+<meta property="og:description" content="本文分享了Spring Boot自定义框架starter方式引入，以mybatis-spring-boot-starter源码作为示例。
+
+
+1. 简介分享了如何优雅的将自定义框架以starter形式引入到项目中，本文以mybatis-sp">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">Spring Boot自定义框架starter方式引入</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2021-04-07</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Mybatis/">
+              Mybatis
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/Spring-Boot/">
+              Spring Boot
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了Spring Boot自定义框架starter方式引入，以<code>mybatis-spring-boot-starter</code>源码作为示例。</p>
+<span id="more"></span>
+
+<h2 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h2><p>分享了如何优雅的将自定义框架以<code>starter</code>形式引入到项目中，本文以<code>mybatis-spring-boot-starter</code>源码作为示例。</p>
+<h2 id="2-命名"><a href="#2-命名" class="headerlink" title="2. 命名"></a>2. 命名</h2><p><code>Spring</code>官方建议了<code>artifactId</code>的命名规则，可遵循建议命名规则，如下：</p>
+<ol>
+<li>官方通常命名为<code>spring-boot-starter-&#123;name&#125;</code>，如：<code>spring-boot-starter-jdbc</code>,<code>spring-data-jpa</code>。</li>
+<li>建议非官方<code>starter</code>命名遵循<code>&#123;name&#125;-spring-boot-starter</code>，如<code>mybatis-spring-boot-start</code>。</li>
+</ol>
+<h2 id="3-mybatis-spring-boot-start"><a href="#3-mybatis-spring-boot-start" class="headerlink" title="3. mybatis-spring-boot-start"></a>3. mybatis-spring-boot-start</h2><p><code>mybatis-spring-boot-start</code>为一个空的项目，只有<code>pom.xml</code>引入了<code>mybatis-spring-boot-autoconfigure</code>与其他一些依赖项。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-jdbc<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.mybatis.spring.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>mybatis-spring-boot-autoconfigure<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.mybatis<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>mybatis<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.mybatis<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>mybatis-spring<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h2 id="4-mybatis-spring-boot-autoconfigure"><a href="#4-mybatis-spring-boot-autoconfigure" class="headerlink" title="4. mybatis-spring-boot-autoconfigure"></a>4. mybatis-spring-boot-autoconfigure</h2><p>在<code>mybatis-spring-boot-autoconfigure</code>中，可以看到一些核心文件<code>MybatisProperties</code>,<code>MybatisAutoConfiguration</code>,<code>ConfigurationCustomizer</code>,<br><code>MybatisLanguageDriverAutoConfiguration</code>,<code>SpringBootVFS</code>,<code>spring.factories</code>,<br><code>additional-spring-configuration-metadata.json</code>等。下面将一一进行查看。</p>
+<h2 id="5-Spring-Boot自定义配置"><a href="#5-Spring-Boot自定义配置" class="headerlink" title="5. Spring Boot自定义配置"></a>5. Spring Boot自定义配置</h2><ol>
+<li>spring.factories<br>在<code>spring-core</code>中<code>SpringFactoriesLoader</code>遍历<code>META-INF/spring.factories</code>，此配置实例化了<code>MybatisLanguageDriverAutoConfiguration</code>和<code>MybatisAutoConfiguration</code>并配置到<code>Spring</code>中。</li>
+</ol>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.boot.autoconfigure.EnableAutoConfiguration=\</span><br><span class="line">org.mybatis.spring.boot.autoconfigure.MybatisLanguageDriverAutoConfiguration,\</span><br><span class="line">org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>MybatisProperties<br>定义了一些<code>mybatis</code>使用的参数，并提供入口，可由开发者通过<code>application.properties</code>配置<code>mybatis</code>参数，前缀为<code>mybatis</code>。如：<code>mybatis.configLocation=xmlPath</code></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@ConfigurationProperties(prefix = MybatisProperties.MYBATIS_PREFIX)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MybatisProperties</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">MYBATIS_PREFIX</span> <span class="operator">=</span> <span class="string">&quot;mybatis&quot;</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">ResourcePatternResolver</span> <span class="variable">resourceResolver</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PathMatchingResourcePatternResolver</span>();</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Location of MyBatis xml config file.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> String configLocation;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>ConfigurationCustomizer<br>提供函数式接口，可由开发者实现接口来自定义配置。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@FunctionalInterface</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">ConfigurationCustomizer</span> &#123;</span><br><span class="line">  <span class="keyword">void</span> <span class="title function_">customize</span><span class="params">(Configuration configuration)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>Metadata<br><code>metadata.json</code>文件中包含了支持的所有配置属性的详细信息，可以帮助开发者在使用<code>application.properties</code>或者<code>application.yml</code>提供上下文提示等信息。</li>
+</ol>
+<p>模仿以上几个关键点，就可以自定义<code>starter</code>的配置，使开发者能够便利的进行配置。</p>
+<h2 id="6-Mybatis的自动配置"><a href="#6-Mybatis的自动配置" class="headerlink" title="6. Mybatis的自动配置"></a>6. Mybatis的自动配置</h2><ol>
+<li>MybatisAutoConfiguration</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@org</span>.springframework.context.annotation.Configuration</span><br><span class="line"><span class="comment">//有这俩个文件配置生效</span></span><br><span class="line"><span class="meta">@ConditionalOnClass(&#123; SqlSessionFactory.class, SqlSessionFactoryBean.class &#125;)</span> </span><br><span class="line"><span class="comment">//有主DataSource生效</span></span><br><span class="line"><span class="meta">@ConditionalOnSingleCandidate(DataSource.class)</span> </span><br><span class="line"><span class="comment">//开启配置properties</span></span><br><span class="line"><span class="meta">@EnableConfigurationProperties(MybatisProperties.class)</span> </span><br><span class="line"><span class="comment">//配置之后配置</span></span><br><span class="line"><span class="meta">@AutoConfigureAfter(&#123; DataSourceAutoConfiguration.class, MybatisLanguageDriverAutoConfiguration.class &#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MybatisAutoConfiguration</span> <span class="keyword">implements</span> <span class="title class_">InitializingBean</span> &#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">Logger</span> <span class="variable">logger</span> <span class="operator">=</span> LoggerFactory.getLogger(MybatisAutoConfiguration.class);</span><br><span class="line">  <span class="comment">//开发者配置properties</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> MybatisProperties properties;</span><br><span class="line">  <span class="comment">//拦截器</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Interceptor[] interceptors;</span><br><span class="line">  <span class="comment">//类型转换处理器</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> TypeHandler[] typeHandlers;</span><br><span class="line">  <span class="comment">//语言驱动</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> LanguageDriver[] languageDrivers;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> ResourceLoader resourceLoader;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> DatabaseIdProvider databaseIdProvider;</span><br><span class="line">  <span class="comment">//开发者自定义的配置Configuration</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> List&lt;ConfigurationCustomizer&gt; configurationCustomizers;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">//检查配置是否存在</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterPropertiesSet</span><span class="params">()</span> &#123;</span><br><span class="line">    checkConfigFileExists();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">checkConfigFileExists</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">this</span>.properties.isCheckConfigLocation() &amp;&amp; StringUtils.hasText(<span class="built_in">this</span>.properties.getConfigLocation())) &#123;</span><br><span class="line">      <span class="type">Resource</span> <span class="variable">resource</span> <span class="operator">=</span> <span class="built_in">this</span>.resourceLoader.getResource(<span class="built_in">this</span>.properties.getConfigLocation());</span><br><span class="line">      Assert.state(resource.exists(),</span><br><span class="line">          <span class="string">&quot;Cannot find config location: &quot;</span> + resource + <span class="string">&quot; (please add config file or check your Mybatis configuration)&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Bean</span></span><br><span class="line">  <span class="comment">//容器中没有SqlSessionFactory对象才会实例化，优先使用开发者自定义SqlSessionFactory</span></span><br><span class="line">  <span class="meta">@ConditionalOnMissingBean</span>  </span><br><span class="line">  <span class="keyword">public</span> SqlSessionFactory <span class="title function_">sqlSessionFactory</span><span class="params">(DataSource dataSource)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">    <span class="comment">//初始化</span></span><br><span class="line">    <span class="type">SqlSessionFactoryBean</span> <span class="variable">factory</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SqlSessionFactoryBean</span>();</span><br><span class="line">    <span class="comment">//设置开发者dataSource</span></span><br><span class="line">    factory.setDataSource(dataSource);</span><br><span class="line">    <span class="comment">//设置VFS，读取资源文件</span></span><br><span class="line">    factory.setVfs(SpringBootVFS.class);</span><br><span class="line">    <span class="comment">//设置开发者配置的xml路径</span></span><br><span class="line">    <span class="keyword">if</span> (StringUtils.hasText(<span class="built_in">this</span>.properties.getConfigLocation())) &#123;</span><br><span class="line">      factory.setConfigLocation(<span class="built_in">this</span>.resourceLoader.getResource(<span class="built_in">this</span>.properties.getConfigLocation()));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//处理配置</span></span><br><span class="line">    applyConfiguration(factory);</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">//通过开发者参数设置SqlSessionFactory</span></span><br><span class="line">    <span class="keyword">if</span> (!ObjectUtils.isEmpty(<span class="built_in">this</span>.properties.resolveMapperLocations())) &#123;</span><br><span class="line">      factory.setMapperLocations(<span class="built_in">this</span>.properties.resolveMapperLocations());</span><br><span class="line">    &#125;</span><br><span class="line">    Set&lt;String&gt; factoryPropertyNames = Stream</span><br><span class="line">        .of(<span class="keyword">new</span> <span class="title class_">BeanWrapperImpl</span>(SqlSessionFactoryBean.class).getPropertyDescriptors()).map(PropertyDescriptor::getName)</span><br><span class="line">        .collect(Collectors.toSet());</span><br><span class="line">    <span class="comment">//初始化设置动态SQL语言驱动</span></span><br><span class="line">    Class&lt;? <span class="keyword">extends</span> <span class="title class_">LanguageDriver</span>&gt; defaultLanguageDriver = <span class="built_in">this</span>.properties.getDefaultScriptingLanguageDriver();</span><br><span class="line">    <span class="keyword">if</span> (factoryPropertyNames.contains(<span class="string">&quot;scriptingLanguageDrivers&quot;</span>) &amp;&amp; !ObjectUtils.isEmpty(<span class="built_in">this</span>.languageDrivers)) &#123;</span><br><span class="line">      <span class="comment">// Need to mybatis-spring 2.0.2+</span></span><br><span class="line">      factory.setScriptingLanguageDrivers(<span class="built_in">this</span>.languageDrivers);</span><br><span class="line">      <span class="keyword">if</span> (defaultLanguageDriver == <span class="literal">null</span> &amp;&amp; <span class="built_in">this</span>.languageDrivers.length == <span class="number">1</span>) &#123;</span><br><span class="line">        defaultLanguageDriver = <span class="built_in">this</span>.languageDrivers[<span class="number">0</span>].getClass();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (factoryPropertyNames.contains(<span class="string">&quot;defaultScriptingLanguageDriver&quot;</span>)) &#123;</span><br><span class="line">      <span class="comment">// Need to mybatis-spring 2.0.2+</span></span><br><span class="line">      factory.setDefaultScriptingLanguageDriver(defaultLanguageDriver);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//最终获取到SqlSessionFactory</span></span><br><span class="line">    <span class="keyword">return</span> factory.getObject();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//处理配置</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">applyConfiguration</span><span class="params">(SqlSessionFactoryBean factory)</span> &#123;</span><br><span class="line">    <span class="type">Configuration</span> <span class="variable">configuration</span> <span class="operator">=</span> <span class="built_in">this</span>.properties.getConfiguration();</span><br><span class="line">    <span class="comment">///配置文件中读取配置</span></span><br><span class="line">    <span class="keyword">if</span> (configuration == <span class="literal">null</span> &amp;&amp; !StringUtils.hasText(<span class="built_in">this</span>.properties.getConfigLocation())) &#123;</span><br><span class="line">      configuration = <span class="keyword">new</span> <span class="title class_">Configuration</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//从开放的自定义接口实现中读取配置</span></span><br><span class="line">    <span class="keyword">if</span> (configuration != <span class="literal">null</span> &amp;&amp; !CollectionUtils.isEmpty(<span class="built_in">this</span>.configurationCustomizers)) &#123;</span><br><span class="line">      <span class="keyword">for</span> (ConfigurationCustomizer customizer : <span class="built_in">this</span>.configurationCustomizers) &#123;</span><br><span class="line">        customizer.customize(configuration);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//设置配置</span></span><br><span class="line">    factory.setConfiguration(configuration);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Bean</span></span><br><span class="line">  <span class="comment">//容器中没有该实例则初始化SqlSessionTemplate，优先使用开发者自定义的SqlSessionTemplate</span></span><br><span class="line">  <span class="meta">@ConditionalOnMissingBean</span>  </span><br><span class="line">  <span class="keyword">public</span> SqlSessionTemplate <span class="title function_">sqlSessionTemplate</span><span class="params">(SqlSessionFactory sqlSessionFactory)</span> &#123;</span><br><span class="line">    <span class="comment">//指定执行器类型</span></span><br><span class="line">    <span class="type">ExecutorType</span> <span class="variable">executorType</span> <span class="operator">=</span> <span class="built_in">this</span>.properties.getExecutorType();</span><br><span class="line">    <span class="keyword">if</span> (executorType != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">SqlSessionTemplate</span>(sqlSessionFactory, executorType);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">SqlSessionTemplate</span>(sqlSessionFactory);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">AutoConfiguredMapperScannerRegistrar</span> <span class="keyword">implements</span> <span class="title class_">BeanFactoryAware</span>, ImportBeanDefinitionRegistrar &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> BeanFactory beanFactory;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">registerBeanDefinitions</span><span class="params">(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)</span> &#123;</span><br><span class="line">      <span class="comment">//必须存在 @EnableAutoConfiguration 注解</span></span><br><span class="line">      <span class="keyword">if</span> (!AutoConfigurationPackages.has(<span class="built_in">this</span>.beanFactory)) &#123;</span><br><span class="line">        logger.debug(<span class="string">&quot;Could not determine auto-configuration package, automatic mapper scanning disabled.&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      logger.debug(<span class="string">&quot;Searching for mappers annotated with @Mapper&quot;</span>);</span><br><span class="line">      <span class="comment">//@EnableAutoConfiguration 注解 指定类的路径</span></span><br><span class="line">      List&lt;String&gt; packages = AutoConfigurationPackages.get(<span class="built_in">this</span>.beanFactory);</span><br><span class="line">      <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">        packages.forEach(pkg -&gt; logger.debug(<span class="string">&quot;Using auto-configuration base package &#x27;&#123;&#125;&#x27;&quot;</span>, pkg));</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">//扫描注册 @Mapper</span></span><br><span class="line">      <span class="type">BeanDefinitionBuilder</span> <span class="variable">builder</span> <span class="operator">=</span> BeanDefinitionBuilder.genericBeanDefinition(MapperScannerConfigurer.class);</span><br><span class="line">      builder.addPropertyValue(<span class="string">&quot;processPropertyPlaceHolders&quot;</span>, <span class="literal">true</span>);</span><br><span class="line">      builder.addPropertyValue(<span class="string">&quot;annotationClass&quot;</span>, Mapper.class);</span><br><span class="line">      builder.addPropertyValue(<span class="string">&quot;basePackage&quot;</span>, StringUtils.collectionToCommaDelimitedString(packages));</span><br><span class="line">      <span class="type">BeanWrapper</span> <span class="variable">beanWrapper</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BeanWrapperImpl</span>(MapperScannerConfigurer.class);</span><br><span class="line">      Stream.of(beanWrapper.getPropertyDescriptors())</span><br><span class="line">          <span class="comment">// Need to mybatis-spring 2.0.2+</span></span><br><span class="line">          .filter(x -&gt; x.getName().equals(<span class="string">&quot;lazyInitialization&quot;</span>)).findAny()</span><br><span class="line">          .ifPresent(x -&gt; builder.addPropertyValue(<span class="string">&quot;lazyInitialization&quot;</span>, <span class="string">&quot;$&#123;mybatis.lazy-initialization:false&#125;&quot;</span>));</span><br><span class="line">      registry.registerBeanDefinition(MapperScannerConfigurer.class.getName(), builder.getBeanDefinition());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setBeanFactory</span><span class="params">(BeanFactory beanFactory)</span> &#123;</span><br><span class="line">      <span class="built_in">this</span>.beanFactory = beanFactory;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@org</span>.springframework.context.annotation.Configuration</span><br><span class="line">  <span class="meta">@Import(AutoConfiguredMapperScannerRegistrar.class)</span></span><br><span class="line">  <span class="comment">//没有MapperFactoryBean，MapperScannerConfigurer时扫描注册才会生效</span></span><br><span class="line">  <span class="meta">@ConditionalOnMissingBean(&#123; MapperFactoryBean.class, MapperScannerConfigurer.class &#125;)</span> </span><br><span class="line">  <span class="comment">//未找到注册mapper的配置，如@MapperScan, MapperFactoryBean和MapperScannerConfigurer</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">MapperScannerRegistrarNotFoundConfiguration</span> <span class="keyword">implements</span> <span class="title class_">InitializingBean</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">afterPropertiesSet</span><span class="params">()</span> &#123;</span><br><span class="line">      logger.debug(</span><br><span class="line">          <span class="string">&quot;Not found configuration for registering mapper bean using @MapperScan, MapperFactoryBean and MapperScannerConfigurer.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>MybatisLanguageDriverAutoConfiguration</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ConditionalOnClass(LanguageDriver.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MybatisLanguageDriverAutoConfiguration</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">CONFIGURATION_PROPERTY_PREFIX</span> <span class="operator">=</span> <span class="string">&quot;mybatis.scripting-language-driver&quot;</span>;</span><br><span class="line">  <span class="comment">//FreeMarkerLanguageDriver,FreeMarker动态sql语言驱动</span></span><br><span class="line">  <span class="meta">@Configuration</span></span><br><span class="line">  <span class="meta">@ConditionalOnClass(FreeMarkerLanguageDriver.class)</span></span><br><span class="line">  <span class="meta">@ConditionalOnMissingClass(&quot;org.mybatis.scripting.freemarker.FreeMarkerLanguageDriverConfig&quot;)</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">LegacyFreeMarkerConfiguration</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">    FreeMarkerLanguageDriver <span class="title function_">freeMarkerLanguageDriver</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FreeMarkerLanguageDriver</span>();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="meta">@Configuration</span></span><br><span class="line">  <span class="meta">@ConditionalOnClass(&#123; FreeMarkerLanguageDriver.class, FreeMarkerLanguageDriverConfig.class &#125;)</span></span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">class</span> <span class="title class_">FreeMarkerConfiguration</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">    FreeMarkerLanguageDriver <span class="title function_">freeMarkerLanguageDriver</span><span class="params">(FreeMarkerLanguageDriverConfig config)</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">FreeMarkerLanguageDriver</span>(config);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">    <span class="meta">@ConfigurationProperties(CONFIGURATION_PROPERTY_PREFIX + &quot;.freemarker&quot;)</span></span><br><span class="line">    <span class="keyword">public</span> FreeMarkerLanguageDriverConfig <span class="title function_">freeMarkerLanguageDriverConfig</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> FreeMarkerLanguageDriverConfig.newInstance();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>SpringBootVFS</li>
+</ol>
+<p><code>mybatis</code>中<code>VFS</code>的默认实现<code>DefaultVFS</code>无法读取<code>Spring Boot</code>嵌套jar的资源文件，所以更换为SpringBootVFS读取。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> List&lt;String&gt; <span class="title function_">list</span><span class="params">(URL url, String path)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">    <span class="type">String</span> <span class="variable">urlString</span> <span class="operator">=</span> url.toString();</span><br><span class="line">    <span class="type">String</span> <span class="variable">baseUrlString</span> <span class="operator">=</span> urlString.endsWith(<span class="string">&quot;/&quot;</span>) ? urlString : urlString.concat(<span class="string">&quot;/&quot;</span>);</span><br><span class="line">    Resource[] resources = resourceResolver.getResources(baseUrlString + <span class="string">&quot;**/*.class&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> Stream.of(resources).map(resource -&gt; preserveSubpackageName(baseUrlString, resource, path))</span><br><span class="line">        .collect(Collectors.toList());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title function_">preserveSubpackageName</span><span class="params">(<span class="keyword">final</span> String baseUrlString, <span class="keyword">final</span> Resource resource,</span></span><br><span class="line"><span class="params">    <span class="keyword">final</span> String rootPath)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> rootPath + (rootPath.endsWith(<span class="string">&quot;/&quot;</span>) ? <span class="string">&quot;&quot;</span> : <span class="string">&quot;/&quot;</span>)</span><br><span class="line">            + resource.getURL().toString().substring(baseUrlString.length());</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">UncheckedIOException</span>(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E7%AE%80%E4%BB%8B"><span class="top-box-text">1. 简介</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-%E5%91%BD%E5%90%8D"><span class="top-box-text">2. 命名</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-mybatis-spring-boot-start"><span class="top-box-text">3. mybatis-spring-boot-start</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-mybatis-spring-boot-autoconfigure"><span class="top-box-text">4. mybatis-spring-boot-autoconfigure</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#5-Spring-Boot%E8%87%AA%E5%AE%9A%E4%B9%89%E9%85%8D%E7%BD%AE"><span class="top-box-text">5. Spring Boot自定义配置</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#6-Mybatis%E7%9A%84%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE"><span class="top-box-text">6. Mybatis的自动配置</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2021/03/30/algo-totp/">
+          <h3 class="post-title">
+            下一篇：支付动态码设计及TOTP算法Luhm算法过程解析
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

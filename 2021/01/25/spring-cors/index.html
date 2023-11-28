@@ -1,8 +1,239 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>Spring CORS原理解析</title>
+<meta name="keywords" content="Spring CORS原理解析, sevndata">
+<meta name="description" content="本文分享了跨域，CORS原理解析等内容。阐述了CORS在Spring MVC和Spring Security中实现原理。
+
+
+1. 同源策略同源策略是一种约定，缺少同源策略浏览器容易受到XSS，CSFR等攻击，为了安全，浏览器会限制非同源的">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Spring CORS原理解析">
+<meta property="og:description" content="本文分享了跨域，CORS原理解析等内容。阐述了CORS在Spring MVC和Spring Security中实现原理。
+
+
+1. 同源策略同源策略是一种约定，缺少同源策略浏览器容易受到XSS，CSFR等攻击，为了安全，浏览器会限制非同源的">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">Spring CORS原理解析</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2021-01-25</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Spring/">
+              Spring
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/CORS/">
+              CORS
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了跨域，CORS原理解析等内容。阐述了CORS在Spring MVC和Spring Security中实现原理。</p>
+<span id="more"></span>
+
+<h2 id="1-同源策略"><a href="#1-同源策略" class="headerlink" title="1. 同源策略"></a>1. 同源策略</h2><p>同源策略是一种约定，缺少同源策略浏览器容易受到XSS，CSFR等攻击，为了安全，浏览器会限制非同源的请求。同源为协议，域名，端口三者相同，任意一者不同则为非同源。</p>
+<h2 id="2-跨域方案"><a href="#2-跨域方案" class="headerlink" title="2. 跨域方案"></a>2. 跨域方案</h2><ol>
+<li>通过<code>nginx</code>代理转发。避开跨域请求，使浏览器访问同源，<code>nginx</code>转发到不同源。</li>
+<li>JSONP，利用<code>Ajax</code>请求会受到同源策略限制，而<code>script</code>标签请求不会，绕过同源策略。但只支持<code>GET</code>，同时是不安全的。</li>
+<li>CORS是跨域资源共享，对于简单请求只要服务器返回正确的响应头即可，非简单请求需要先进行预检请求，要求首先使用<code>Fetch</code>发起<code>OPTIONS</code>预检请求到服务器，通过<code>Access-Control-Allow-Origin</code>以获知服务器是否允许该请求。</li>
+<li>websocket，document.domain等其他方案。</li>
+</ol>
+<h2 id="3-CORS简介"><a href="#3-CORS简介" class="headerlink" title="3. CORS简介"></a>3. CORS简介</h2><p>跨域资源共享(CORS) 是一种机制，它使用额外的 HTTP 头来告诉浏览器 让运行在一个 origin (domain) 上的Web应用被准许访问来自不同源服务器上的指定的资源。当一个资源从与该资源本身所在的服务器不同的域、协议或端口请求一个资源时，资源会发起一个跨域 HTTP 请求。 跨域资源共享（ CORS ）机制允许 Web 应用服务器进行跨域访问控制，从而使跨域数据传输得以安全进行。现代浏览器支持在 API 容器中（例如 XMLHttpRequest 或 Fetch ）使用 CORS，以降低跨域 HTTP 请求所带来的风险。</p>
+<p>通常配置<code>CorsConfigurationSource</code>即可实现CORS设置。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="keyword">public</span> CorsConfigurationSource <span class="title function_">corsConfigurationSource</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="type">CorsConfiguration</span> <span class="variable">configuration</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CorsConfiguration</span>();</span><br><span class="line">  configuration.applyPermitDefaultValues();</span><br><span class="line">  configuration.addAllowedHeader(<span class="string">&quot;Authentication-Info&quot;</span>);</span><br><span class="line">  configuration.addExposedHeader(<span class="string">&quot;Authentication-Info&quot;</span>);</span><br><span class="line">  configuration.setAllowCredentials(<span class="literal">true</span>);</span><br><span class="line">  <span class="type">UrlBasedCorsConfigurationSource</span> <span class="variable">source</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UrlBasedCorsConfigurationSource</span>();</span><br><span class="line">  source.registerCorsConfiguration(<span class="string">&quot;/**&quot;</span>, configuration);</span><br><span class="line">  <span class="keyword">return</span> source;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-Spring-MVC"><a href="#4-Spring-MVC" class="headerlink" title="4. Spring MVC"></a>4. Spring MVC</h2><p>当<code>OPTIONS</code>预检请求发生时，<code>HandlerMapping.getHandler</code>会得到<code>PreFlightHandler</code>作为请求<code>handler</code>。更多详细内容可先理解<code>Spring MVC</code>如何处理一个请求。</p>
+<p><code>Spring MVC</code>是如何获取的该<code>handler</code>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> HandlerExecutionChain <span class="title function_">getHandler</span><span class="params">(HttpServletRequest request)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	<span class="type">Object</span> <span class="variable">handler</span> <span class="operator">=</span> getHandlerInternal(request);</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		handler = getDefaultHandler();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (handler == <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// Bean name or resolved handler?</span></span><br><span class="line">	<span class="keyword">if</span> (handler <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">		<span class="type">String</span> <span class="variable">handlerName</span> <span class="operator">=</span> (String) handler;</span><br><span class="line">		handler = obtainApplicationContext().getBean(handlerName);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="type">HandlerExecutionChain</span> <span class="variable">executionChain</span> <span class="operator">=</span> getHandlerExecutionChain(handler, request);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">		logger.trace(<span class="string">&quot;Mapped to &quot;</span> + handler);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (logger.isDebugEnabled() &amp;&amp; !request.getDispatcherType().equals(DispatcherType.ASYNC)) &#123;</span><br><span class="line">		logger.debug(<span class="string">&quot;Mapped to &quot;</span> + executionChain.getHandler());</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//如果是预检请求则获取HandlerExecutionChain</span></span><br><span class="line">	<span class="keyword">if</span> (hasCorsConfigurationSource(handler)) &#123;</span><br><span class="line">		<span class="comment">//从配置的corsConfigurationSource中获取CorsConfiguration</span></span><br><span class="line">		<span class="type">CorsConfiguration</span> <span class="variable">config</span> <span class="operator">=</span> (<span class="built_in">this</span>.corsConfigurationSource != <span class="literal">null</span> ? <span class="built_in">this</span>.corsConfigurationSource.getCorsConfiguration(request) : <span class="literal">null</span>);</span><br><span class="line">		<span class="comment">//从注解中获取CorsConfiguration</span></span><br><span class="line">		<span class="type">CorsConfiguration</span> <span class="variable">handlerConfig</span> <span class="operator">=</span> getCorsConfiguration(handler, request);</span><br><span class="line">		<span class="comment">//CorsConfiguration选取，优先获取corsConfigurationSource中CorsConfiguration</span></span><br><span class="line">		config = (config != <span class="literal">null</span> ? config.combine(handlerConfig) : handlerConfig);</span><br><span class="line">		<span class="comment">//配置获取CorsHandlerExecutionChain,详细查看下一块代码</span></span><br><span class="line">		executionChain = getCorsHandlerExecutionChain(request, executionChain, config);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> executionChain;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> HandlerExecutionChain <span class="title function_">getCorsHandlerExecutionChain</span><span class="params">(HttpServletRequest request,</span></span><br><span class="line"><span class="params">															 HandlerExecutionChain chain, <span class="meta">@Nullable</span> CorsConfiguration config)</span> &#123;</span><br><span class="line">	<span class="comment">//是否是预检请求</span></span><br><span class="line">	<span class="comment">//return (HttpMethod.OPTIONS.matches(request.getMethod()) &amp;&amp;</span></span><br><span class="line">	<span class="comment">//		request.getHeader(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD) != null);   </span></span><br><span class="line">	<span class="comment">//public static final String ACCESS_CONTROL_REQUEST_METHOD = &quot;Access-Control-Request-Method&quot;;         </span></span><br><span class="line">	<span class="keyword">if</span> (CorsUtils.isPreFlightRequest(request)) &#123;</span><br><span class="line">		<span class="comment">//创建HandlerExecutionChain</span></span><br><span class="line">		HandlerInterceptor[] interceptors = chain.getInterceptors();</span><br><span class="line">		chain = <span class="keyword">new</span> <span class="title class_">HandlerExecutionChain</span>(<span class="keyword">new</span> <span class="title class_">PreFlightHandler</span>(config), interceptors);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> &#123;</span><br><span class="line">		<span class="comment">//添加CorsInterceptor</span></span><br><span class="line">		chain.addInterceptor(<span class="number">0</span>, <span class="keyword">new</span> <span class="title class_">CorsInterceptor</span>(config));</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//PreFlightHandler和CorsInterceprtor都是调用corsProcessor.processRequest</span></span><br><span class="line">	<span class="keyword">return</span> chain;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>CorsProcessor</code>是一个<code>interface</code>，他的默认实现是<code>DefaultCorsProcessor</code>，来看<code>DefaultCorsProcessor</code>:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="type">boolean</span> <span class="title function_">processRequest</span><span class="params">(<span class="meta">@Nullable</span> CorsConfiguration config, HttpServletRequest request,</span></span><br><span class="line"><span class="params">							  HttpServletResponse response)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">	<span class="comment">//Origin</span></span><br><span class="line">	response.addHeader(HttpHeaders.VARY, HttpHeaders.ORIGIN);</span><br><span class="line">	<span class="comment">//Access-Control-Request-Method</span></span><br><span class="line">	response.addHeader(HttpHeaders.VARY, HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD);</span><br><span class="line">	<span class="comment">//AAccess-Control-Request-Headers</span></span><br><span class="line">	response.addHeader(HttpHeaders.VARY, HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS);</span><br><span class="line"></span><br><span class="line">	<span class="comment">//非Cors请求通过</span></span><br><span class="line">	<span class="keyword">if</span> (!CorsUtils.isCorsRequest(request)) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//已经包含了Access-Control-Allow-Origin通过</span></span><br><span class="line">	<span class="keyword">if</span> (response.getHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN) != <span class="literal">null</span>) &#123;</span><br><span class="line">		logger.trace(<span class="string">&quot;Skip: response already contains \&quot;Access-Control-Allow-Origin\&quot;&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="type">boolean</span> <span class="variable">preFlightRequest</span> <span class="operator">=</span> CorsUtils.isPreFlightRequest(request);</span><br><span class="line">	<span class="keyword">if</span> (config == <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span> (preFlightRequest) &#123;</span><br><span class="line">			<span class="comment">//没有配置CorsConfiguration的预请求返回403</span></span><br><span class="line">			<span class="comment">//response.setStatusCode(HttpStatus.FORBIDDEN);  FORBIDDEN(403, &quot;Forbidden&quot;)</span></span><br><span class="line">			<span class="comment">//response.getBody().write(&quot;Invalid CORS request&quot;.getBytes(StandardCharsets.UTF_8));</span></span><br><span class="line">			<span class="comment">//response.flush();</span></span><br><span class="line">			rejectRequest(<span class="keyword">new</span> <span class="title class_">ServletServerHttpResponse</span>(response));</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">//否则通过</span></span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//执行具体处理，详细如下</span></span><br><span class="line">	<span class="keyword">return</span> handleInternal(<span class="keyword">new</span> <span class="title class_">ServletServerHttpRequest</span>(request), <span class="keyword">new</span> <span class="title class_">ServletServerHttpResponse</span>(response), config, preFlightRequest);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">handleInternal</span><span class="params">(ServerHttpRequest request, ServerHttpResponse response,</span></span><br><span class="line"><span class="params">								 CorsConfiguration config, <span class="type">boolean</span> preFlightRequest)</span> <span class="keyword">throws</span> IOException &#123;</span><br><span class="line">	<span class="comment">//该方法主要为检查请求是否允许，并作出了不同动作如：</span></span><br><span class="line">	<span class="comment">//rejectRequest 403 Reject:origin is not allowed</span></span><br><span class="line">	<span class="comment">//通过请求设置AccessControlAllowMethods等</span></span><br><span class="line">	<span class="comment">//在下方代码中详细描述checkOrigin，如何确认请求通过</span></span><br><span class="line">	<span class="type">String</span> <span class="variable">requestOrigin</span> <span class="operator">=</span> request.getHeaders().getOrigin();</span><br><span class="line">	<span class="type">String</span> <span class="variable">allowOrigin</span> <span class="operator">=</span> checkOrigin(config, requestOrigin);</span><br><span class="line">	<span class="type">HttpHeaders</span> <span class="variable">responseHeaders</span> <span class="operator">=</span> response.getHeaders();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (allowOrigin == <span class="literal">null</span>) &#123;</span><br><span class="line">		logger.debug(<span class="string">&quot;Reject: &#x27;&quot;</span> + requestOrigin + <span class="string">&quot;&#x27; origin is not allowed&quot;</span>);</span><br><span class="line">		rejectRequest(response);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="type">HttpMethod</span> <span class="variable">requestMethod</span> <span class="operator">=</span> getMethodToUse(request, preFlightRequest);</span><br><span class="line">	List&lt;HttpMethod&gt; allowMethods = checkMethods(config, requestMethod);</span><br><span class="line">	<span class="keyword">if</span> (allowMethods == <span class="literal">null</span>) &#123;</span><br><span class="line">		logger.debug(<span class="string">&quot;Reject: HTTP &#x27;&quot;</span> + requestMethod + <span class="string">&quot;&#x27; is not allowed&quot;</span>);</span><br><span class="line">		rejectRequest(response);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	List&lt;String&gt; requestHeaders = getHeadersToUse(request, preFlightRequest);</span><br><span class="line">	List&lt;String&gt; allowHeaders = checkHeaders(config, requestHeaders);</span><br><span class="line">	<span class="keyword">if</span> (preFlightRequest &amp;&amp; allowHeaders == <span class="literal">null</span>) &#123;</span><br><span class="line">		logger.debug(<span class="string">&quot;Reject: headers &#x27;&quot;</span> + requestHeaders + <span class="string">&quot;&#x27; are not allowed&quot;</span>);</span><br><span class="line">		rejectRequest(response);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	responseHeaders.setAccessControlAllowOrigin(allowOrigin);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (preFlightRequest) &#123;</span><br><span class="line">		responseHeaders.setAccessControlAllowMethods(allowMethods);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (preFlightRequest &amp;&amp; !allowHeaders.isEmpty()) &#123;</span><br><span class="line">		responseHeaders.setAccessControlAllowHeaders(allowHeaders);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!CollectionUtils.isEmpty(config.getExposedHeaders())) &#123;</span><br><span class="line">		responseHeaders.setAccessControlExposeHeaders(config.getExposedHeaders());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (Boolean.TRUE.equals(config.getAllowCredentials())) &#123;</span><br><span class="line">		responseHeaders.setAccessControlAllowCredentials(<span class="literal">true</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (preFlightRequest &amp;&amp; config.getMaxAge() != <span class="literal">null</span>) &#123;</span><br><span class="line">		responseHeaders.setAccessControlMaxAge(config.getMaxAge());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	response.flush();</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>检查请求Origin:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> String <span class="title function_">checkOrigin</span><span class="params">(<span class="meta">@Nullable</span> String requestOrigin)</span> &#123;</span><br><span class="line">	<span class="comment">//检查请求Origin，不存在则不通过</span></span><br><span class="line">	<span class="keyword">if</span> (!StringUtils.hasText(requestOrigin)) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//allowedOrigins为空不通过</span></span><br><span class="line">	<span class="keyword">if</span> (ObjectUtils.isEmpty(<span class="built_in">this</span>.allowedOrigins)) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//如果allowedOrigins包含*</span></span><br><span class="line">	<span class="comment">//发出请求时，如果前端携带了cookie, 而服务器配置为*, 浏览器则会拒绝请求</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.allowedOrigins.contains(ALL)) &#123;</span><br><span class="line">		<span class="comment">//Access-Control-Allow-Credentials</span></span><br><span class="line">		<span class="comment">//如果allowCredentials配置为true，表示可携带验证信息如：cookie则返回*</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">this</span>.allowCredentials != Boolean.TRUE) &#123;</span><br><span class="line">			<span class="keyword">return</span> ALL;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">//返回来源地址</span></span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> requestOrigin;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//遍历允许地址，包含改地址则返回</span></span><br><span class="line">	<span class="keyword">for</span> (String allowedOrigin : <span class="built_in">this</span>.allowedOrigins) &#123;</span><br><span class="line">		<span class="keyword">if</span> (requestOrigin.equalsIgnoreCase(allowedOrigin)) &#123;</span><br><span class="line">			<span class="keyword">return</span> requestOrigin;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//该地址不允许</span></span><br><span class="line">	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="5-Spring-Security"><a href="#5-Spring-Security" class="headerlink" title="5. Spring Security"></a>5. Spring Security</h2><p>在<code>Spring Security</code>中通常配置<code>HttpSecurity</code>。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">configure</span><span class="params">(HttpSecurity http)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	http</span><br><span class="line">		.authorizeRequests()</span><br><span class="line">		.permitAll()</span><br><span class="line">		.and()</span><br><span class="line">		.cors();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>只需调用<code>.cors()</code>就配置了允许跨域：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> CorsConfigurer&lt;HttpSecurity&gt; <span class="title function_">cors</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	<span class="keyword">return</span> getOrApply(<span class="keyword">new</span> <span class="title class_">CorsConfigurer</span>&lt;&gt;());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> &lt;C <span class="keyword">extends</span> <span class="title class_">SecurityConfigurerAdapter</span>&lt;DefaultSecurityFilterChain, HttpSecurity&gt;&gt; C <span class="title function_">getOrApply</span><span class="params">(</span></span><br><span class="line"><span class="params">			C configurer)</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">	<span class="type">C</span> <span class="variable">existingConfig</span> <span class="operator">=</span> (C) getConfigurer(configurer.getClass());</span><br><span class="line">	<span class="keyword">if</span> (existingConfig != <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> existingConfig;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> apply(configurer);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在<code>HttpSecurity</code>中获取了<code>CorsConfigurer</code>，<code>configure()</code>在<code>SecurityBuilder</code>build调用，详看<code>configure()</code>如何创建<code>CorsConfigurer</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">configure</span><span class="params">(H http)</span> &#123;</span><br><span class="line">	<span class="type">ApplicationContext</span> <span class="variable">context</span> <span class="operator">=</span> http.getSharedObject(ApplicationContext.class);</span><br><span class="line">	<span class="comment">//获取CorsFilter</span></span><br><span class="line">	<span class="type">CorsFilter</span> <span class="variable">corsFilter</span> <span class="operator">=</span> getCorsFilter(context);</span><br><span class="line">	<span class="keyword">if</span> (corsFilter == <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">IllegalStateException</span>(</span><br><span class="line">				<span class="string">&quot;Please configure either a &quot;</span> + CORS_FILTER_BEAN_NAME + <span class="string">&quot; bean or a &quot;</span></span><br><span class="line">						+ CORS_CONFIGURATION_SOURCE_BEAN_NAME + <span class="string">&quot;bean.&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//添加CorsFilter到filter调用链</span></span><br><span class="line">	http.addFilter(corsFilter);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>获取<code>CorsFilter</code>,<code>CorsFilter</code>是<code>Spring MVC</code>中实现跨域一种方式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> CorsFilter <span class="title function_">getCorsFilter</span><span class="params">(ApplicationContext context)</span> &#123;</span><br><span class="line">	<span class="comment">//如果配置了configurationSource，从configurationSource中获取corsFilter</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="built_in">this</span>.configurationSource != <span class="literal">null</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">CorsFilter</span>(<span class="built_in">this</span>.configurationSource);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//从容器查corsFilter获取corsFilter</span></span><br><span class="line">	<span class="type">boolean</span> <span class="variable">containsCorsFilter</span> <span class="operator">=</span> context</span><br><span class="line">			.containsBeanDefinition(CORS_FILTER_BEAN_NAME);</span><br><span class="line">	<span class="keyword">if</span> (containsCorsFilter) &#123;</span><br><span class="line">		<span class="keyword">return</span> context.getBean(CORS_FILTER_BEAN_NAME, CorsFilter.class);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//从容器中查corsConfigurationSource创建corsFilter</span></span><br><span class="line">	<span class="type">boolean</span> <span class="variable">containsCorsSource</span> <span class="operator">=</span> context</span><br><span class="line">			.containsBean(CORS_CONFIGURATION_SOURCE_BEAN_NAME);</span><br><span class="line">	<span class="keyword">if</span> (containsCorsSource) &#123;</span><br><span class="line">		<span class="type">CorsConfigurationSource</span> <span class="variable">configurationSource</span> <span class="operator">=</span> context.getBean(</span><br><span class="line">				CORS_CONFIGURATION_SOURCE_BEAN_NAME, CorsConfigurationSource.class);</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">CorsFilter</span>(configurationSource);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//从HandlerMappingIntrospector获取corsFilter</span></span><br><span class="line">	<span class="type">boolean</span> <span class="variable">mvcPresent</span> <span class="operator">=</span> ClassUtils.isPresent(HANDLER_MAPPING_INTROSPECTOR,</span><br><span class="line">			context.getClassLoader());</span><br><span class="line">	<span class="keyword">if</span> (mvcPresent) &#123;</span><br><span class="line">		<span class="keyword">return</span> MvcCorsFilter.getMvcCorsFilter(context);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>Spring Security</code>通过以上四种方式获取<code>corsFilter</code>,同样我们可以通过这四种方式进行跨域配置。<br><code>Spring MVC</code>中<code>CorsFilter</code>同样是调用<code>DefaultCorsProcessor</code>中<code>processRequest</code>，和<code>PreFlightHandler</code>中一样。详细流程参考上方内容。</p>
+<pre><code class="java"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilterInternal</span><span class="params">(HttpServletRequest request, HttpServletResponse response,</span></span>
+<span class="function"><span class="params">            FilterChain filterChain)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;
+    CorsConfiguration corsConfiguration = <span class="keyword">this</span>.configSource.getCorsConfiguration(request);
+    <span class="keyword">boolean</span> isValid = <span class="keyword">this</span>.processor.processRequest(corsConfiguration, request, response);
+    <span class="keyword">if</span> (!isValid || CorsUtils.isPreFlightRequest(request)) &#123;
+        <span class="keyword">return</span>;
+    &#125;
+    filterChain.doFilter(request, response);
+&#125;</code></pre>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E5%90%8C%E6%BA%90%E7%AD%96%E7%95%A5"><span class="top-box-text">1. 同源策略</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-%E8%B7%A8%E5%9F%9F%E6%96%B9%E6%A1%88"><span class="top-box-text">2. 跨域方案</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-CORS%E7%AE%80%E4%BB%8B"><span class="top-box-text">3. CORS简介</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-Spring-MVC"><span class="top-box-text">4. Spring MVC</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#5-Spring-Security"><span class="top-box-text">5. Spring Security</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/10/26/mysql-init/">
+          <h3 class="post-title">
+            下一篇：MySQL8搭建，调优及数据迁移(xtrabackup)
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

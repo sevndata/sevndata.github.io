@@ -1,8 +1,183 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>shell分布式架构下分发应用</title>
+<meta name="keywords" content="shell分布式架构下分发应用, sevndata">
+<meta name="description" content="本文分享了在linux下通过shell脚本做一些分发文件的重复操作。
+
+代码1234567891011121314151617181920212223242526272829303132333435363738394041424344454">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="shell分布式架构下分发应用">
+<meta property="og:description" content="本文分享了在linux下通过shell脚本做一些分发文件的重复操作。
+
+代码1234567891011121314151617181920212223242526272829303132333435363738394041424344454">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">shell分布式架构下分发应用</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-07-02</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/shell/">
+              shell
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了在<code>linux</code>下通过<code>shell</code>脚本做一些分发文件的重复操作。</p>
+<span id="more"></span>
+<h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/sh</span></span><br><span class="line">controllist=(172.24.18.177 172.24.18.175)</span><br><span class="line">backuppath=/root/ready_release/backup/</span><br><span class="line">readypath=/root/ready_release/war/</span><br><span class="line">webapppath=/home/webapp/apache-tomcat-9.0.40/webapps/</span><br><span class="line">date=$(date &quot;+%Y.%m.%d.%H.%M.%S&quot;)</span><br><span class="line">newfilepath=/root/ready_release/</span><br><span class="line"></span><br><span class="line">if [ ! -d $backuppath ];then</span><br><span class="line">        mkdir $backuppath</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ ! -d $readypath ];then</span><br><span class="line">        mkdir $readypath</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ ! -n &quot;$1&quot; ];</span><br><span class="line">then</span><br><span class="line">    echo &quot;comand fail&quot;</span><br><span class="line">    echo &quot;example sh run.sh control&quot;</span><br><span class="line">    exit</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ $1 != &quot;node&quot; ]&amp;&amp;[ $1 != &quot;control&quot; ]&amp;&amp;[ $1 != &quot;batch&quot; ];then</span><br><span class="line">    echo &quot;command fail:&quot;$1</span><br><span class="line">    echo &quot;example: sh run.sh control&quot;</span><br><span class="line">    echo &quot;support：control， node， batch&quot;</span><br><span class="line">    exit</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ &quot;$1&quot; == &quot;control&quot; ];then</span><br><span class="line">    if [ -f $newfilepath&quot;control.war&quot;  ];</span><br><span class="line">    then</span><br><span class="line">        for control in $&#123;controllist[*]&#125;</span><br><span class="line">        do</span><br><span class="line">            scp root@$control:$webapppath&quot;control.war&quot; $backuppath&quot;control.war&quot;.bak.$date</span><br><span class="line">            scp $newfilepath&quot;control.war&quot; root@$control:$webapppath&quot;control.war&quot;</span><br><span class="line">            echo &quot;SUCCESS-&gt;&quot;$newfilepath&quot;control.war&quot;</span><br><span class="line">            sleep 240</span><br><span class="line">        done</span><br><span class="line">        mv $newfilepath&quot;control.war&quot; $readypath&quot;control.war&quot;.bak.$date</span><br><span class="line">    else</span><br><span class="line">        echo &quot;NOSUCH FILE-&gt;&quot;$newfilepath&quot;control.war&quot;</span><br><span class="line">    fi</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ &quot;$1&quot; == &quot;batch&quot; ];then</span><br><span class="line">    if [ -f $newfilepath&quot;batch.war&quot;  ];</span><br><span class="line">    then</span><br><span class="line">        mv $webapppath&quot;batch.war&quot; $backuppath&quot;batch.war&quot;.bak.$date</span><br><span class="line">        cp $newfilepath&quot;batch.war&quot; $webapppath&quot;batch.war&quot;</span><br><span class="line">        mv $newfilepath&quot;batch.war&quot; $readypath&quot;batch.war&quot;.bak.$date</span><br><span class="line">        echo &quot;SUCCESS-&gt;&quot;$newfilepath&quot;node.war&quot;</span><br><span class="line">    else</span><br><span class="line">        echo &quot;NOSUCH FILE-&gt;&quot;$newfilepath&quot;batch.war&quot;</span><br><span class="line">    fi</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#%E4%BB%A3%E7%A0%81"><span class="top-box-text">代码</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2022/03/28/java-recursion/">
+          <h3 class="post-title">
+            下一篇：Java递归不建议使用对象参数本身
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

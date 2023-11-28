@@ -1,8 +1,193 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>python自动发送邮件</title>
+<meta name="keywords" content="python自动发送邮件, sevndata">
+<meta name="description" content="分享使用python自动发送类似日报邮件
+
+
+这里是我的自动发送邮件，示例：
+123456789101112131415161718192021222324252627282930313233343536373839404142434445">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="python自动发送邮件">
+<meta property="og:description" content="分享使用python自动发送类似日报邮件
+
+
+这里是我的自动发送邮件，示例：
+123456789101112131415161718192021222324252627282930313233343536373839404142434445">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">python自动发送邮件</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2019-06-02</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/python/">
+              python
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>分享使用python自动发送类似日报邮件</p>
+<span id="more"></span>
+
+<p>这里是我的自动发送邮件，示例：</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> timefrom email.mime.application </span><br><span class="line"><span class="keyword">import</span> MIMEApplicationfrom email.mime.multipart </span><br><span class="line"><span class="keyword">import</span> MIMEMultipartfrom email.mime.text </span><br><span class="line"><span class="keyword">import</span> MIMETextimport smtplibfrom email </span><br><span class="line"><span class="keyword">import</span> utils</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">EMailer</span>(<span class="title class_ inherited__">object</span>):</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self,contacts</span>):        </span><br><span class="line">    self.address = <span class="string">&#x27;&#x27;</span> <span class="comment"># 发送的邮箱地址        </span></span><br><span class="line">    auth_info = &#123;&#125;        </span><br><span class="line">    auth_info[<span class="string">&#x27;server&#x27;</span>] = <span class="string">&#x27;&#x27;</span>  <span class="comment"># 邮箱服务器        </span></span><br><span class="line">    auth_info[<span class="string">&#x27;user&#x27;</span>] = self.address        </span><br><span class="line">    auth_info[<span class="string">&#x27;password&#x27;</span>] = <span class="string">&#x27;&#x27;</span> <span class="comment"># 邮箱密码        </span></span><br><span class="line">    self.user_info = auth_info        </span><br><span class="line">    self.contacts = contacts <span class="comment"># 接受邮件的邮箱        </span></span><br><span class="line">    <span class="built_in">print</span> (self.contacts)</span><br><span class="line"><span class="keyword">def</span> <span class="title function_">send_mail</span>(<span class="params">self, subject, content</span>):        </span><br><span class="line">    str_to = <span class="string">&#x27;; &#x27;</span>.join(self.contacts)        </span><br><span class="line">    server = self.user_info.get(<span class="string">&#x27;server&#x27;</span>)       </span><br><span class="line">    smtp_port = <span class="number">25</span>        </span><br><span class="line">    user = self.user_info.get(<span class="string">&#x27;user&#x27;</span>)        </span><br><span class="line">    passwd = self.user_info.get(<span class="string">&#x27;password&#x27;</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> (server <span class="keyword">and</span> user <span class="keyword">and</span> passwd):            </span><br><span class="line">        <span class="built_in">print</span> (<span class="string">&#x27;incomplete login info, exit now&#x27;</span>)            </span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">        </span><br><span class="line">    msg_root = MIMEMultipart(<span class="string">&#x27;related&#x27;</span>)        </span><br><span class="line">    msg_root[<span class="string">&#x27;Subject&#x27;</span>] = subject        </span><br><span class="line">    msg_root[<span class="string">&#x27;From&#x27;</span>] = self.address        </span><br><span class="line">    msg_root[<span class="string">&#x27;To&#x27;</span>] = str_to</span><br><span class="line">    </span><br><span class="line">    msg_alternative = MIMEMultipart(<span class="string">&#x27;alternative&#x27;</span>)        </span><br><span class="line">    msg_root.attach(msg_alternative)</span><br><span class="line">    main_msg = MIMEMultipart()        </span><br><span class="line">    textApart=MIMEText(subject)</span><br><span class="line">    </span><br><span class="line">    zipFile = subject+<span class="string">&quot;.docx&quot;</span>        </span><br><span class="line">    zipApart = MIMEApplication(<span class="built_in">open</span>(zipFile, <span class="string">&#x27;rb&#x27;</span>).read())        </span><br><span class="line">    zipApart.add_header(<span class="string">&#x27;Content-Disposition&#x27;</span>, <span class="string">&#x27;attachment&#x27;</span>, filename=zipFile)</span><br><span class="line">    main_msg.attach(textApart)        </span><br><span class="line">    main_msg.attach(zipApart)</span><br><span class="line">    main_msg[<span class="string">&#x27;From&#x27;</span>] = self.address       </span><br><span class="line">    main_msg[<span class="string">&#x27;To&#x27;</span>] = str_to        </span><br><span class="line">    main_msg[<span class="string">&#x27;Subject&#x27;</span>] = subject        </span><br><span class="line">    main_msg[<span class="string">&#x27;Date&#x27;</span>] = utils.formatdate()        </span><br><span class="line">    full_text = main_msg.as_string()        </span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        smtp = smtplib.SMTP(server, smtp_port)            </span><br><span class="line">        smtp.ehlo()            </span><br><span class="line">        smtp.starttls()            </span><br><span class="line">        smtp.ehlo()            </span><br><span class="line">        smtp.login(user, passwd)            </span><br><span class="line">        smtp.sendmail(self.address, self.contacts, full_text)            </span><br><span class="line">        smtp.quit()            </span><br><span class="line">        <span class="built_in">print</span> (<span class="string">&quot;success!&quot;</span>)        </span><br><span class="line">        <span class="keyword">except</span> Exception <span class="keyword">as</span> e:            </span><br><span class="line">        <span class="built_in">print</span> (<span class="string">&quot;fail:&quot;</span> + <span class="built_in">str</span>(e))</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:    </span><br><span class="line">    firstContacts = <span class="string">&quot;&quot;</span>    </span><br><span class="line">    EMailer(firstContacts).send_mail(<span class="string">&quot;xxx_&quot;</span>+time.strftime(<span class="string">&quot;%Y年_%m月_%d日&quot;</span>, time.localtime())+<span class="string">&quot;_工作日报&quot;</span>, <span class="string">&quot;&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p>需要去邮箱设置开启smtp。可以去学习下邮件传输协议。</p>
+<p>执行python3 emailer.py测试发送</p>
+<p>准备一台服务器，定时执行就可以自动发邮件了。当然这是发送固定文件。具体如何创建word并写入内容有时间了再做研究。</p>
+
+        </div>
+          
+        <div class="top-div">
+          
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2019/05/26/java-idea-pojo/">
+          <h3 class="post-title">
+            下一篇：使用IntelliJ IDEA生成代码
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

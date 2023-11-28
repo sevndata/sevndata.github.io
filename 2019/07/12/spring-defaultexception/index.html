@@ -1,8 +1,182 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>Spring MVC默认异常处理器及异常处理过程解析</title>
+<meta name="keywords" content="Spring MVC默认异常处理器及异常处理过程解析, sevndata">
+<meta name="description" content="本文分享了Spring MVC默认异常处理器DefaultHandlerExceptionResolver,ExceptionHandlerExceptionResolver,ResponseStatusExceptionResolver的">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Spring MVC默认异常处理器及异常处理过程解析">
+<meta property="og:description" content="本文分享了Spring MVC默认异常处理器DefaultHandlerExceptionResolver,ExceptionHandlerExceptionResolver,ResponseStatusExceptionResolver的">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">Spring MVC默认异常处理器及异常处理过程解析</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2019-07-12</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Spring-MVC/">
+              Spring MVC
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了Spring MVC默认异常处理器<code>DefaultHandlerExceptionResolver</code>,<code>ExceptionHandlerExceptionResolver</code>,<code>ResponseStatusExceptionResolver</code>的处理异常过程。</p>
+<span id="more"></span>
+<h2 id="1-DefaultHandlerExceptionResolver"><a href="#1-DefaultHandlerExceptionResolver" class="headerlink" title="1. DefaultHandlerExceptionResolver"></a>1. DefaultHandlerExceptionResolver</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> ModelAndView <span class="title function_">doResolveException</span><span class="params">(</span></span><br><span class="line"><span class="params">			HttpServletRequest request, HttpServletResponse response, <span class="meta">@Nullable</span> Object handler, Exception ex)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">//405</span></span><br><span class="line">    <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> HttpRequestMethodNotSupportedException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleHttpRequestMethodNotSupported(</span><br><span class="line">          (HttpRequestMethodNotSupportedException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//415</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> HttpMediaTypeNotSupportedException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleHttpMediaTypeNotSupported(</span><br><span class="line">          (HttpMediaTypeNotSupportedException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//406</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> HttpMediaTypeNotAcceptableException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleHttpMediaTypeNotAcceptable(</span><br><span class="line">          (HttpMediaTypeNotAcceptableException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//500</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> MissingPathVariableException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleMissingPathVariable(</span><br><span class="line">          (MissingPathVariableException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//400</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> MissingServletRequestParameterException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleMissingServletRequestParameter(</span><br><span class="line">          (MissingServletRequestParameterException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//400</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> ServletRequestBindingException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleServletRequestBindingException(</span><br><span class="line">          (ServletRequestBindingException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//new ModelAndView()</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> ConversionNotSupportedException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleConversionNotSupported(</span><br><span class="line">          (ConversionNotSupportedException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//400</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> TypeMismatchException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleTypeMismatch(</span><br><span class="line">          (TypeMismatchException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//400</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> HttpMessageNotReadableException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleHttpMessageNotReadable(</span><br><span class="line">          (HttpMessageNotReadableException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//new ModelAndView()</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> HttpMessageNotWritableException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleHttpMessageNotWritable(</span><br><span class="line">          (HttpMessageNotWritableException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//400</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> MethodArgumentNotValidException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleMethodArgumentNotValidException(</span><br><span class="line">          (MethodArgumentNotValidException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//400</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> MissingServletRequestPartException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleMissingServletRequestPartException(</span><br><span class="line">          (MissingServletRequestPartException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//400</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> BindException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleBindException((BindException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//404</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> NoHandlerFoundException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleNoHandlerFoundException(</span><br><span class="line">          (NoHandlerFoundException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//503</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> AsyncRequestTimeoutException) &#123;</span><br><span class="line">      <span class="keyword">return</span> handleAsyncRequestTimeoutException(</span><br><span class="line">          (AsyncRequestTimeoutException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">catch</span> (Exception handlerEx) &#123;</span><br><span class="line">    <span class="keyword">if</span> (logger.isWarnEnabled()) &#123;</span><br><span class="line">      logger.warn(<span class="string">&quot;Failure while trying to resolve exception [&quot;</span> + ex.getClass().getName() + <span class="string">&quot;]&quot;</span>, handlerEx);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="6-ExceptionHandlerExceptionResolver"><a href="#6-ExceptionHandlerExceptionResolver" class="headerlink" title="6. ExceptionHandlerExceptionResolver"></a>6. ExceptionHandlerExceptionResolver</h2><p>该类默认优先级较高,负责解析含有@ControllerAdvice和@ExceptionHandler注解的Controller抛出的异常</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> ModelAndView <span class="title function_">doResolveHandlerMethodException</span><span class="params">(HttpServletRequest request,</span></span><br><span class="line"><span class="params">    HttpServletResponse response, <span class="meta">@Nullable</span> HandlerMethod handlerMethod, Exception exception)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="type">ServletInvocableHandlerMethod</span> <span class="variable">exceptionHandlerMethod</span> <span class="operator">=</span> getExceptionHandlerMethod(handlerMethod, exception);</span><br><span class="line">  <span class="keyword">if</span> (exceptionHandlerMethod == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.argumentResolvers != <span class="literal">null</span>) &#123;</span><br><span class="line">    exceptionHandlerMethod.setHandlerMethodArgumentResolvers(<span class="built_in">this</span>.argumentResolvers);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">this</span>.returnValueHandlers != <span class="literal">null</span>) &#123;</span><br><span class="line">    exceptionHandlerMethod.setHandlerMethodReturnValueHandlers(<span class="built_in">this</span>.returnValueHandlers);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="type">ServletWebRequest</span> <span class="variable">webRequest</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ServletWebRequest</span>(request, response);</span><br><span class="line">  <span class="type">ModelAndViewContainer</span> <span class="variable">mavContainer</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ModelAndViewContainer</span>();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">      logger.debug(<span class="string">&quot;Using @ExceptionHandler &quot;</span> + exceptionHandlerMethod);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 通过ServletInvocableHandlerMethod处理异常</span></span><br><span class="line">    <span class="type">Throwable</span> <span class="variable">cause</span> <span class="operator">=</span> exception.getCause();</span><br><span class="line">    <span class="keyword">if</span> (cause != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="comment">// Expose cause as provided argument as well</span></span><br><span class="line">      exceptionHandlerMethod.invokeAndHandle(webRequest, mavContainer, exception, cause, handlerMethod);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// Otherwise, just the given exception as-is</span></span><br><span class="line">      exceptionHandlerMethod.invokeAndHandle(webRequest, mavContainer, exception, handlerMethod);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">catch</span> (Throwable invocationEx) &#123;</span><br><span class="line">    <span class="comment">// Any other than the original exception (or its cause) is unintended here,</span></span><br><span class="line">    <span class="comment">// probably an accident (e.g. failed assertion or the like).</span></span><br><span class="line">    <span class="keyword">if</span> (invocationEx != exception &amp;&amp; invocationEx != exception.getCause() &amp;&amp; logger.isWarnEnabled()) &#123;</span><br><span class="line">      logger.warn(<span class="string">&quot;Failure in @ExceptionHandler &quot;</span> + exceptionHandlerMethod, invocationEx);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Continue with default processing of the original exception...</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (mavContainer.isRequestHandled()) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">ModelAndView</span>();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="type">ModelMap</span> <span class="variable">model</span> <span class="operator">=</span> mavContainer.getModel();</span><br><span class="line">    <span class="type">HttpStatus</span> <span class="variable">status</span> <span class="operator">=</span> mavContainer.getStatus();</span><br><span class="line">    <span class="type">ModelAndView</span> <span class="variable">mav</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ModelAndView</span>(mavContainer.getViewName(), model, status);</span><br><span class="line">    mav.setViewName(mavContainer.getViewName());</span><br><span class="line">    <span class="keyword">if</span> (!mavContainer.isViewReference()) &#123;</span><br><span class="line">      mav.setView((View) mavContainer.getView());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (model <span class="keyword">instanceof</span> RedirectAttributes) &#123;</span><br><span class="line">      Map&lt;String, ?&gt; flashAttributes = ((RedirectAttributes) model).getFlashAttributes();</span><br><span class="line">      RequestContextUtils.getOutputFlashMap(request).putAll(flashAttributes);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> mav;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="3-ResponseStatusExceptionResolver"><a href="#3-ResponseStatusExceptionResolver" class="headerlink" title="3. ResponseStatusExceptionResolver"></a>3. ResponseStatusExceptionResolver</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> ModelAndView <span class="title function_">doResolveException</span><span class="params">(</span></span><br><span class="line"><span class="params">    HttpServletRequest request, HttpServletResponse response, <span class="meta">@Nullable</span> Object handler, Exception ex)</span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (ex <span class="keyword">instanceof</span> ResponseStatusException) &#123;</span><br><span class="line">      <span class="keyword">return</span> resolveResponseStatusException((ResponseStatusException) ex, request, response, handler);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 解析@ResponseStatus</span></span><br><span class="line">    <span class="type">ResponseStatus</span> <span class="variable">status</span> <span class="operator">=</span> AnnotatedElementUtils.findMergedAnnotation(ex.getClass(), ResponseStatus.class);</span><br><span class="line">    <span class="keyword">if</span> (status != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="keyword">return</span> resolveResponseStatus(status, request, response, handler, ex);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 解析其他异常</span></span><br><span class="line">    <span class="keyword">if</span> (ex.getCause() <span class="keyword">instanceof</span> Exception) &#123;</span><br><span class="line">      <span class="keyword">return</span> doResolveException(request, response, handler, (Exception) ex.getCause());</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">catch</span> (Exception resolveEx) &#123;</span><br><span class="line">    <span class="keyword">if</span> (logger.isWarnEnabled()) &#123;</span><br><span class="line">      logger.warn(<span class="string">&quot;Failure while trying to resolve exception [&quot;</span> + ex.getClass().getName() + <span class="string">&quot;]&quot;</span>, resolveEx);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-DefaultHandlerExceptionResolver"><span class="top-box-text">1. DefaultHandlerExceptionResolver</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#6-ExceptionHandlerExceptionResolver"><span class="top-box-text">6. ExceptionHandlerExceptionResolver</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-ResponseStatusExceptionResolver"><span class="top-box-text">3. ResponseStatusExceptionResolver</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2019/07/07/spring-exception/">
+          <h3 class="post-title">
+            下一篇：Spring MVC自定义异常解析器及异常处理过程
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

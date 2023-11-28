@@ -1,8 +1,211 @@
-{%- extends "_layout.swig" -%}
-{%- import '_macro/post.swig' as post_template -%}
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
 
-{%- block title -%} {{ page.title }} - {{ config.title }} {%- endblock -%}
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
 
-{%- block content -%}
-  {{ post_template.render(page) }}
-{%- endblock -%}
+<meta charset="utf-8" >
+
+<title>浅析Spring MVC:响应式Web应用</title>
+<meta name="keywords" content="浅析Spring MVC:响应式Web应用, sevndata">
+<meta name="description" content="使用Spring Web MVC，开发者可以直接访问官方文档Spring Web MVC文档Version 5.2.1.RELEASE，本文及Spring MVC系列文章都参考于此文档及源码。
+Spring 5支持响应式Web应用。
+
+Sp">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="浅析Spring MVC:响应式Web应用">
+<meta property="og:description" content="使用Spring Web MVC，开发者可以直接访问官方文档Spring Web MVC文档Version 5.2.1.RELEASE，本文及Spring MVC系列文章都参考于此文档及源码。
+Spring 5支持响应式Web应用。
+
+Sp">
+
+<link rel="shortcut icon" href="/image/logo.png">
+<link rel="stylesheet" href="/style/main.css">
+
+  <meta name="generator" content="Hexo 7.0.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.png" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">浅析Spring MVC:响应式Web应用</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2018-07-05</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Spring-MVC/">
+              Spring MVC
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>使用Spring Web MVC，开发者可以直接访问官方文档<a target="_blank" rel="noopener" href="https://docs.spring.io/spring/docs/5.2.1.RELEASE/spring-framework-reference/web.html#mvc">Spring Web MVC文档Version 5.2.1.RELEASE</a>，本文及Spring MVC系列文章都参考于此文档及源码。</p>
+<p>Spring 5支持响应式Web应用。</p>
+<span id="more"></span>
+<p>Spring Web MVC includes <code>WebMvc.fn</code>, a lightweight functional programming model in which functions are used to route and handle requests and contracts are designed for immutability. It is an alternative to the annotation-based programming model but otherwise runs on the same DispatcherServlet.</p>
+<p>主要包括<code>RouterFunction</code>，<code>HandlerFunction</code>和<code>HandlerFilterFunction</code>，分别对应<code>@RequestMapping</code>，<code>@Controller</code>和<code>HandlerInterceptor</code>。</p>
+<p>简单示例</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.springframework.http.MediaType.APPLICATION_JSON;</span><br><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.springframework.web.servlet.function.RequestPredicates.*;</span><br><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.springframework.web.servlet.function.RouterFunctions.route;</span><br><span class="line"></span><br><span class="line"><span class="type">PersonRepository</span> <span class="variable">repository</span> <span class="operator">=</span> ...</span><br><span class="line"><span class="type">PersonHandler</span> <span class="variable">handler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PersonHandler</span>(repository);</span><br><span class="line"></span><br><span class="line">RouterFunction&lt;ServerResponse&gt; route = route()</span><br><span class="line">    .GET(<span class="string">&quot;/person/&#123;id&#125;&quot;</span>, accept(APPLICATION_JSON), handler::getPerson)</span><br><span class="line">    .GET(<span class="string">&quot;/person&quot;</span>, accept(APPLICATION_JSON), handler::listPeople)</span><br><span class="line">    .POST(<span class="string">&quot;/person&quot;</span>, handler::createPerson)</span><br><span class="line">    .build();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PersonHandler</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ServerResponse <span class="title function_">listPeople</span><span class="params">(ServerRequest request)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ServerResponse <span class="title function_">createPerson</span><span class="params">(ServerRequest request)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ServerResponse <span class="title function_">getPerson</span><span class="params">(ServerRequest request)</span> &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-HandlerFunction"><a href="#1-HandlerFunction" class="headerlink" title="1. HandlerFunction"></a>1. HandlerFunction</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.springframework.http.MediaType.APPLICATION_JSON;</span><br><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.springframework.web.reactive.function.server.ServerResponse.ok;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PersonHandler</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> PersonRepository repository;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">PersonHandler</span><span class="params">(PersonRepository repository)</span> &#123;</span><br><span class="line">        <span class="built_in">this</span>.repository = repository;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ServerResponse <span class="title function_">listPeople</span><span class="params">(ServerRequest request)</span> &#123; </span><br><span class="line">        List&lt;Person&gt; people = repository.allPeople();</span><br><span class="line">		<span class="comment">//转换成JSON对象返回</span></span><br><span class="line">        <span class="keyword">return</span> ok().contentType(APPLICATION_JSON).body(people);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ServerResponse <span class="title function_">createPerson</span><span class="params">(ServerRequest request)</span> <span class="keyword">throws</span> Exception &#123; </span><br><span class="line">		<span class="comment">//获取request body内容</span></span><br><span class="line">        <span class="type">Person</span> <span class="variable">person</span> <span class="operator">=</span> request.body(Person.class);</span><br><span class="line">        repository.savePerson(person);</span><br><span class="line">        <span class="keyword">return</span> ok().build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ServerResponse <span class="title function_">getPerson</span><span class="params">(ServerRequest request)</span> &#123; </span><br><span class="line">		<span class="comment">//获取参数request中id</span></span><br><span class="line">        <span class="type">int</span> <span class="variable">personId</span> <span class="operator">=</span> Integer.parseInt(request.pathVariable(<span class="string">&quot;id&quot;</span>));</span><br><span class="line">		<span class="comment">//通过id查询Person</span></span><br><span class="line">        <span class="type">Person</span> <span class="variable">person</span> <span class="operator">=</span> repository.getPerson(personId);</span><br><span class="line">        <span class="keyword">if</span> (person != <span class="literal">null</span>) &#123;</span><br><span class="line">			<span class="comment">//查询到结果后转换成json返回</span></span><br><span class="line">            <span class="keyword">return</span> ok().contentType(APPLICATION_JSON).body(person))</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">//未查询到结构返回notFound404</span></span><br><span class="line">            <span class="keyword">return</span> ServerResponse.notFound().build();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>数据校验示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PersonHandler</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="type">Validator</span> <span class="variable">validator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PersonValidator</span>(); </span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> ServerResponse <span class="title function_">createPerson</span><span class="params">(ServerRequest request)</span> &#123;</span><br><span class="line">		<span class="comment">//获取参数正文</span></span><br><span class="line">        <span class="type">Person</span> <span class="variable">person</span> <span class="operator">=</span> request.body(Person.class);</span><br><span class="line">		<span class="comment">//校验参数</span></span><br><span class="line">        validate(person); </span><br><span class="line">		<span class="comment">//保存person</span></span><br><span class="line">        repository.savePerson(person);</span><br><span class="line">	    <span class="comment">//返回成功</span></span><br><span class="line">        <span class="keyword">return</span> ok().build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">validate</span><span class="params">(Person person)</span> &#123;</span><br><span class="line">        <span class="type">Errors</span> <span class="variable">errors</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BeanPropertyBindingResult</span>(person, <span class="string">&quot;person&quot;</span>);</span><br><span class="line">        validator.validate(person, errors);</span><br><span class="line">		<span class="comment">//抛出异常</span></span><br><span class="line">        <span class="keyword">if</span> (errors.hasErrors()) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> <span class="title class_">ServerWebInputException</span>(errors.toString()); </span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="2-RouterFunction"><a href="#2-RouterFunction" class="headerlink" title="2. RouterFunction"></a>2. RouterFunction</h2><p><code>RouterFunction</code>将请求路由到<code>HandlerFunction</code>,通过<code>RouterFunctions.route()</code>，<code>RouterFunctions.route(RequestPredicate, HandlerFunction)</code>创建路由.</p>
+<p>简单示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">RouterFunction&lt;ServerResponse&gt; route = RouterFunctions.route()</span><br><span class="line">    .GET(<span class="string">&quot;/hello-world&quot;</span>, accept(MediaType.TEXT_PLAIN),</span><br><span class="line">        request -&gt; ServerResponse.ok().body(<span class="string">&quot;Hello World&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>更加强大的示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.springframework.http.MediaType.APPLICATION_JSON;</span><br><span class="line"><span class="keyword">import</span> <span class="keyword">static</span> org.springframework.web.servlet.function.RequestPredicates.*;</span><br><span class="line"></span><br><span class="line"><span class="type">PersonRepository</span> <span class="variable">repository</span> <span class="operator">=</span> ...</span><br><span class="line"><span class="type">PersonHandler</span> <span class="variable">handler</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PersonHandler</span>(repository);</span><br><span class="line"></span><br><span class="line">RouterFunction&lt;ServerResponse&gt; otherRoute = ...</span><br><span class="line"></span><br><span class="line">RouterFunction&lt;ServerResponse&gt; route = route()</span><br><span class="line">    .GET(<span class="string">&quot;/person/&#123;id&#125;&quot;</span>, accept(APPLICATION_JSON), handler::getPerson) <span class="comment">//匹配accept JSON的PersonHandler.getPerson</span></span><br><span class="line">    .GET(<span class="string">&quot;/person&quot;</span>, accept(APPLICATION_JSON), handler::listPeople) <span class="comment">//匹配accept JSON的PersonHandler.listPeople</span></span><br><span class="line">    .POST(<span class="string">&quot;/person&quot;</span>, handler::createPerson) <span class="comment">//PersonHandler.createPerson</span></span><br><span class="line">    .add(otherRoute) </span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+
+<p>嵌套示例：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">RouterFunction&lt;ServerResponse&gt; route = route()</span><br><span class="line">    .path(<span class="string">&quot;/person&quot;</span>, b1 -&gt; b1</span><br><span class="line">        .nest(accept(APPLICATION_JSON), b2 -&gt; b2</span><br><span class="line">            .GET(<span class="string">&quot;/&#123;id&#125;&quot;</span>, handler::getPerson)</span><br><span class="line">            .GET(<span class="string">&quot;&quot;</span>, handler::listPeople))</span><br><span class="line">        .POST(<span class="string">&quot;/person&quot;</span>, handler::createPerson))</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-run"><a href="#3-run" class="headerlink" title="3. run"></a>3. run</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableMvc</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">WebConfig</span> <span class="keyword">implements</span> <span class="title class_">WebMvcConfigurer</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> RouterFunction&lt;?&gt; routerFunctionA() &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> RouterFunction&lt;?&gt; routerFunctionB() &#123;</span><br><span class="line">        <span class="comment">// ...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">configureMessageConverters</span><span class="params">(List&lt;HttpMessageConverter&lt;?&gt;&gt; converters)</span> &#123;</span><br><span class="line">        <span class="comment">// configure message conversion...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addCorsMappings</span><span class="params">(CorsRegistry registry)</span> &#123;</span><br><span class="line">        <span class="comment">// configure CORS...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">configureViewResolvers</span><span class="params">(ViewResolverRegistry registry)</span> &#123;</span><br><span class="line">        <span class="comment">// configure view resolution for HTML rendering...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-HandlerFilterFunction"><a href="#4-HandlerFilterFunction" class="headerlink" title="4. HandlerFilterFunction"></a>4. HandlerFilterFunction</h2><p>可以使用<code>HandlerFilterFunction</code>的<code>before</code>，<code>after</code>或<code>filter</code></p>
+<p><code>before</code>，<code>after</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">RouterFunction&lt;ServerResponse&gt; route = route()</span><br><span class="line">    .path(<span class="string">&quot;/person&quot;</span>, b1 -&gt; b1</span><br><span class="line">        .nest(accept(APPLICATION_JSON), b2 -&gt; b2</span><br><span class="line">            .GET(<span class="string">&quot;/&#123;id&#125;&quot;</span>, handler::getPerson)</span><br><span class="line">            .GET(<span class="string">&quot;&quot;</span>, handler::listPeople)</span><br><span class="line">            .before(request -&gt; ServerRequest.from(request) <span class="comment">//前，build</span></span><br><span class="line">                .header(<span class="string">&quot;X-RequestHeader&quot;</span>, <span class="string">&quot;Value&quot;</span>)</span><br><span class="line">                .build()))</span><br><span class="line">        .POST(<span class="string">&quot;/person&quot;</span>, handler::createPerson))</span><br><span class="line">    .after((request, response) -&gt; logResponse(response)) <span class="comment">//后，logResponse</span></span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+<p><code>filter</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">SecurityManager</span> <span class="variable">securityManager</span> <span class="operator">=</span> ...</span><br><span class="line"></span><br><span class="line">RouterFunction&lt;ServerResponse&gt; route = route()</span><br><span class="line">    .path(<span class="string">&quot;/person&quot;</span>, b1 -&gt; b1</span><br><span class="line">        .nest(accept(APPLICATION_JSON), b2 -&gt; b2</span><br><span class="line">            .GET(<span class="string">&quot;/&#123;id&#125;&quot;</span>, handler::getPerson)</span><br><span class="line">            .GET(<span class="string">&quot;&quot;</span>, handler::listPeople))</span><br><span class="line">        .POST(<span class="string">&quot;/person&quot;</span>, handler::createPerson))</span><br><span class="line">    .filter((request, next) -&gt; &#123; <span class="comment">//添加安全拦截</span></span><br><span class="line">        <span class="keyword">if</span> (securityManager.allowAccessTo(request.path())) &#123;</span><br><span class="line">            <span class="keyword">return</span> next.handle(request);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> ServerResponse.status(UNAUTHORIZED).build();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-HandlerFunction"><span class="top-box-text">1. HandlerFunction</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-RouterFunction"><span class="top-box-text">2. RouterFunction</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-run"><span class="top-box-text">3. run</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-HandlerFilterFunction"><span class="top-box-text">4. HandlerFilterFunction</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2018/07/02/spring-mvc4/">
+          <h3 class="post-title">
+            下一篇：浅析Spring MVC:CORS URI Asyn 缓存
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+
