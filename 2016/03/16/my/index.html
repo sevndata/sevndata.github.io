@@ -237,7 +237,31 @@
 </ul>
 <hr>
 <h3 id="致谢"><a href="#致谢" class="headerlink" title="致谢"></a>致谢</h3><p>感谢您花宝贵时间阅读我的简历，期待能有机会和您共事。</p>
+<p>server {<br>        listen 80;<br>        server_name  work.xingdata.com;<br>        rewrite ^(.<em>) https://$server_name$1 permanent;<br>        # Load configuration files for the default server block.<br>        include /etc/nginx/default.d/</em>.conf;<br>}<br>server{<br>        listen 443 ssl;<br>        server_name work.xingdata.com;<br>        root         /usr/share/nginx/html;</p>
+<pre><code>    gzip on;
+    gzip_buffers 32 4K;
+    gzip_comp_level 6;
+    gzip_min_length 100;
+    gzip_types application/javascript text/css text/xml;
+    gzip_disable &quot;MSIE [1-6]\.&quot;; #配置禁用gzip条件，支持
+    gzip_vary on;
 
+    ssl_certificate /etc/nginx/ssl/xingdata.com.pem;
+    ssl_certificate_key /etc/nginx/ssl/xingdata.com.key;
+
+    location / &#123;
+            proxy_pass http://127.0.0.1:18686;
+            index zentao/user-login-L3plbnRhby8=.html;
+    &#125;
+
+    error_page 404 /404.html;
+    location = /404.html &#123;
+    &#125;
+
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html &#123;
+    &#125;
+&#125;</code></pre>
         </div>
           
         <div class="top-div">
@@ -263,6 +287,10 @@
 <div class="site-footer">
   <div class="social-container">
     
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
       
     
       
@@ -290,6 +318,13 @@
      |
     
       <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
   
   
 </div>
