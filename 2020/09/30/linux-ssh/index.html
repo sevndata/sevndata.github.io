@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>CentOS7 ssh免密登录及失效问题</title>
+<meta name="keywords" content="CentOS7 ssh免密登录及失效问题, sevndata">
+<meta name="description" content="分享ssh免密登录及失效问题">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="CentOS7 ssh免密登录及失效问题">
+<meta property="og:description" content="分享ssh免密登录及失效问题">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">CentOS7 ssh免密登录及失效问题</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-09-30</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/CentOS/">
+              CentOS
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>分享ssh免密登录及失效问题</p>
+<span id="more"></span>
+
+<h2 id="1-ssh免密登录"><a href="#1-ssh免密登录" class="headerlink" title="1. ssh免密登录"></a>1. ssh免密登录</h2><p>通过配置本机公钥到目标服务器认证文件方式实现免密登录，常用于免密登录服务器，免密git等。</p>
+<p>如:A服务器登录到B服务器，A生成公私钥，将A的公钥配置到B认证文件中，实现了A免密登录到B服务器。</p>
+<h3 id="1-配置ssh免密登录"><a href="#1-配置ssh免密登录" class="headerlink" title="1. 配置ssh免密登录"></a>1. 配置ssh免密登录</h3><ol>
+<li><p>生成秘钥</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">ssh-keygen <span class="token parameter variable">-t</span> rsa<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>免密设置<br>将在用户目录下<code>.ssh</code>中生成<code>id_rsa</code>,<code>id_rsa.pub</code>公私钥，将<code>id_rsa.pub</code>公钥设置在目标服务器用户目录<code>.ssh</code>中认证文件<code>authorized_keys</code>尾部（可设置多个）。这样就实现了服务器间免密登录。</p>
+</li>
+</ol>
+<h2 id="2-免密失效"><a href="#2-免密失效" class="headerlink" title="2. 免密失效"></a>2. 免密失效</h2><h3 id="1-修改密码IP"><a href="#1-修改密码IP" class="headerlink" title="1. 修改密码IP"></a>1. 修改密码IP</h3><p>因修改密码或IP等导致免密失效可删除<code>known_hosts</code>中对应<code>IP</code>信息。</p>
+<h3 id="2-权限问题"><a href="#2-权限问题" class="headerlink" title="2. 权限问题"></a>2. 权限问题</h3><p>用户目录，<code>.ssh</code>目录，<code>authorized_keys</code>文件等文件权限会引起认证失效，可重新设置权限为<code>700</code></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">chmod</span> <span class="token number">700</span> authorized_keys<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h3 id="3-ssh配置文件"><a href="#3-ssh配置文件" class="headerlink" title="3. ssh配置文件"></a>3. ssh配置文件</h3><p>在<code>/etc/ssh/sshd_config</code>中检查<code>StrictModes</code>,<code>AuthorizedKeysFile</code>等配置是否正确。</p>
+<h3 id="4-防火墙等问题"><a href="#4-防火墙等问题" class="headerlink" title="4. 防火墙等问题"></a>4. 防火墙等问题</h3><p>检查是否端口禁止访问等导致免密失效。</p>
+<h3 id="5-ssh重启"><a href="#5-ssh重启" class="headerlink" title="5. ssh重启"></a>5. ssh重启</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">service</span> sshd restart<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+
+
+
+
+
+
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-ssh%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95"><span class="top-box-text">1. ssh免密登录</span></a><ol class="top-box-child"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-%E9%85%8D%E7%BD%AEssh%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95"><span class="top-box-text">1. 配置ssh免密登录</span></a></li></ol></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-%E5%85%8D%E5%AF%86%E5%A4%B1%E6%95%88"><span class="top-box-text">2. 免密失效</span></a><ol class="top-box-child"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-%E4%BF%AE%E6%94%B9%E5%AF%86%E7%A0%81IP"><span class="top-box-text">1. 修改密码IP</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#2-%E6%9D%83%E9%99%90%E9%97%AE%E9%A2%98"><span class="top-box-text">2. 权限问题</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#3-ssh%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="top-box-text">3. ssh配置文件</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#4-%E9%98%B2%E7%81%AB%E5%A2%99%E7%AD%89%E9%97%AE%E9%A2%98"><span class="top-box-text">4. 防火墙等问题</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#5-ssh%E9%87%8D%E5%90%AF"><span class="top-box-text">5. ssh重启</span></a></li></ol></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/09/21/git-gitlab-init/">
+          <h3 class="post-title">
+            下一篇：GitLab的安装使用及迁移
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

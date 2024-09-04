@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>在Ubuntu中使用微信(deepin-wine)</title>
+<meta name="keywords" content="在Ubuntu中使用微信(deepin-wine), sevndata">
+<meta name="description" content="本文分享了在Ubuntu环境中使用微信">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="在Ubuntu中使用微信(deepin-wine)">
+<meta property="og:description" content="本文分享了在Ubuntu环境中使用微信">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">在Ubuntu中使用微信(deepin-wine)</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2024-09-04</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Ubuntu/">
+              Ubuntu
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/deepin-wine/">
+              deepin-wine
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了在Ubuntu环境中使用微信</p>
+<span id="more"></span>
+
+<p>最近给同学们更换了<code>Ubuntu</code>开发环境，问题是微信等官方并没有提供<code>Ubuntu</code>支持版本。同样还有QQ，输入法等，这里分享一些在<code>Ubuntu</code>中微信的使用。推荐使用第四种，第五种方式。</p>
+<h2 id="1-封装web应用"><a href="#1-封装web应用" class="headerlink" title="1. 封装web应用"></a>1. 封装web应用</h2><p>可以利用<code>nativefier</code>，<code>nw.js</code>等打包工具或者设置快捷方式将微信网页版<code>web</code>打包成应用。目前这种办法不能使用了，<code>Ubuntu</code>下微信网页版不能正常打开。</p>
+<h2 id="2-wewechat"><a href="#2-wewechat" class="headerlink" title="2. wewechat"></a>2. wewechat</h2><p>可以使用开源第三方，如<code>wewechat</code>,<code>electronic-wechat</code>等，大概率现在也不能正常使用。</p>
+<h2 id="3-wine"><a href="#3-wine" class="headerlink" title="3. wine"></a>3. wine</h2><p>下载安装后发现有输入框不显示，缺少依赖等问题。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> wine<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>下载exe运行：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">wine WeChatSetup.exe<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h2 id="4-deepin-wine"><a href="#4-deepin-wine" class="headerlink" title="4. deepin-wine"></a>4. deepin-wine</h2><p>使用<code>deepin-wine</code>环境和<code>deepin</code>官方原版软件包</p>
+<ol>
+<li>下载安装<code>deepin-wine</code>环境</li>
+<li>下载软件包</li>
+<li>安装软件包<pre class="line-numbers language-none"><code class="language-none">dpkg -i xxx.deb<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+微信不能发送图片：<pre class="line-numbers language-none"><code class="language-none">sudo apt-get install libjpeg62:i386<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+拷贝字体：<pre class="line-numbers language-none"><code class="language-none">&#x2F;usr&#x2F;share&#x2F;deepin-wine&#x2F;wine&#x2F;fonts<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+</li>
+</ol>
+<h2 id="5-deepin-wine"><a href="#5-deepin-wine" class="headerlink" title="5. deepin-wine"></a>5. deepin-wine</h2><p>同样也可以使用<a target="_blank" rel="noopener" href="https://github.com/zq1997/deepin-wine">开源快速方法</a>，其中有很详细的介绍</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">wget</span> -O- https://deepin-wine.i-m.dev/setup.sh <span class="token operator">|</span> <span class="token function">sh</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>详细配置可详见<code>setup.sh</code>与文档介绍</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> com.qq.weixin.deepin<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E5%B0%81%E8%A3%85web%E5%BA%94%E7%94%A8"><span class="top-box-text">1. 封装web应用</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-wewechat"><span class="top-box-text">2. wewechat</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-wine"><span class="top-box-text">3. wine</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-deepin-wine"><span class="top-box-text">4. deepin-wine</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#5-deepin-wine"><span class="top-box-text">5. deepin-wine</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2024/09/02/linux-mail/">
+          <h3 class="post-title">
+            下一篇：搭建邮箱服务器&amp;发送通知邮件
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

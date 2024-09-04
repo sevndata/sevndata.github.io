@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>浅析Spring MVC:响应式Web应用</title>
+<meta name="keywords" content="浅析Spring MVC:响应式Web应用, sevndata">
+<meta name="description" content="使用Spring Web MVC，开发者可以直接访问官方文档Spring Web MVC文档Version 5.2.1.RELEASE，本文及Spring MVC系列文章都参考于此文档及源码。
+Spring 5支持响应式Web应用。
+
+Sp">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="浅析Spring MVC:响应式Web应用">
+<meta property="og:description" content="使用Spring Web MVC，开发者可以直接访问官方文档Spring Web MVC文档Version 5.2.1.RELEASE，本文及Spring MVC系列文章都参考于此文档及源码。
+Spring 5支持响应式Web应用。
+
+Sp">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">浅析Spring MVC:响应式Web应用</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2018-07-05</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Spring-MVC/">
+              Spring MVC
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>使用Spring Web MVC，开发者可以直接访问官方文档<a target="_blank" rel="noopener" href="https://docs.spring.io/spring/docs/5.2.1.RELEASE/spring-framework-reference/web.html#mvc">Spring Web MVC文档Version 5.2.1.RELEASE</a>，本文及Spring MVC系列文章都参考于此文档及源码。</p>
+<p>Spring 5支持响应式Web应用。</p>
+<span id="more"></span>
+<p>Spring Web MVC includes <code>WebMvc.fn</code>, a lightweight functional programming model in which functions are used to route and handle requests and contracts are designed for immutability. It is an alternative to the annotation-based programming model but otherwise runs on the same DispatcherServlet.</p>
+<p>主要包括<code>RouterFunction</code>，<code>HandlerFunction</code>和<code>HandlerFilterFunction</code>，分别对应<code>@RequestMapping</code>，<code>@Controller</code>和<code>HandlerInterceptor</code>。</p>
+<p>简单示例</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">import</span> <span class="token keyword">static</span> <span class="token import static"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>http<span class="token punctuation">.</span></span><span class="token class-name">MediaType</span><span class="token punctuation">.</span><span class="token static">APPLICATION_JSON</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token keyword">static</span> <span class="token import static"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>web<span class="token punctuation">.</span>servlet<span class="token punctuation">.</span>function<span class="token punctuation">.</span></span><span class="token class-name">RequestPredicates</span><span class="token punctuation">.</span><span class="token operator">*</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token keyword">static</span> <span class="token import static"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>web<span class="token punctuation">.</span>servlet<span class="token punctuation">.</span>function<span class="token punctuation">.</span></span><span class="token class-name">RouterFunctions</span><span class="token punctuation">.</span><span class="token static">route</span></span><span class="token punctuation">;</span>
+
+<span class="token class-name">PersonRepository</span> repository <span class="token operator">=</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token class-name">PersonHandler</span> handler <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PersonHandler</span><span class="token punctuation">(</span>repository<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">ServerResponse</span><span class="token punctuation">></span></span> route <span class="token operator">=</span> <span class="token function">route</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/person/&#123;id&#125;"</span><span class="token punctuation">,</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">getPerson</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">listPeople</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">POST</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">createPerson</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">PersonHandler</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token comment">// ...</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ServerResponse</span> <span class="token function">listPeople</span><span class="token punctuation">(</span><span class="token class-name">ServerRequest</span> request<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// ...</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ServerResponse</span> <span class="token function">createPerson</span><span class="token punctuation">(</span><span class="token class-name">ServerRequest</span> request<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// ...</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ServerResponse</span> <span class="token function">getPerson</span><span class="token punctuation">(</span><span class="token class-name">ServerRequest</span> request<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// ...</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="1-HandlerFunction"><a href="#1-HandlerFunction" class="headerlink" title="1. HandlerFunction"></a>1. HandlerFunction</h2><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">import</span> <span class="token keyword">static</span> <span class="token import static"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>http<span class="token punctuation">.</span></span><span class="token class-name">MediaType</span><span class="token punctuation">.</span><span class="token static">APPLICATION_JSON</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token keyword">static</span> <span class="token import static"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>web<span class="token punctuation">.</span>reactive<span class="token punctuation">.</span>function<span class="token punctuation">.</span>server<span class="token punctuation">.</span></span><span class="token class-name">ServerResponse</span><span class="token punctuation">.</span><span class="token static">ok</span></span><span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">PersonHandler</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">PersonRepository</span> repository<span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">PersonHandler</span><span class="token punctuation">(</span><span class="token class-name">PersonRepository</span> repository<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">this</span><span class="token punctuation">.</span>repository <span class="token operator">=</span> repository<span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ServerResponse</span> <span class="token function">listPeople</span><span class="token punctuation">(</span><span class="token class-name">ServerRequest</span> request<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> 
+        <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Person</span><span class="token punctuation">></span></span> people <span class="token operator">=</span> repository<span class="token punctuation">.</span><span class="token function">allPeople</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">//转换成JSON对象返回</span>
+        <span class="token keyword">return</span> <span class="token function">ok</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">contentType</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">body</span><span class="token punctuation">(</span>people<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ServerResponse</span> <span class="token function">createPerson</span><span class="token punctuation">(</span><span class="token class-name">ServerRequest</span> request<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span> <span class="token punctuation">&#123;</span> 
+		<span class="token comment">//获取request body内容</span>
+        <span class="token class-name">Person</span> person <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">body</span><span class="token punctuation">(</span><span class="token class-name">Person</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        repository<span class="token punctuation">.</span><span class="token function">savePerson</span><span class="token punctuation">(</span>person<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token function">ok</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ServerResponse</span> <span class="token function">getPerson</span><span class="token punctuation">(</span><span class="token class-name">ServerRequest</span> request<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span> 
+		<span class="token comment">//获取参数request中id</span>
+        <span class="token keyword">int</span> personId <span class="token operator">=</span> <span class="token class-name">Integer</span><span class="token punctuation">.</span><span class="token function">parseInt</span><span class="token punctuation">(</span>request<span class="token punctuation">.</span><span class="token function">pathVariable</span><span class="token punctuation">(</span><span class="token string">"id"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">//通过id查询Person</span>
+        <span class="token class-name">Person</span> person <span class="token operator">=</span> repository<span class="token punctuation">.</span><span class="token function">getPerson</span><span class="token punctuation">(</span>personId<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>person <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">//查询到结果后转换成json返回</span>
+            <span class="token keyword">return</span> <span class="token function">ok</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">contentType</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">body</span><span class="token punctuation">(</span>person<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">//未查询到结构返回notFound404</span>
+            <span class="token keyword">return</span> <span class="token class-name">ServerResponse</span><span class="token punctuation">.</span><span class="token function">notFound</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>数据校验示例：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">PersonHandler</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">final</span> <span class="token class-name">Validator</span> validator <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PersonValidator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+
+    <span class="token comment">// ...</span>
+
+    <span class="token keyword">public</span> <span class="token class-name">ServerResponse</span> <span class="token function">createPerson</span><span class="token punctuation">(</span><span class="token class-name">ServerRequest</span> request<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token comment">//获取参数正文</span>
+        <span class="token class-name">Person</span> person <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">body</span><span class="token punctuation">(</span><span class="token class-name">Person</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">//校验参数</span>
+        <span class="token function">validate</span><span class="token punctuation">(</span>person<span class="token punctuation">)</span><span class="token punctuation">;</span> 
+		<span class="token comment">//保存person</span>
+        repository<span class="token punctuation">.</span><span class="token function">savePerson</span><span class="token punctuation">(</span>person<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	    <span class="token comment">//返回成功</span>
+        <span class="token keyword">return</span> <span class="token function">ok</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">void</span> <span class="token function">validate</span><span class="token punctuation">(</span><span class="token class-name">Person</span> person<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token class-name">Errors</span> errors <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BeanPropertyBindingResult</span><span class="token punctuation">(</span>person<span class="token punctuation">,</span> <span class="token string">"person"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        validator<span class="token punctuation">.</span><span class="token function">validate</span><span class="token punctuation">(</span>person<span class="token punctuation">,</span> errors<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">//抛出异常</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>errors<span class="token punctuation">.</span><span class="token function">hasErrors</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">ServerWebInputException</span><span class="token punctuation">(</span>errors<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="2-RouterFunction"><a href="#2-RouterFunction" class="headerlink" title="2. RouterFunction"></a>2. RouterFunction</h2><p><code>RouterFunction</code>将请求路由到<code>HandlerFunction</code>,通过<code>RouterFunctions.route()</code>，<code>RouterFunctions.route(RequestPredicate, HandlerFunction)</code>创建路由.</p>
+<p>简单示例：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">ServerResponse</span><span class="token punctuation">></span></span> route <span class="token operator">=</span> <span class="token class-name">RouterFunctions</span><span class="token punctuation">.</span><span class="token function">route</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/hello-world"</span><span class="token punctuation">,</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token class-name">MediaType</span><span class="token punctuation">.</span><span class="token constant">TEXT_PLAIN</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        request <span class="token operator">-></span> <span class="token class-name">ServerResponse</span><span class="token punctuation">.</span><span class="token function">ok</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">body</span><span class="token punctuation">(</span><span class="token string">"Hello World"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>更加强大的示例：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">import</span> <span class="token keyword">static</span> <span class="token import static"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>http<span class="token punctuation">.</span></span><span class="token class-name">MediaType</span><span class="token punctuation">.</span><span class="token static">APPLICATION_JSON</span></span><span class="token punctuation">;</span>
+<span class="token keyword">import</span> <span class="token keyword">static</span> <span class="token import static"><span class="token namespace">org<span class="token punctuation">.</span>springframework<span class="token punctuation">.</span>web<span class="token punctuation">.</span>servlet<span class="token punctuation">.</span>function<span class="token punctuation">.</span></span><span class="token class-name">RequestPredicates</span><span class="token punctuation">.</span><span class="token operator">*</span></span><span class="token punctuation">;</span>
+
+<span class="token class-name">PersonRepository</span> repository <span class="token operator">=</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token class-name">PersonHandler</span> handler <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">PersonHandler</span><span class="token punctuation">(</span>repository<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">ServerResponse</span><span class="token punctuation">></span></span> otherRoute <span class="token operator">=</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+
+<span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">ServerResponse</span><span class="token punctuation">></span></span> route <span class="token operator">=</span> <span class="token function">route</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/person/&#123;id&#125;"</span><span class="token punctuation">,</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">getPerson</span><span class="token punctuation">)</span> <span class="token comment">//匹配accept JSON的PersonHandler.getPerson</span>
+    <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> <span class="token function">accept</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">listPeople</span><span class="token punctuation">)</span> <span class="token comment">//匹配accept JSON的PersonHandler.listPeople</span>
+    <span class="token punctuation">.</span><span class="token function">POST</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">createPerson</span><span class="token punctuation">)</span> <span class="token comment">//PersonHandler.createPerson</span>
+    <span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>otherRoute<span class="token punctuation">)</span> 
+    <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>嵌套示例：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">ServerResponse</span><span class="token punctuation">></span></span> route <span class="token operator">=</span> <span class="token function">route</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">path</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> b1 <span class="token operator">-></span> b1
+        <span class="token punctuation">.</span><span class="token function">nest</span><span class="token punctuation">(</span><span class="token function">accept</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">,</span> b2 <span class="token operator">-></span> b2
+            <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/&#123;id&#125;"</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">getPerson</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">listPeople</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">POST</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">createPerson</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="3-run"><a href="#3-run" class="headerlink" title="3. run"></a>3. run</h2><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Configuration</span>
+<span class="token annotation punctuation">@EnableMvc</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">WebConfig</span> <span class="token keyword">implements</span> <span class="token class-name">WebMvcConfigurer</span> <span class="token punctuation">&#123;</span>
+
+    <span class="token annotation punctuation">@Bean</span>
+    <span class="token keyword">public</span> <span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> <span class="token function">routerFunctionA</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// ...</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Bean</span>
+    <span class="token keyword">public</span> <span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> <span class="token function">routerFunctionB</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// ...</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token comment">// ...</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">configureMessageConverters</span><span class="token punctuation">(</span><span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">HttpMessageConverter</span><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span><span class="token punctuation">></span></span> converters<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// configure message conversion...</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">addCorsMappings</span><span class="token punctuation">(</span><span class="token class-name">CorsRegistry</span> registry<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// configure CORS...</span>
+    <span class="token punctuation">&#125;</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">configureViewResolvers</span><span class="token punctuation">(</span><span class="token class-name">ViewResolverRegistry</span> registry<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token comment">// configure view resolution for HTML rendering...</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="4-HandlerFilterFunction"><a href="#4-HandlerFilterFunction" class="headerlink" title="4. HandlerFilterFunction"></a>4. HandlerFilterFunction</h2><p>可以使用<code>HandlerFilterFunction</code>的<code>before</code>，<code>after</code>或<code>filter</code></p>
+<p><code>before</code>，<code>after</code>：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">ServerResponse</span><span class="token punctuation">></span></span> route <span class="token operator">=</span> <span class="token function">route</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">path</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> b1 <span class="token operator">-></span> b1
+        <span class="token punctuation">.</span><span class="token function">nest</span><span class="token punctuation">(</span><span class="token function">accept</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">,</span> b2 <span class="token operator">-></span> b2
+            <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/&#123;id&#125;"</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">getPerson</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">listPeople</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">before</span><span class="token punctuation">(</span>request <span class="token operator">-></span> <span class="token class-name">ServerRequest</span><span class="token punctuation">.</span><span class="token function">from</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span> <span class="token comment">//前，build</span>
+                <span class="token punctuation">.</span><span class="token function">header</span><span class="token punctuation">(</span><span class="token string">"X-RequestHeader"</span><span class="token punctuation">,</span> <span class="token string">"Value"</span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">POST</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">createPerson</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">after</span><span class="token punctuation">(</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> response<span class="token punctuation">)</span> <span class="token operator">-></span> <span class="token function">logResponse</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token comment">//后，logResponse</span>
+    <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>filter</code>：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token class-name">SecurityManager</span> securityManager <span class="token operator">=</span> <span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+
+<span class="token class-name">RouterFunction</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">ServerResponse</span><span class="token punctuation">></span></span> route <span class="token operator">=</span> <span class="token function">route</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">path</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> b1 <span class="token operator">-></span> b1
+        <span class="token punctuation">.</span><span class="token function">nest</span><span class="token punctuation">(</span><span class="token function">accept</span><span class="token punctuation">(</span><span class="token constant">APPLICATION_JSON</span><span class="token punctuation">)</span><span class="token punctuation">,</span> b2 <span class="token operator">-></span> b2
+            <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">"/&#123;id&#125;"</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">getPerson</span><span class="token punctuation">)</span>
+            <span class="token punctuation">.</span><span class="token function">GET</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">listPeople</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token punctuation">.</span><span class="token function">POST</span><span class="token punctuation">(</span><span class="token string">"/person"</span><span class="token punctuation">,</span> handler<span class="token operator">::</span><span class="token function">createPerson</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">filter</span><span class="token punctuation">(</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> next<span class="token punctuation">)</span> <span class="token operator">-></span> <span class="token punctuation">&#123;</span> <span class="token comment">//添加安全拦截</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>securityManager<span class="token punctuation">.</span><span class="token function">allowAccessTo</span><span class="token punctuation">(</span>request<span class="token punctuation">.</span><span class="token function">path</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> next<span class="token punctuation">.</span><span class="token function">handle</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+        <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+            <span class="token keyword">return</span> <span class="token class-name">ServerResponse</span><span class="token punctuation">.</span><span class="token function">status</span><span class="token punctuation">(</span><span class="token constant">UNAUTHORIZED</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span><span class="token punctuation">)</span>
+    <span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-HandlerFunction"><span class="top-box-text">1. HandlerFunction</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-RouterFunction"><span class="top-box-text">2. RouterFunction</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-run"><span class="top-box-text">3. run</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-HandlerFilterFunction"><span class="top-box-text">4. HandlerFilterFunction</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2018/07/02/spring-mvc4/">
+          <h3 class="post-title">
+            下一篇：浅析Spring MVC:CORS URI Asyn 缓存
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

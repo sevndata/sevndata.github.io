@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>MySQL阻塞，修复损坏的innodb</title>
+<meta name="keywords" content="MySQL阻塞，修复损坏的innodb, sevndata">
+<meta name="description" content="记录一次生产迁移数据造成生产事故及修复过程">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="MySQL阻塞，修复损坏的innodb">
+<meta property="og:description" content="记录一次生产迁移数据造成生产事故及修复过程">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">MySQL阻塞，修复损坏的innodb</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2021-03-09</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/MySQL/">
+              MySQL
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>记录一次生产迁移数据造成生产事故及修复过程</p>
+<span id="more"></span>
+
+<h2 id="1-事件起由"><a href="#1-事件起由" class="headerlink" title="1.事件起由"></a>1.事件起由</h2><p>该系统是运行于中东国家的分布式多节点系统，维持近十万商户交易。由于服务器硬件没有及时到位，只运行于一个节点，短时间内，业务数据库达到了接近上亿级别的数据量，应用服务器也超过了负荷。在硬件到位后，扩容了4-5个节点，面临的问题需要把运行于第一个节点的商户平均分到4个节点上，减轻压力。应用服务器比较容易处理，而数据库按照一定的规则将商户数据迁移到新数据库则比较复杂。</p>
+<h2 id="2-迁移方案"><a href="#2-迁移方案" class="headerlink" title="2.迁移方案"></a>2.迁移方案</h2><p>确认了俩套方案去做数据库数据的迁移：</p>
+<ol>
+<li>编写脚本，以时间，id等因素迁移数据。</li>
+<li>一次性将节点一数据库全量备份恢复到其他节点，并且恢复交易，然后长期计划删除不属于该节点商户业务数据。</li>
+</ol>
+<p>通过评审确认了2方案为最后方案。原因为1方案涉及需要迁移的数据太多，太杂，稍有错误将会影响系统的运行，且系统每天只有4小时的可停机时间，1方案极可能迁移不完，需要二次迁移等，阻断交易风险巨大。而反向删除业务数据更加好做，且时间足够使用物理备份恢复数据库，删除数据可以分布去做，而不影响交易。</p>
+<p>实际中使用<code>xtrabackup</code>工具迁移数据。完美的迁移了数据并且恢复了业务。而问题出现在了删除数据环节。</p>
+<h2 id="3-造成阻塞"><a href="#3-造成阻塞" class="headerlink" title="3.造成阻塞"></a>3.造成阻塞</h2><p>数据恢复后，编写删除非该节点商户业务数据，准备删除脚本，并执行</p>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">delete</span> <span class="token keyword">from</span> node_sku <span class="token keyword">where</span> op_map_id <span class="token operator">not</span> <span class="token operator">in</span> <span class="token punctuation">(</span>xxxx<span class="token punctuation">,</span>xx<span class="token punctuation">,</span>xxx<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nohup</span> mysql <span class="token parameter variable">-uroot</span> <span class="token parameter variable">-p</span> <span class="token parameter variable">-Dtk_biz</span> <span class="token operator">&lt;</span> exportSql/delete_sku.sql   //输入密码
+<span class="token function">nohup</span> mysql <span class="token parameter variable">-uroot</span> <span class="token parameter variable">-p</span> <span class="token parameter variable">-Dtk_biz</span> <span class="token operator">&lt;</span> exportSql/delete_sku.sql <span class="token operator">&amp;</span>   //会跳过输入密码，并报没有权限<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>经过停机时间，恢复后系统后，数据库响应变的非常慢，造成大面积商户不能使用问题。登录服务器发现数据库大量报错信息。</p>
+<pre class="line-numbers language-none"><code class="language-none">Lock wait timeout exceeded; try restarting transaction<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> information_schema<span class="token punctuation">.</span>INNODB_TRX<span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>通过以上脚本发现有一条涉及800万数据的回滚。准备杀掉事务，设置一些锁参数等恢复了数据库。</p>
+<p>经过实践及大量资料的查阅，得知大量数据删除这样的操作的非常不可取的，一旦操作中断Rolling back将花费更多的时间，并造成数据库阻塞。可以通过将数据转移到临时表，使用truncate table tablename等方法，或者保证删除数据脚本的可用性，如数据量较小。</p>
+<p>之后减小了脚本删除的数据量及关闭了mysql日志又执行了一次删除数据操作</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">// /etc/my.cnf
+skip-log-bin<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-none"><code class="language-none">autocommit&#x3D;1 默认自动提交
+autocommit&#x3D;0 手动提交<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>结果发生了第二次数据库阻塞，并且在业务方催的时候错误的执行了kill，reboot，断电操作，造成Mysql启动不起来。</p>
+<h2 id="4-修复损坏的innodb"><a href="#4-修复损坏的innodb" class="headerlink" title="4.修复损坏的innodb"></a>4.修复损坏的innodb</h2><p>查看<code>/var/log/mysql.log</code>，发现大量表innodb损坏，修复数据库：</p>
+<ol>
+<li><p>配置<code>my.cnf</code>中<code>innodb_force_recovery</code></p>
+<pre class="line-numbers language-none"><code class="language-none">innodb_force_recovery&#x3D;1<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>设置为1，重启数据库，如果不成功则修改为2重启，1-6不同含义可参考<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/8.0/en/forcing-innodb-recovery.html">mysql官网Forcing InnoDB Recovery</a>直到启动成功。</p>
+</li>
+<li><p>mysql启动后，损坏的表是只读状态<code>Can&#39;t lock file (errno: 165 - Table is read only)</code>。</p>
+</li>
+<li><p>将损坏的表的数据导出</p>
+<pre class="line-numbers language-none"><code class="language-none">mysqldump -u root -p tk_biz node_sku --no-create-info --where&#x3D;&quot;op_map_id in (&#39;xx&#39;,&#39;xxx&#39;,&#39;xxxx&#39;)&quot;&gt; &#x2F;home&#x2F;exportSql&#x2F;sku.sql<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li>
+<li><p>将损坏表drop</p>
+</li>
+<li><p>删除<code>innodb_force_recovery</code>配置</p>
+</li>
+<li><p>启动mysql</p>
+</li>
+<li><p>将导出数据重新恢复到数据库中</p>
+</li>
+<li><p>恢复是可能出现丢失数据问题</p>
+<pre class="line-numbers language-none"><code class="language-none">mysqldump: Error 2013: Lost connection to MySQL server during query when dumping table &#96;node_payment&#96; at row: 6060246<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>恢复innodb后会有错误：</p>
+<pre class="line-numbers language-none"><code class="language-none">log sequence number is in the future<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>原因是InnoDB日志文件(重做日志)与数据文件不同步</p>
+</li>
+</ol>
+<p>致此数据恢复正常。分享记录了一些操作，有些其他细节也记不清了。</p>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E4%BA%8B%E4%BB%B6%E8%B5%B7%E7%94%B1"><span class="top-box-text">1.事件起由</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-%E8%BF%81%E7%A7%BB%E6%96%B9%E6%A1%88"><span class="top-box-text">2.迁移方案</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-%E9%80%A0%E6%88%90%E9%98%BB%E5%A1%9E"><span class="top-box-text">3.造成阻塞</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-%E4%BF%AE%E5%A4%8D%E6%8D%9F%E5%9D%8F%E7%9A%84innodb"><span class="top-box-text">4.修复损坏的innodb</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2021/01/25/spring-cors/">
+          <h3 class="post-title">
+            下一篇：Spring CORS原理解析
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

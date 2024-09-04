@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>ShardingSphere-JDBC进行数据分片</title>
+<meta name="keywords" content="ShardingSphere-JDBC进行数据分片, sevndata">
+<meta name="description" content="分享分表分库的策略">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="ShardingSphere-JDBC进行数据分片">
+<meta property="og:description" content="分享分表分库的策略">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">ShardingSphere-JDBC进行数据分片</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-05-28</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/MySQL/">
+              MySQL
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/Spring/">
+              Spring
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>分享在实战中分表分库的策略。</p>
+<span id="more"></span>
+
+<h2 id="1-数据量评估与策略"><a href="#1-数据量评估与策略" class="headerlink" title="1. 数据量评估与策略"></a>1. 数据量评估与策略</h2><p>数据量评估和并发评估是项目的至关重要的环节，数据量的多少决定项目的架构，技术的选取。</p>
+<p>很多同学往往会进入误区，认为某个技术就是比另一个技术好，微服务就是比单系统好。而事实上技术最终都可归结为资源问题，技术大多数是业务演变而形成。</p>
+<p>选取合适的技术非常重要，盲目的追求技术将会加大人力，财力等资源消耗。</p>
+<p>应对不同的数据量并发性简单分享下关于数据库几种应对策略：</p>
+<ol>
+<li>读写分离</li>
+<li>垂直分库，垂直分表</li>
+<li>水平分库，水平分表</li>
+<li>其他方式：跑批数据转移等策略</li>
+</ol>
+<h2 id="2-ShardingSphere-JDBC"><a href="#2-ShardingSphere-JDBC" class="headerlink" title="2. ShardingSphere-JDBC"></a>2. ShardingSphere-JDBC</h2><p>简单分享使用<code>ShardingSphere-JDBC</code>做数据分片，<code>ShardingSphere-JDBC</code>是<code>Apache ShardingSphere</code>中的一个模块，更加详细的内容请参阅(Apache ShardingSphere文档)[<a target="_blank" rel="noopener" href="https://shardingsphere.apache.org/document/legacy/4.x/document/en/overview/],以下为在`Spring">https://shardingsphere.apache.org/document/legacy/4.x/document/en/overview/],以下为在`Spring</a> Boot`中使用：</p>
+<pre class="line-numbers language-markup" data-language="markup"><code class="language-markup"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.apache.shardingsphere<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>sharding-jdbc-spring-boot-starter<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>&#123;last.version&#125;<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java">spring<span class="token punctuation">.</span>jpa<span class="token punctuation">.</span>database<span class="token operator">=</span>mysql
+spring<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>url<span class="token operator">=</span>jdbc<span class="token operator">:</span>mysql<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span>jdbc<span class="token operator">:</span>mysql<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span>xxx<span class="token punctuation">.</span>xxx<span class="token punctuation">.</span>xxx<span class="token punctuation">.</span>xxx<span class="token operator">:</span><span class="token number">3306</span><span class="token operator">/</span>xxx
+spring<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>username<span class="token operator">=</span>username
+spring<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>password<span class="token operator">=</span>password
+spring<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>driver<span class="token operator">-</span><span class="token keyword">class</span><span class="token operator">-</span>name<span class="token operator">=</span><span class="token class-name"><span class="token namespace">com<span class="token punctuation">.</span>mysql<span class="token punctuation">.</span>cj<span class="token punctuation">.</span>jdbc<span class="token punctuation">.</span></span>Driver</span>
+
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>name<span class="token operator">=</span>master
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>master<span class="token punctuation">.</span>type<span class="token operator">=</span><span class="token class-name"><span class="token namespace">com<span class="token punctuation">.</span>zaxxer<span class="token punctuation">.</span>hikari<span class="token punctuation">.</span></span>HikariDataSource</span>
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>master<span class="token punctuation">.</span>drive<span class="token operator">-</span><span class="token keyword">class</span><span class="token operator">-</span>name<span class="token operator">=</span><span class="token class-name"><span class="token namespace">com<span class="token punctuation">.</span>mysql<span class="token punctuation">.</span>cj<span class="token punctuation">.</span>jdbc<span class="token punctuation">.</span></span>Driver</span>
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>master<span class="token punctuation">.</span>jdbc<span class="token operator">-</span>url<span class="token operator">=</span>jdbc<span class="token operator">:</span>mysql<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span>jdbc<span class="token operator">:</span>mysql<span class="token operator">:</span><span class="token operator">/</span><span class="token operator">/</span>xxx<span class="token punctuation">.</span>xxx<span class="token punctuation">.</span>xxx<span class="token punctuation">.</span>xxx<span class="token operator">:</span><span class="token number">3306</span><span class="token operator">/</span>xxx
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>master<span class="token punctuation">.</span>username<span class="token operator">=</span>username
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>datasource<span class="token punctuation">.</span>master<span class="token punctuation">.</span>password<span class="token operator">=</span>password
+
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span><span class="token keyword">default</span><span class="token operator">-</span>data<span class="token operator">-</span>source<span class="token operator">-</span>name<span class="token operator">=</span>master
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_user<span class="token punctuation">.</span>actual<span class="token operator">-</span>data<span class="token operator">-</span>nodes<span class="token operator">=</span>master<span class="token punctuation">.</span>vip_user$<span class="token punctuation">&#123;</span><span class="token number">0.</span><span class="token number">.19</span><span class="token punctuation">&#125;</span>
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_user<span class="token punctuation">.</span>table<span class="token operator">-</span>strategy<span class="token punctuation">.</span>inline<span class="token punctuation">.</span>sharding<span class="token operator">-</span>column<span class="token operator">=</span>id
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_user<span class="token punctuation">.</span>table<span class="token operator">-</span>strategy<span class="token punctuation">.</span>inline<span class="token punctuation">.</span>algorithm<span class="token operator">-</span>expression<span class="token operator">=</span>vip_user$<span class="token punctuation">&#123;</span>id <span class="token operator">%</span> <span class="token number">20</span><span class="token punctuation">&#125;</span>
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_user<span class="token punctuation">.</span>key<span class="token operator">-</span>generator<span class="token punctuation">.</span>column<span class="token operator">=</span>id
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_user<span class="token punctuation">.</span>key<span class="token operator">-</span>generator<span class="token punctuation">.</span>type<span class="token operator">=</span><span class="token constant">SNOWFLAKE</span>
+
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_addr<span class="token punctuation">.</span>actual<span class="token operator">-</span>data<span class="token operator">-</span>nodes<span class="token operator">=</span>master<span class="token punctuation">.</span>vip_addr$<span class="token punctuation">&#123;</span><span class="token number">0.</span><span class="token number">.19</span><span class="token punctuation">&#125;</span>
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_addr<span class="token punctuation">.</span>table<span class="token operator">-</span>strategy<span class="token punctuation">.</span>inline<span class="token punctuation">.</span>algorithm<span class="token operator">-</span>expression<span class="token operator">=</span>vip_addr$<span class="token punctuation">&#123;</span>id <span class="token operator">%</span> <span class="token number">20</span><span class="token punctuation">&#125;</span>
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_addr<span class="token punctuation">.</span>table<span class="token operator">-</span>strategy<span class="token punctuation">.</span>inline<span class="token punctuation">.</span>sharding<span class="token operator">-</span>column<span class="token operator">=</span>id
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_addr<span class="token punctuation">.</span>key<span class="token operator">-</span>generator<span class="token punctuation">.</span>type<span class="token operator">=</span><span class="token constant">SNOWFLAKE</span>
+spring<span class="token punctuation">.</span>shardingsphere<span class="token punctuation">.</span>sharding<span class="token punctuation">.</span>tables<span class="token punctuation">.</span>vip_addr<span class="token punctuation">.</span>key<span class="token operator">-</span>generator<span class="token punctuation">.</span>column<span class="token operator">=</span>id<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Table</span><span class="token punctuation">(</span>name <span class="token operator">=</span><span class="token string">"vip_addr"</span><span class="token punctuation">)</span>
+<span class="token annotation punctuation">@Entity</span>
+<span class="token annotation punctuation">@Getter</span>
+<span class="token annotation punctuation">@Setter</span>
+<span class="token annotation punctuation">@NoArgsConstructor</span>
+<span class="token annotation punctuation">@ToString</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Addr</span>  <span class="token keyword">implements</span> <span class="token class-name">Serializable</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">long</span> serialVersionUID <span class="token operator">=</span>  <span class="token number">2200950815215875003L</span><span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * id
+     */</span>
+    <span class="token annotation punctuation">@Column</span><span class="token punctuation">(</span>name <span class="token operator">=</span> <span class="token string">"id"</span><span class="token punctuation">)</span>
+    <span class="token annotation punctuation">@GeneratedValue</span><span class="token punctuation">(</span>strategy<span class="token operator">=</span><span class="token class-name">GenerationType</span><span class="token punctuation">.</span><span class="token constant">IDENTITY</span><span class="token punctuation">)</span>
+    <span class="token annotation punctuation">@Id</span>
+    <span class="token annotation punctuation">@JsonFormat</span><span class="token punctuation">(</span>shape <span class="token operator">=</span> <span class="token class-name">JsonFormat<span class="token punctuation">.</span>Shape</span><span class="token punctuation">.</span><span class="token constant">STRING</span><span class="token punctuation">)</span>
+    <span class="token keyword">private</span> <span class="token class-name">Long</span> id<span class="token punctuation">;</span>
+
+    <span class="token comment">/**
+     * 
+     */</span>
+    <span class="token annotation punctuation">@Column</span><span class="token punctuation">(</span>name <span class="token operator">=</span> <span class="token string">"user_map_id"</span><span class="token punctuation">,</span> updatable <span class="token operator">=</span> <span class="token boolean">false</span><span class="token punctuation">)</span>
+    <span class="token keyword">private</span> <span class="token class-name">Integer</span> userMapId<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在数据库中创建<code>vip_user0</code>,<code>vip_user1</code>…<code>vip_user19</code>20个表。这样就将数据水平分割到20个表中。</p>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E6%95%B0%E6%8D%AE%E9%87%8F%E8%AF%84%E4%BC%B0%E4%B8%8E%E7%AD%96%E7%95%A5"><span class="top-box-text">1. 数据量评估与策略</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-ShardingSphere-JDBC"><span class="top-box-text">2. ShardingSphere-JDBC</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/05/22/tomcat-init/">
+          <h3 class="post-title">
+            下一篇：Tomcat9安装使用
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

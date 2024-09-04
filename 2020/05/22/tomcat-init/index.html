@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>Tomcat9安装使用</title>
+<meta name="keywords" content="Tomcat9安装使用, sevndata">
+<meta name="description" content="记录分享Tomcat9安装使用过程">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Tomcat9安装使用">
+<meta property="og:description" content="记录分享Tomcat9安装使用过程">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">Tomcat9安装使用</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-05-22</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Tomcat/">
+              Tomcat
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>记录分享Tomcat9安装使用过程</p>
+<span id="more"></span>
+
+<h3 id="1-java环境安装"><a href="#1-java环境安装" class="headerlink" title="1. java环境安装"></a>1. java环境安装</h3><p>使用<code>openjdk</code>,注意<code>openjdk</code>与<code>jdk</code>是有区别的。如使用到<code>sun.misc.BASE64Decoder</code>等<code>jdk</code>中有而<code>openjdk</code>中没有的则不能使用<code>openjdk</code>。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">
+yum search <span class="token function">java</span>
+
+yum <span class="token function">install</span> java-1.8.0-openjdk.x86_64
+
+<span class="token function">java</span> <span class="token parameter variable">-version</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="2-tomcat使用"><a href="#2-tomcat使用" class="headerlink" title="2. tomcat使用"></a>2. tomcat使用</h3><h4 id="1-下载解压"><a href="#1-下载解压" class="headerlink" title="1. 下载解压"></a>1. 下载解压</h4><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">
+<span class="token function">wget</span> https://mirror.bit.edu.cn/apache/tomcat/tomcat-9/v9.0.38/bin/apache-tomcat-9.0.38.tar.gz
+
+<span class="token function">tar</span> zxvf apache-tomcat-9.0.38.tar.gz
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="2-配置文件"><a href="#2-配置文件" class="headerlink" title="2. 配置文件"></a>2. 配置文件</h4><p>配置文件在conf下，列举俩个常用的配置，其他配置如<code>web.xml</code>,<code>logging.properties</code>,<code>catalina.properties</code>详见配置文件中内容。</p>
+<ol>
+<li>修改端口，修改server.xml</li>
+</ol>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token operator">&lt;</span>Connector <span class="token assign-left variable">port</span><span class="token operator">=</span><span class="token string">"80"</span> <span class="token assign-left variable">protocol</span><span class="token operator">=</span><span class="token string">"HTTP/1.1"</span>
+               <span class="token assign-left variable">connectionTimeout</span><span class="token operator">=</span><span class="token string">"20000"</span>
+               <span class="token assign-left variable">redirectPort</span><span class="token operator">=</span><span class="token string">"8443"</span> /<span class="token operator">></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<ol start="2">
+<li>https配置，修改server.xml</li>
+</ol>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token operator">&lt;</span>Connector <span class="token assign-left variable">port</span><span class="token operator">=</span><span class="token string">"443"</span> <span class="token assign-left variable">protocol</span><span class="token operator">=</span><span class="token string">"HTTP/1.1"</span>
+<span class="token assign-left variable">maxThreads</span><span class="token operator">=</span><span class="token string">"150"</span> <span class="token assign-left variable">SSLEnabled</span><span class="token operator">=</span><span class="token string">"true"</span> <span class="token assign-left variable">scheme</span><span class="token operator">=</span><span class="token string">"https"</span> <span class="token assign-left variable">secure</span><span class="token operator">=</span><span class="token string">"true"</span>
+<span class="token assign-left variable">keystoreFile</span><span class="token operator">=</span><span class="token string">"/home/webapp/xxxx.pfx"</span>
+<span class="token assign-left variable">keystoreType</span><span class="token operator">=</span><span class="token string">"PKCS12"</span>
+<span class="token assign-left variable">keystorePass</span><span class="token operator">=</span><span class="token string">"xxxxxxx"</span>
+<span class="token assign-left variable">clientAuth</span><span class="token operator">=</span><span class="token string">"false"</span> <span class="token assign-left variable">sslProtocol</span><span class="token operator">=</span><span class="token string">"TLS"</span> /<span class="token operator">></span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="3-设置tomcat不产生大量日志"><a href="#3-设置tomcat不产生大量日志" class="headerlink" title="3. 设置tomcat不产生大量日志"></a>3. 设置tomcat不产生大量日志</h4><p>生产环境中因会有大量业务日志生成，tomcat也会产生大量日志，通常我们会有日志系统或者应用日志，不需要tomcat产生日志，可以设置tomcat不产生大量日志。修改<code>bin/catalina.sh</code>中：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token parameter variable">-z</span> <span class="token string">"<span class="token variable">$CATALINA_OUT</span>"</span> <span class="token punctuation">]</span> <span class="token punctuation">;</span> <span class="token keyword">then</span>
+  <span class="token assign-left variable">CATALINA_OUT</span><span class="token operator">=</span>/dev/null
+<span class="token keyword">fi</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<h4 id="4-启动与停止"><a href="#4-启动与停止" class="headerlink" title="4. 启动与停止"></a>4. 启动与停止</h4><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">
+./startup.sh
+
+./shutdown.sh
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-java%E7%8E%AF%E5%A2%83%E5%AE%89%E8%A3%85"><span class="top-box-text">1. java环境安装</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#2-tomcat%E4%BD%BF%E7%94%A8"><span class="top-box-text">2. tomcat使用</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/04/29/linux-sh/">
+          <h3 class="post-title">
+            下一篇：CentOS7开机自启动
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

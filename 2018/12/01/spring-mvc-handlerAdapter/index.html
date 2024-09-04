@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>剖析Spring MVC:HandlerAdapter</title>
+<meta name="keywords" content="剖析Spring MVC:HandlerAdapter, sevndata">
+<meta name="description" content="剖析Spring MVC,介绍Spring MVC中的HandlerAdapter">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="剖析Spring MVC:HandlerAdapter">
+<meta property="og:description" content="剖析Spring MVC,介绍Spring MVC中的HandlerAdapter">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">剖析Spring MVC:HandlerAdapter</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2018-12-01</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Spring-MVC/">
+              Spring MVC
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>剖析Spring MVC,介绍Spring MVC中的HandlerAdapter。</p>
+<span id="more"></span>
+
+<p>在前面文章中，<code>DispatcherServlet</code>接收到请求后通过<code>HandlerMapping</code>,<code>HandlerAdapter</code>来处理请求，这一章先来看<code>HandlerAdapter</code>是如何工作的。</p>
+<pre class="mermaid" id="mermaid"></pre><script>
+<pre><code>    // 使用 DOMContentLoaded 事件确保 DOM 构建完成后执行脚本
+    document.addEventListener(&apos;DOMContentLoaded&apos;, function() &#123;
+    const originalContent = &quot;  graph BT\n  AbstractHandlerMethodAdapter -.-&gt; HandlerAdapter\n  HttpRequestHandlerAdapter -.-&gt; HandlerAdapter\n  SimpleControllerHandlerAdapter -.-&gt; HandlerAdapter\n  SimpleServletHandlerAdapter -.-&gt; HandlerAdapter\n  RequestMappingHandlerAdapter --&gt;AbstractHandlerMethodAdapter&quot;;
+    const mermaid = document.getElementById(&apos;mermaid&apos;);
+    // 创建文本节点并设置内容
+    const textNode = document.createTextNode(originalContent);
+    // 将文本节点添加到元素中
+    mermaid.appendChild(textNode);
+  &#125;);
+&lt;/script&gt;</code></pre><pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">HandlerAdapter</span> <span class="token punctuation">&#123;</span>
+
+	<span class="token keyword">boolean</span> <span class="token function">supports</span><span class="token punctuation">(</span><span class="token class-name">Object</span> handler<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token annotation punctuation">@Nullable</span>
+	<span class="token class-name">ModelAndView</span> <span class="token function">handle</span><span class="token punctuation">(</span><span class="token class-name">HttpServletRequest</span> request<span class="token punctuation">,</span> <span class="token class-name">HttpServletResponse</span> response<span class="token punctuation">,</span> <span class="token class-name">Object</span> handler<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">long</span> <span class="token function">getLastModified</span><span class="token punctuation">(</span><span class="token class-name">HttpServletRequest</span> request<span class="token punctuation">,</span> <span class="token class-name">Object</span> handler<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>HandlerAdapter</code>包含三个方法分别为：是否支持handler，使用handler处理请求，获取资源的LastModified值。</p>
+<p>在处理一个请求时。<code>DispatcherServlet</code>中的<code>doDispatch</code>会获取<code>handler</code>,然后通过<code>handler</code>获取<code>HandlerAdapter</code>,获取到<code>HandlerAdapter</code>后调用<code>handle</code>方法，获取<code>ModelAndView</code>，返回请求。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token comment">//获取HandlerAdapter</span>
+<span class="token class-name">HandlerAdapter</span> ha <span class="token operator">=</span> <span class="token function">getHandlerAdapter</span><span class="token punctuation">(</span>mappedHandler<span class="token punctuation">.</span><span class="token function">getHandler</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">protected</span> <span class="token class-name">HandlerAdapter</span> <span class="token function">getHandlerAdapter</span><span class="token punctuation">(</span><span class="token class-name">Object</span> handler<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">ServletException</span> <span class="token punctuation">&#123;</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>handlerAdapters <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">HandlerAdapter</span> ha <span class="token operator">:</span> <span class="token keyword">this</span><span class="token punctuation">.</span>handlerAdapters<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>logger<span class="token punctuation">.</span><span class="token function">isTraceEnabled</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        logger<span class="token punctuation">.</span><span class="token function">trace</span><span class="token punctuation">(</span><span class="token string">"Testing handler adapter ["</span> <span class="token operator">+</span> ha <span class="token operator">+</span> <span class="token string">"]"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">&#125;</span>
+      <span class="token comment">//使用supports方法寻找合适的适配器子类</span>
+      <span class="token keyword">if</span> <span class="token punctuation">(</span>ha<span class="token punctuation">.</span><span class="token function">supports</span><span class="token punctuation">(</span>handler<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        <span class="token keyword">return</span> ha<span class="token punctuation">;</span>
+      <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+  <span class="token punctuation">&#125;</span>
+  <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">ServletException</span><span class="token punctuation">(</span><span class="token string">"No adapter for handler ["</span> <span class="token operator">+</span> handler <span class="token operator">+</span>
+      <span class="token string">"]: The DispatcherServlet configuration needs to include a HandlerAdapter that supports this handler"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span>
+<span class="token comment">//获取lastModified</span>
+<span class="token keyword">long</span> lastModified <span class="token operator">=</span> ha<span class="token punctuation">.</span><span class="token function">getLastModified</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> mappedHandler<span class="token punctuation">.</span><span class="token function">getHandler</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment">//获取ModelAndView</span>
+mv <span class="token operator">=</span> ha<span class="token punctuation">.</span><span class="token function">handle</span><span class="token punctuation">(</span>processedRequest<span class="token punctuation">,</span> response<span class="token punctuation">,</span> mappedHandler<span class="token punctuation">.</span><span class="token function">getHandler</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>以上基本解释了HandlerAdapter的这三个方法。再来看他的实现。</p>
+<h2 id="1-HttpRequestHandlerAdapter"><a href="#1-HttpRequestHandlerAdapter" class="headerlink" title="1. HttpRequestHandlerAdapter"></a>1. HttpRequestHandlerAdapter</h2><p> 适配HTTP请求处理器适配器，适配HttpRequest类型handler。</p>
+<ol>
+<li>supports：<code>handler instanceof HttpRequestHandler</code>，适配HttpRequestHandler。</li>
+<li>handle：调用<code>HttpRequestHandler</code>的handleRequest方法。</li>
+</ol>
+<h2 id="2-SimpleControllerHandlerAdapter"><a href="#2-SimpleControllerHandlerAdapter" class="headerlink" title="2. SimpleControllerHandlerAdapter"></a>2. SimpleControllerHandlerAdapter</h2><p>适配Controller类型的handler(实现Controller)。</p>
+<ol>
+<li>supports：<code>handler instanceof Controller</code>，适配Controller。</li>
+<li>handle：调用<code>Controller</code>的handleRequest方法。 </li>
+</ol>
+<h2 id="3-SimpleServletHandlerAdapter"><a href="#3-SimpleServletHandlerAdapter" class="headerlink" title="3. SimpleServletHandlerAdapter"></a>3. SimpleServletHandlerAdapter</h2><p>适配servlet类型的handler。</p>
+<ol>
+<li>supports：<code>handler instanceof Servlet</code>，适配Servlet。</li>
+<li>handle：调用<code>Servlet</code>的service方法。 </li>
+</ol>
+<h2 id="4-RequestMappingHandlerAdapter"><a href="#4-RequestMappingHandlerAdapter" class="headerlink" title="4. RequestMappingHandlerAdapter"></a>4. RequestMappingHandlerAdapter</h2><p><code>AbstractHandlerMethodAdapter</code>,<code>RequestMappingHandlerAdapter</code>：注解方式，适配HandlerMethod。</p>
+<p><code>RequestMappingHandlerAdapter</code>继承<code>AbstractHandlerMethodAdapter</code>，AbstractHandlerMethodAdapter为一个抽象模板模板。</p>
+<ol>
+<li>supports：<code>handler instanceof HandlerMethod &amp;&amp; supportsInternal((HandlerMethod) handler)</code>,适配HandlerMethod，supportsInternal为抽象模板方法，在子类中直接返回了true。</li>
+<li>handle：调用本类中<code>handleInternal</code>抽象方法。在子类中<code>RequestMappingHandlerAdapter</code>实现。</li>
+</ol>
+<p>下面详细看RequestMappingHandlerAdapter，</p>
+<ol>
+<li><p>RequestMappingHandlerAdapter的创建：<br><code>RequestMappingHandlerAdapter</code>实现<code>InitializingBean</code>,</p>
+</li>
+<li><p>RequestMappingHandlerAdapter的使用：</p>
+</li>
+</ol>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Override</span>
+<span class="token keyword">protected</span> <span class="token class-name">ModelAndView</span> <span class="token function">handleInternal</span><span class="token punctuation">(</span><span class="token class-name">HttpServletRequest</span> request<span class="token punctuation">,</span>
+    <span class="token class-name">HttpServletResponse</span> response<span class="token punctuation">,</span> <span class="token class-name">HandlerMethod</span> handlerMethod<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span> <span class="token punctuation">&#123;</span>
+
+  <span class="token class-name">ModelAndView</span> mav<span class="token punctuation">;</span>
+  <span class="token function">checkRequest</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+  <span class="token comment">// Execute invokeHandlerMethod in synchronized block if required.</span>
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>synchronizeOnSession<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token class-name">HttpSession</span> session <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">getSession</span><span class="token punctuation">(</span><span class="token boolean">false</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span>session <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token class-name">Object</span> mutex <span class="token operator">=</span> <span class="token class-name">WebUtils</span><span class="token punctuation">.</span><span class="token function">getSessionMutex</span><span class="token punctuation">(</span>session<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token keyword">synchronized</span> <span class="token punctuation">(</span>mutex<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+        mav <span class="token operator">=</span> <span class="token function">invokeHandlerMethod</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> response<span class="token punctuation">,</span> handlerMethod<span class="token punctuation">)</span><span class="token punctuation">;</span>
+      <span class="token punctuation">&#125;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+      <span class="token comment">// No HttpSession available -> no mutex necessary</span>
+      mav <span class="token operator">=</span> <span class="token function">invokeHandlerMethod</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> response<span class="token punctuation">,</span> handlerMethod<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+  <span class="token punctuation">&#125;</span>
+  <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+    <span class="token comment">// No synchronization on session demanded at all...</span>
+    mav <span class="token operator">=</span> <span class="token function">invokeHandlerMethod</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> response<span class="token punctuation">,</span> handlerMethod<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token punctuation">&#125;</span>
+
+  <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span>response<span class="token punctuation">.</span><span class="token function">containsHeader</span><span class="token punctuation">(</span><span class="token constant">HEADER_CACHE_CONTROL</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">getSessionAttributesHandler</span><span class="token punctuation">(</span>handlerMethod<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">hasSessionAttributes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+      <span class="token function">applyCacheSeconds</span><span class="token punctuation">(</span>response<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>cacheSecondsForSessionAttributeHandlers<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+    <span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+      <span class="token function">prepareResponse</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">&#125;</span>
+  <span class="token punctuation">&#125;</span>
+
+  <span class="token keyword">return</span> mav<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre></script>
+        </div>
+          
+        <div class="top-div">
+          
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2018/11/28/spring-mvc-handler/">
+          <h3 class="post-title">
+            下一篇：剖析Spring MVC:HandlerMapping
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

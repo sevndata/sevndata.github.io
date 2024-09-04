@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>GitLab的安装使用及迁移</title>
+<meta name="keywords" content="GitLab的安装使用及迁移, sevndata">
+<meta name="description" content="记录一次GitLab的迁移过程">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="GitLab的安装使用及迁移">
+<meta property="og:description" content="记录一次GitLab的迁移过程">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">GitLab的安装使用及迁移</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-09-21</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Git/">
+              Git
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>记录一次GitLab的迁移过程。</p>
+<span id="more"></span>
+
+<p>由于原有的GitLab部署在内网环境中，对于出差的同事只能通过路由器映射端口才能使用GitLab，如此背景下进行GitLab从内网迁移到云。系统环境为Ubuntu迁移到CentOS下。在安装迁移过程中遇到很多问题，本文将以事件过程分享。</p>
+<h3 id="1-安装文档"><a href="#1-安装文档" class="headerlink" title="1.安装文档"></a>1.安装文档</h3><p>查看<a target="_blank" rel="noopener" href="https://about.gitlab.com/install/#centos-7">GitLab官方安装文档</a>，得到如下内容：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> yum <span class="token function">install</span> <span class="token parameter variable">-y</span> <span class="token function">curl</span> policycoreutils-python openssh-server
+<span class="token function">sudo</span> systemctl <span class="token builtin class-name">enable</span> sshd
+<span class="token function">sudo</span> systemctl start sshd
+<span class="token function">sudo</span> firewall-cmd <span class="token parameter variable">--permanent</span> --add-service<span class="token operator">=</span>http
+<span class="token function">sudo</span> firewall-cmd <span class="token parameter variable">--permanent</span> --add-service<span class="token operator">=</span>https
+<span class="token function">sudo</span> systemctl reload firewalld<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> yum <span class="token function">install</span> postfix
+<span class="token function">sudo</span> systemctl <span class="token builtin class-name">enable</span> postfix
+<span class="token function">sudo</span> systemctl start postfix<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">curl</span> https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh <span class="token operator">|</span> <span class="token function">sudo</span> <span class="token function">bash</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token assign-left variable">EXTERNAL_URL</span><span class="token operator">=</span><span class="token string">"https://gitlab.example.com"</span> yum <span class="token function">install</span> <span class="token parameter variable">-y</span> gitlab-ee<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h3 id="2-社区版安装"><a href="#2-社区版安装" class="headerlink" title="2.社区版安装"></a>2.社区版安装</h3><p>尝试修改为社区版脚本安装，结果为可使用，如下：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">curl</span> https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh <span class="token operator">|</span> <span class="token function">sudo</span> <span class="token function">bash</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token assign-left variable">EXTERNAL_URL</span><span class="token operator">=</span><span class="token string">"https://gitlab.example.com"</span> yum <span class="token function">install</span> <span class="token parameter variable">-y</span> gitlab-ce<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>目录:</p>
+<pre class="line-numbers language-none"><code class="language-none">主目录：&#x2F;opt&#x2F;gitlab
+配置文件地址：&#x2F;etc&#x2F;gitlab&#x2F;gitlab.rb
+各个组件地址：&#x2F;var&#x2F;opt&#x2F;gitlab
+日志地址：&#x2F;var&#x2F;log&#x2F;gitlab<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>常用命令:</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment">#启动状态</span>
+gitlab-ctl status
+<span class="token comment">#重新加载配置</span>
+<span class="token function">sudo</span> gitlab-ctl reconfigure
+<span class="token comment">#重新启动</span>
+gitlab-ctl restart
+<span class="token comment">#启动</span>
+gitlab-ctl start
+<span class="token comment">#停止</span>
+gitlab-ctl stop
+<span class="token comment">#停止某个组件</span>
+gitlab-ctl stop unicorn
+<span class="token comment">#各组件日志查看</span>
+gitlab-ctl <span class="token function">tail</span> nginx<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="3-备份被迁移的GitLab"><a href="#3-备份被迁移的GitLab" class="headerlink" title="3.备份被迁移的GitLab"></a>3.备份被迁移的GitLab</h3><p>备份原来的GitLab:</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> gitlab-rake gitlab:backup:create<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>将备份文件(几十个G，有点大)上传到目标服务器上:</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">scp</span> 1599804179_2020_09_11_12.6.2_gitlab_backup.tar root@xxx:/var/opt/gitlab/backups/<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<h3 id="4-恢复备份"><a href="#4-恢复备份" class="headerlink" title="4.恢复备份"></a>4.恢复备份</h3><p>在目标服务恢复备份：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">gitlab-ctl stop unicorn
+gitlab-ctl stop sidekiq<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">chmod</span> <span class="token number">777</span> 1599804179_2020_09_11_12.6.2_gitlab_backup.tar
+gitlab-rake gitlab:backup:restore <span class="token assign-left variable">BACKUP</span><span class="token operator">=</span>1599804179_2020_09_11_12.6.2<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>在恢复过程中报错，版本不兼容。</p>
+<h3 id="5-版本兼容问题"><a href="#5-版本兼容问题" class="headerlink" title="5.版本兼容问题"></a>5.版本兼容问题</h3><p>查看原来GitLab版本为12.6.2，新安装版本为13.3.5，尝试升级原有GitLab:</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">cat</span> /opt/gitlab/embedded/service/gitlab-rails/VERSION
+<span class="token function">sudo</span> <span class="token function">apt-get</span> update
+<span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> gitlab-ce
+<span class="token function">sudo</span> <span class="token function">apt</span> <span class="token function">install</span> gitlab-ce<span class="token operator">=</span><span class="token number">13.3</span>.5-ce<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>发现GitLab不能跨版本升级，升级到了12.9.2，考虑到升级需要时间，备份文件过大传输过慢，决定将新安装的13.3.5版本GitLab降版本到12.6.2</p>
+<h3 id="6-卸载重装"><a href="#6-卸载重装" class="headerlink" title="6.卸载重装"></a>6.卸载重装</h3><p>卸载并删除GitLab:</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> yum <span class="token function">install</span> <span class="token parameter variable">-y</span> gitlab-ee<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<pre class="line-numbers language-none"><code class="language-none">find &#x2F; -name gitlab | xargs rm -rf<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>尝试直接修改脚本安装：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">curl</span> https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce-12.6.2/script.rpm.sh <span class="token operator">|</span> <span class="token function">sudo</span> <span class="token function">bash</span>
+<span class="token function">curl</span> https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce.12.6.2/script.rpm.sh <span class="token operator">|</span> <span class="token function">sudo</span> <span class="token function">bash</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>未能成功。查看连接是否正确。浏览器中打开显示<code>The page you were looking for doesn&#39;t exist</code>，<code>wget</code>显示<code>404</code>。官网中寻找到<a target="_blank" rel="noopener" href="https://packages.gitlab.com/gitlab/gitlab-ce/">下载地址</a>（直接改地址，官网查找，找了好久没找到，最后在搜索引擎中找到了地址），搜索<code>12.6.2</code>查找包，根据系统版本选择版本，这里选择<code>el/7</code>:</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">curl</span> <span class="token parameter variable">-s</span> https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.rpm.sh <span class="token operator">|</span> <span class="token function">sudo</span> <span class="token function">bash</span>
+<span class="token function">sudo</span> yum <span class="token function">install</span> gitlab-ce-12.6.2-ce.0.el7.x8，6_64<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>安装成功后，启动服务。浏览器中访问为502。查看各组件启动情况，并配置修改。</p>
+<h3 id="7-配置"><a href="#7-配置" class="headerlink" title="7.配置"></a>7.配置</h3><p>挨个查询各个组件运行情况并解决（比较庞大，繁琐。只能遇到什么问题解决什么问题），修改配置后需要重新加载配置并启动</p>
+<p>各组件进程不能通过kill杀掉，gitlab-ctl守护进程会启动子进程。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> gitlab-ctl reconfigure
+<span class="token function">sudo</span> gitlab-ctl restart<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>以下为本次迁移遇到的问题以及解决方案：</p>
+<ol>
+<li><code>gitlab-ctl reconfigure</code>出现<code>No such file or directory</code>错误</li>
+</ol>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">/opt/gitlab/embedded/bin/gitlab-logrotate-wrapper: No such <span class="token function">file</span> or directory
+/opt/gitlab/embedded/service/gitlab-rails/bin/sidekiq-cluster: No such <span class="token function">file</span> or directory<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>可以从其他机器拷贝一份，也可以通过来回修改<code>unicorn</code>端口号自动生成文件</p>
+<ol start="2">
+<li>nginx端口号冲突导致启动异常</li>
+</ol>
+<p>本台服务器通过<code>nginx</code>代理很多其他服务。决定禁用<code>GitLab</code>自带<code>nginx</code>使用原有<code>nginx</code>。修改<code>GitLab</code>配置：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">external_url <span class="token string">'xxx'</span>
+gitlab_workhorse<span class="token punctuation">[</span><span class="token string">'listen_network'</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">"tcp"</span>
+gitlab_workhorse<span class="token punctuation">[</span><span class="token string">'listen_addr'</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">"127.0.0.1:18181"</span>
+nginx<span class="token punctuation">[</span><span class="token string">'enable'</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token boolean">false</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p>修改原有<code>nginx</code>代理到该服务。启动后出现异常，手动关闭<code>GitLab</code>中<code>nginx</code>服务恢复正常。猜测与<code>external_url</code>有关系。可尝试注释掉<code>external_url</code>。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">gitlab-ctl stop nginx<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>同时可能没有写日志权限，要赋予权限</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">chmod</span> <span class="token parameter variable">-R</span> o+x /var/opt/gitlab/gitlab-rails<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<ol start="3">
+<li>unicorn端口号冲突导致启动异常</li>
+</ol>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">unicorn<span class="token punctuation">[</span><span class="token string">'port'</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token number">18080</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<ol start="4">
+<li>prometheus端口冲突导致启动异常</li>
+</ol>
+<p>直接修改了原来的prometheus端口</p>
+<ol start="5">
+<li>unicorn写日志权限不足</li>
+</ol>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">chmod</span> <span class="token parameter variable">-R</span> <span class="token number">777</span> /var/log/gitlab
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<ol start="6">
+<li>其他类似问题</li>
+</ol>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token punctuation">&#123;</span><span class="token string">"address"</span><span class="token builtin class-name">:</span><span class="token string">"/var/opt/gitlab/redis/redis.socket"</span>,<span class="token string">"level"</span><span class="token builtin class-name">:</span><span class="token string">"info"</span>,<span class="token string">"msg"</span><span class="token builtin class-name">:</span><span class="token string">"redis: dialing"</span>,<span class="token string">"network"</span><span class="token builtin class-name">:</span><span class="token string">"unix"</span>,<span class="token string">"time"</span><span class="token builtin class-name">:</span><span class="token string">"2020-09-11T18:01:41+08:00"</span><span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#123;</span><span class="token string">"error"</span><span class="token builtin class-name">:</span><span class="token string">"keywatcher: dial unix /var/opt/gitlab/redis/redis.socket: connect: connection refused"</span>,<span class="token string">"level"</span><span class="token builtin class-name">:</span><span class="token string">"error"</span>,<span class="token string">"msg"</span><span class="token builtin class-name">:</span><span class="token string">"unknown error"</span>,<span class="token string">"time"</span><span class="token builtin class-name">:</span><span class="token string">"2020-09-11T18:01:41+08:00"</span><span class="token punctuation">&#125;</span>
+
+ind<span class="token punctuation">(</span><span class="token punctuation">)</span> to <span class="token number">0.0</span>.0.0:80 failed <span class="token punctuation">(</span><span class="token number">98</span>: Address already <span class="token keyword">in</span> use<span class="token punctuation">)</span>
+
+The data directory was initialized by PostgreSQL version <span class="token number">11</span>, <span class="token function">which</span> is not compatible with this version <span class="token number">10.9</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>经过各种问题的解决终于服务正常，并在浏览器中可以访问到。</p>
+<h3 id="8-再次恢复"><a href="#8-再次恢复" class="headerlink" title="8.再次恢复"></a>8.再次恢复</h3><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">chmod</span> <span class="token number">777</span> 1599804179_2020_09_11_12.6.2_gitlab_backup.tar
+gitlab-rake gitlab:backup:restore <span class="token assign-left variable">BACKUP</span><span class="token operator">=</span>1599804179_2020_09_11_12.6.2<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>过程中有一个项目恢复失败</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">sxf <span class="token punctuation">..</span>. <span class="token punctuation">[</span>DONE<span class="token punctuation">]</span>
+        * tangKu8/misapp <span class="token punctuation">..</span>. Error: <span class="token number">13</span>:CreateRepositoryFromBundle: cmd <span class="token function">wait</span> failed: <span class="token builtin class-name">exit</span> status <span class="token number">128</span>
+        <span class="token punctuation">[</span>Failed<span class="token punctuation">]</span> restoring tangKu8/misapp repository
+Warning: Your gitlab.rb and gitlab-secrets.json files contain sensitive data
+and are not included <span class="token keyword">in</span> this backup. You will need to restore these files manually.<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="9-邮件配置"><a href="#9-邮件配置" class="headerlink" title="9.邮件配置"></a>9.邮件配置</h3><h3 id="10-验证"><a href="#10-验证" class="headerlink" title="10.验证"></a>10.验证</h3><p>验证各个用户和项目迁移是否成功。</p>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-%E5%AE%89%E8%A3%85%E6%96%87%E6%A1%A3"><span class="top-box-text">1.安装文档</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#2-%E7%A4%BE%E5%8C%BA%E7%89%88%E5%AE%89%E8%A3%85"><span class="top-box-text">2.社区版安装</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#3-%E5%A4%87%E4%BB%BD%E8%A2%AB%E8%BF%81%E7%A7%BB%E7%9A%84GitLab"><span class="top-box-text">3.备份被迁移的GitLab</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#4-%E6%81%A2%E5%A4%8D%E5%A4%87%E4%BB%BD"><span class="top-box-text">4.恢复备份</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#5-%E7%89%88%E6%9C%AC%E5%85%BC%E5%AE%B9%E9%97%AE%E9%A2%98"><span class="top-box-text">5.版本兼容问题</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#6-%E5%8D%B8%E8%BD%BD%E9%87%8D%E8%A3%85"><span class="top-box-text">6.卸载重装</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#7-%E9%85%8D%E7%BD%AE"><span class="top-box-text">7.配置</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#8-%E5%86%8D%E6%AC%A1%E6%81%A2%E5%A4%8D"><span class="top-box-text">8.再次恢复</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#9-%E9%82%AE%E4%BB%B6%E9%85%8D%E7%BD%AE"><span class="top-box-text">9.邮件配置</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#10-%E9%AA%8C%E8%AF%81"><span class="top-box-text">10.验证</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/09/09/doc-showdoc-init/">
+          <h3 class="post-title">
+            下一篇：ShowDoc的导入与安装
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

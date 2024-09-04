@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>浅析servlet</title>
+<meta name="keywords" content="浅析servlet, sevndata">
+<meta name="description" content="浅析在java web开发中使用的servlet">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="浅析servlet">
+<meta property="og:description" content="浅析在java web开发中使用的servlet">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">浅析servlet</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2018-03-11</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/servlet/">
+              servlet
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>浅析在java web开发中使用的servlet。</p>
+<span id="more"></span>
+<h2 id="1-main"><a href="#1-main" class="headerlink" title="1. main"></a>1. main</h2><pre class="mermaid" id="mermaid"></pre><script>
+<pre><code>    // 使用 DOMContentLoaded 事件确保 DOM 构建完成后执行脚本
+    document.addEventListener(&apos;DOMContentLoaded&apos;, function() &#123;
+    const originalContent = &quot;  graph BT\n  HttpServlet --&gt; GenericServlet\n  GenericServlet -.-&gt; Serializable\n  GenericServlet -.-&gt; Servlet\n  GenericServlet -.-&gt; ServletConfig&quot;;
+    const mermaid = document.getElementById(&apos;mermaid&apos;);
+    // 创建文本节点并设置内容
+    const textNode = document.createTextNode(originalContent);
+    // 将文本节点添加到元素中
+    mermaid.appendChild(textNode);
+  &#125;);
+&lt;/script&gt;</code></pre><pre class="mermaid" id="mermaid"></pre><script>
+<pre><code>    // 使用 DOMContentLoaded 事件确保 DOM 构建完成后执行脚本
+    document.addEventListener(&apos;DOMContentLoaded&apos;, function() &#123;
+    const originalContent = &quot;  graph BT\n  HttpServletRequestWrapper --&gt;ServletRequestWrapper\n  HttpServletRequestWrapper -.-&gt;HttpServletRequest\n  ServletRequestWrapper -.-&gt; ServletRequest\n  HttpServletRequest --&gt; ServletRequest\n\n  HttpServletResponseWrapper --&gt;ServletResponseWrapper\n  HttpServletResponseWrapper -.-&gt;HttpServletResponse\n  ServletResponseWrapper -.-&gt; ServletResponse \n  HttpServletResponse --&gt; ServletResponse&quot;;
+    const mermaid = document.getElementById(&apos;mermaid&apos;);
+    // 创建文本节点并设置内容
+    const textNode = document.createTextNode(originalContent);
+    // 将文本节点添加到元素中
+    mermaid.appendChild(textNode);
+  &#125;);
+&lt;/script&gt;</code></pre><p>servlet实例化,服务。</p>
+<ol>
+<li><code>Servlet</code>: init,service,destroy</li>
+<li><code>GenericServlet</code></li>
+<li><code>HttpServlet</code>: doGet,doPost…</li>
+<li><code>ServletConfig</code>: Config</li>
+<li><code>ServletContext</code>: Context</li>
+<li><code>Request</code>: 请求</li>
+<li><code>Response</code>: 响应</li>
+</ol>
+<h2 id="2-Wrapper"><a href="#2-Wrapper" class="headerlink" title="2. Wrapper"></a>2. Wrapper</h2><p><code>ServletRequestWrapper</code>,<code>ServletResponseWrapper</code>,<code>HttpServletRequestWrapper</code>,<code>HttpServletResponseWrapper</code></p>
+<p>对于<code>ServletRequest</code>,<code>ServletResponse</code>,<code>HttpServletRequest</code>,<code>HttpServletResponse</code>，servlet提供给开发者wrapper装饰类。开发者可以使用改变属性，扩展功能等,例如验证参数，过滤数据，自定义功能等。</p>
+<h2 id="3-ServletContainerInitializer"><a href="#3-ServletContainerInitializer" class="headerlink" title="3. ServletContainerInitializer"></a>3. ServletContainerInitializer</h2><p>servlet 3.0提供开发者<code>ServletContainerInitializer</code>，可以通过实现<code>ServletContainerInitializer</code>接口来注册初始化应用，从而取代<code>web.xml</code>。</p>
+<ol>
+<li>使用<code>web.xml</code>时，web容器会寻找<code>web.xml</code>进行初始化应用。</li>
+<li>使用实现<code>ServletContainerInitializer</code>时，web容器会寻找<code>ServletContainerInitializer</code>的实现类，并调用<code>onStartup</code>进行初始化应用。</li>
+</ol>
+<p>可参考<code>SpringServletContainerInitializer</code>,<code>TomcatStarter</code></p>
+<h2 id="4-Listener"><a href="#4-Listener" class="headerlink" title="4. Listener"></a>4. Listener</h2><p>servlet有如下Listener：</p>
+<ol>
+<li><p><code>ServletContextListener</code>，<code>ServletContextAttributeListener</code>：</p>
+<p> 监听<code>ServletContext</code>，例如Spring中<code>ContextLoaderListener</code>创建<code>WebApplicationContext</code>。</p>
+</li>
+<li><p><code>ServletRequestListener</code>，<code>ServletRequestAttributeListener</code>：</p>
+<p> 监听<code>ServletRequest</code>，例如Spring中<code>RequestContextListener</code>，进行<code>setLocale</code>等。</p>
+</li>
+<li><p><code>AsyncListener</code></p>
+<p> 异步监听</p>
+</li>
+<li><p><code>HttpSessionListener</code>，<code>HttpSessionIdListener</code>，<code>HttpSessionAttributeListener</code> </p>
+<p>session的监听，创建，销毁，属性值变化，sessionIdChanged</p>
+</li>
+<li><p><code>HttpSessionActivationListener</code></p>
+<p>session序列化监听</p>
+</li>
+<li><p><code>HttpSessionBindingListener</code></p>
+<p><code>valueBound()</code>: 数据对象绑定到session监听</p>
+<p><code>valueUnbound</code>: 解绑监听</p>
+</li>
+<li><p><code>WriteListener</code>,<code>ReadListener</code></p>
+</li>
+</ol>
+<p>名称以Listener结尾的一般为创建销毁监听，AttributeListener为属性变化监听。</p>
+<h2 id="5-Filter"><a href="#5-Filter" class="headerlink" title="5. Filter"></a>5. Filter</h2><p><code>Filter</code>,<code>FilterChain</code>,<code>FilterConfig</code></p>
+<h2 id="6-Asyn"><a href="#6-Asyn" class="headerlink" title="6. Asyn"></a>6. Asyn</h2><p>servlet3.0支持异步。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">void</span> <span class="token function">start</span><span class="token punctuation">(</span><span class="token class-name">Runnable</span> run<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</script>
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-main"><span class="top-box-text">1. main</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2017/11/06/sevn/">
+          <h3 class="post-title">
+            下一篇：sevn的互联网之旅
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>python自动发送邮件</title>
+<meta name="keywords" content="python自动发送邮件, sevndata">
+<meta name="description" content="分享使用python自动发送类似日报邮件">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="python自动发送邮件">
+<meta property="og:description" content="分享使用python自动发送类似日报邮件">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">python自动发送邮件</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2019-06-02</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/python/">
+              python
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>分享使用python自动发送类似日报邮件</p>
+<span id="more"></span>
+
+<p>这里是我的自动发送邮件，示例：</p>
+<pre class="line-numbers language-python" data-language="python"><code class="language-python"><span class="token keyword">import</span> timefrom email<span class="token punctuation">.</span>mime<span class="token punctuation">.</span>application 
+<span class="token keyword">import</span> MIMEApplicationfrom email<span class="token punctuation">.</span>mime<span class="token punctuation">.</span>multipart 
+<span class="token keyword">import</span> MIMEMultipartfrom email<span class="token punctuation">.</span>mime<span class="token punctuation">.</span>text 
+<span class="token keyword">import</span> MIMETextimport smtplibfrom email 
+<span class="token keyword">import</span> utils
+
+<span class="token keyword">class</span> <span class="token class-name">EMailer</span><span class="token punctuation">(</span><span class="token builtin">object</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+<span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span>contacts<span class="token punctuation">)</span><span class="token punctuation">:</span>        
+    self<span class="token punctuation">.</span>address <span class="token operator">=</span> <span class="token string">''</span> <span class="token comment"># 发送的邮箱地址        </span>
+    auth_info <span class="token operator">=</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>        
+    auth_info<span class="token punctuation">[</span><span class="token string">'server'</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">''</span>  <span class="token comment"># 邮箱服务器        </span>
+    auth_info<span class="token punctuation">[</span><span class="token string">'user'</span><span class="token punctuation">]</span> <span class="token operator">=</span> self<span class="token punctuation">.</span>address        
+    auth_info<span class="token punctuation">[</span><span class="token string">'password'</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token string">''</span> <span class="token comment"># 邮箱密码        </span>
+    self<span class="token punctuation">.</span>user_info <span class="token operator">=</span> auth_info        
+    self<span class="token punctuation">.</span>contacts <span class="token operator">=</span> contacts <span class="token comment"># 接受邮件的邮箱        </span>
+    <span class="token keyword">print</span> <span class="token punctuation">(</span>self<span class="token punctuation">.</span>contacts<span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">send_mail</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> subject<span class="token punctuation">,</span> content<span class="token punctuation">)</span><span class="token punctuation">:</span>        
+    str_to <span class="token operator">=</span> <span class="token string">'; '</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>self<span class="token punctuation">.</span>contacts<span class="token punctuation">)</span>        
+    server <span class="token operator">=</span> self<span class="token punctuation">.</span>user_info<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'server'</span><span class="token punctuation">)</span>       
+    smtp_port <span class="token operator">=</span> <span class="token number">25</span>        
+    user <span class="token operator">=</span> self<span class="token punctuation">.</span>user_info<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'user'</span><span class="token punctuation">)</span>        
+    passwd <span class="token operator">=</span> self<span class="token punctuation">.</span>user_info<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'password'</span><span class="token punctuation">)</span>
+    
+    <span class="token keyword">if</span> <span class="token keyword">not</span> <span class="token punctuation">(</span>server <span class="token keyword">and</span> user <span class="token keyword">and</span> passwd<span class="token punctuation">)</span><span class="token punctuation">:</span>            
+        <span class="token keyword">print</span> <span class="token punctuation">(</span><span class="token string">'incomplete login info, exit now'</span><span class="token punctuation">)</span>            
+        <span class="token keyword">return</span>
+        
+    msg_root <span class="token operator">=</span> MIMEMultipart<span class="token punctuation">(</span><span class="token string">'related'</span><span class="token punctuation">)</span>        
+    msg_root<span class="token punctuation">[</span><span class="token string">'Subject'</span><span class="token punctuation">]</span> <span class="token operator">=</span> subject        
+    msg_root<span class="token punctuation">[</span><span class="token string">'From'</span><span class="token punctuation">]</span> <span class="token operator">=</span> self<span class="token punctuation">.</span>address        
+    msg_root<span class="token punctuation">[</span><span class="token string">'To'</span><span class="token punctuation">]</span> <span class="token operator">=</span> str_to
+    
+    msg_alternative <span class="token operator">=</span> MIMEMultipart<span class="token punctuation">(</span><span class="token string">'alternative'</span><span class="token punctuation">)</span>        
+    msg_root<span class="token punctuation">.</span>attach<span class="token punctuation">(</span>msg_alternative<span class="token punctuation">)</span>
+    main_msg <span class="token operator">=</span> MIMEMultipart<span class="token punctuation">(</span><span class="token punctuation">)</span>        
+    textApart<span class="token operator">=</span>MIMEText<span class="token punctuation">(</span>subject<span class="token punctuation">)</span>
+    
+    zipFile <span class="token operator">=</span> subject<span class="token operator">+</span><span class="token string">".docx"</span>        
+    zipApart <span class="token operator">=</span> MIMEApplication<span class="token punctuation">(</span><span class="token builtin">open</span><span class="token punctuation">(</span>zipFile<span class="token punctuation">,</span> <span class="token string">'rb'</span><span class="token punctuation">)</span><span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>        
+    zipApart<span class="token punctuation">.</span>add_header<span class="token punctuation">(</span><span class="token string">'Content-Disposition'</span><span class="token punctuation">,</span> <span class="token string">'attachment'</span><span class="token punctuation">,</span> filename<span class="token operator">=</span>zipFile<span class="token punctuation">)</span>
+    main_msg<span class="token punctuation">.</span>attach<span class="token punctuation">(</span>textApart<span class="token punctuation">)</span>        
+    main_msg<span class="token punctuation">.</span>attach<span class="token punctuation">(</span>zipApart<span class="token punctuation">)</span>
+    main_msg<span class="token punctuation">[</span><span class="token string">'From'</span><span class="token punctuation">]</span> <span class="token operator">=</span> self<span class="token punctuation">.</span>address       
+    main_msg<span class="token punctuation">[</span><span class="token string">'To'</span><span class="token punctuation">]</span> <span class="token operator">=</span> str_to        
+    main_msg<span class="token punctuation">[</span><span class="token string">'Subject'</span><span class="token punctuation">]</span> <span class="token operator">=</span> subject        
+    main_msg<span class="token punctuation">[</span><span class="token string">'Date'</span><span class="token punctuation">]</span> <span class="token operator">=</span> utils<span class="token punctuation">.</span>formatdate<span class="token punctuation">(</span><span class="token punctuation">)</span>        
+    full_text <span class="token operator">=</span> main_msg<span class="token punctuation">.</span>as_string<span class="token punctuation">(</span><span class="token punctuation">)</span>        
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        smtp <span class="token operator">=</span> smtplib<span class="token punctuation">.</span>SMTP<span class="token punctuation">(</span>server<span class="token punctuation">,</span> smtp_port<span class="token punctuation">)</span>            
+        smtp<span class="token punctuation">.</span>ehlo<span class="token punctuation">(</span><span class="token punctuation">)</span>            
+        smtp<span class="token punctuation">.</span>starttls<span class="token punctuation">(</span><span class="token punctuation">)</span>            
+        smtp<span class="token punctuation">.</span>ehlo<span class="token punctuation">(</span><span class="token punctuation">)</span>            
+        smtp<span class="token punctuation">.</span>login<span class="token punctuation">(</span>user<span class="token punctuation">,</span> passwd<span class="token punctuation">)</span>            
+        smtp<span class="token punctuation">.</span>sendmail<span class="token punctuation">(</span>self<span class="token punctuation">.</span>address<span class="token punctuation">,</span> self<span class="token punctuation">.</span>contacts<span class="token punctuation">,</span> full_text<span class="token punctuation">)</span>            
+        smtp<span class="token punctuation">.</span>quit<span class="token punctuation">(</span><span class="token punctuation">)</span>            
+        <span class="token keyword">print</span> <span class="token punctuation">(</span><span class="token string">"success!"</span><span class="token punctuation">)</span>        
+        <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>            
+        <span class="token keyword">print</span> <span class="token punctuation">(</span><span class="token string">"fail:"</span> <span class="token operator">+</span> <span class="token builtin">str</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>    
+    firstContacts <span class="token operator">=</span> <span class="token string">""</span>    
+    EMailer<span class="token punctuation">(</span>firstContacts<span class="token punctuation">)</span><span class="token punctuation">.</span>send_mail<span class="token punctuation">(</span><span class="token string">"xxx_"</span><span class="token operator">+</span>time<span class="token punctuation">.</span>strftime<span class="token punctuation">(</span><span class="token string">"%Y年_%m月_%d日"</span><span class="token punctuation">,</span> time<span class="token punctuation">.</span>localtime<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token operator">+</span><span class="token string">"_工作日报"</span><span class="token punctuation">,</span> <span class="token string">""</span><span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>需要去邮箱设置开启smtp。可以去学习下邮件传输协议。</p>
+<p>执行python3 emailer.py测试发送</p>
+<p>准备一台服务器，定时执行就可以自动发邮件了。当然这是发送固定文件。具体如何创建word并写入内容有时间了再做研究。</p>
+
+        </div>
+          
+        <div class="top-div">
+          
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2019/05/26/java-idea-pojo/">
+          <h3 class="post-title">
+            下一篇：使用IntelliJ IDEA生成代码
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

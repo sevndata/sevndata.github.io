@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>ShowDoc的导入与安装</title>
+<meta name="keywords" content="ShowDoc的导入与安装, sevndata">
+<meta name="description" content="本文分享了ShowDoc安装，使用及导入">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="ShowDoc的导入与安装">
+<meta property="og:description" content="本文分享了ShowDoc安装，使用及导入">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">ShowDoc的导入与安装</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-09-09</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/ShowDoc/">
+              ShowDoc
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/python/">
+              python
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了ShowDoc安装，使用及导入。</p>
+<span id="more"></span>
+
+<p>分享一款好用的在线文档分享工具。一直在寻找一款好用的接口文档工具，曾经尝试过<code>Swagger</code>，<code>YApi</code>，<code>gitLab wiki</code>都差强人意。发现<code>ShowDoc</code>后十分惊喜，并且它可以私有化部署。</p>
+<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>ShowDoc是一个非常适合IT团队的在线文档分享工具，可以访问<a target="_blank" rel="noopener" href="https://github.com/star7th/showdoc">github</a>详细了解。同时可以参考<a target="_blank" rel="noopener" href="https://www.showdoc.cc/help">帮助文档</a>进行私有化部署。下文主要为私有化部署过程，导入的分享。</p>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><p>官方提供了自动脚本部署，Docker部署，PHP部署，二次开发等方法进行私有化部署，强烈推荐使用自动脚本部署，<a target="_blank" rel="noopener" href="https://www.showdoc.com.cn/script/showdoc">详细脚本内容</a>下载查看</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment">#下载脚本并赋予权限</span>
+ <span class="token function">wget</span> https://www.showdoc.com.cn/script/showdoc<span class="token punctuation">;</span>
+ <span class="token function">chmod</span> +x showdoc<span class="token punctuation">;</span>
+<span class="token comment">#默认安装中文版。如果想安装英文版，请加上en参数，如 ./showdoc en</span>
+./showdoc<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="md导入"><a href="#md导入" class="headerlink" title="md导入"></a>md导入</h3><p>安装完成后登录到web可以看到简洁的文档操作界面。然而碰到一个问题，原有的文档在gitLab wiki中，查找到官方没有提供导入<code>.md</code>的功能，但是提供了<a target="_blank" rel="noopener" href="https://www.showdoc.com.cn/page/102098">开放API接口</a>，可以利用此接口导入。</p>
+<p>以下为通过python读取文件下的<code>.md</code>文件，并通过开放API接口导入到<code>ShowDoc</code>中</p>
+<pre class="line-numbers language-python" data-language="python"><code class="language-python"><span class="token keyword">import</span> os
+<span class="token keyword">import</span> json
+<span class="token keyword">import</span> urllib<span class="token punctuation">.</span>parse
+<span class="token keyword">import</span> urllib<span class="token punctuation">.</span>request
+<span class="token keyword">import</span> fileinput
+<span class="token keyword">import</span> operator
+
+<span class="token comment"># 需要导入的文件夹地址</span>
+wiki_dir <span class="token operator">=</span> <span class="token string">'/Users/xx/work/doc'</span>
+
+<span class="token comment"># showdoc开放API参数</span>
+data <span class="token operator">=</span> <span class="token punctuation">&#123;</span>
+    <span class="token string">'api_key'</span> <span class="token punctuation">:</span> <span class="token string">'xx'</span><span class="token punctuation">,</span> 
+    <span class="token string">'api_token'</span> <span class="token punctuation">:</span> <span class="token string">'xx'</span><span class="token punctuation">,</span>
+    <span class="token string">'cat_name'</span> <span class="token punctuation">:</span> <span class="token string">'API'</span><span class="token punctuation">,</span>
+    <span class="token string">'page_title'</span> <span class="token punctuation">:</span> <span class="token string">''</span><span class="token punctuation">,</span>
+    <span class="token string">'page_content'</span> <span class="token punctuation">:</span> <span class="token string">''</span>
+    <span class="token punctuation">&#125;</span>
+<span class="token comment"># showdoc开放API地址</span>
+url <span class="token operator">=</span> <span class="token string">'http://xxx.com/server/index.php?s=/api/item/updateByApi'</span>
+
+<span class="token keyword">def</span> <span class="token function">get_filelist</span><span class="token punctuation">(</span><span class="token builtin">dir</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment"># 获取文件夹中所有文件，去除mac下.DS_Store文件。并排序文件</span>
+    <span class="token keyword">for</span> home<span class="token punctuation">,</span> dirs<span class="token punctuation">,</span> files <span class="token keyword">in</span> os<span class="token punctuation">.</span>walk<span class="token punctuation">(</span><span class="token builtin">dir</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">for</span> <span class="token builtin">dir</span> <span class="token keyword">in</span> dirs<span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token builtin">dir</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token string">'.DS_Store'</span> <span class="token keyword">in</span> files<span class="token punctuation">:</span>
+            files<span class="token punctuation">.</span>remove<span class="token punctuation">(</span><span class="token string">'.DS_Store'</span><span class="token punctuation">)</span>
+        files<span class="token punctuation">.</span>sort<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">for</span> filename <span class="token keyword">in</span> files<span class="token punctuation">:</span>
+            fullname <span class="token operator">=</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>join<span class="token punctuation">(</span>home<span class="token punctuation">,</span> filename<span class="token punctuation">)</span>
+            get_file<span class="token punctuation">(</span>filename<span class="token punctuation">,</span>fullname<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">get_file</span><span class="token punctuation">(</span>filename<span class="token punctuation">,</span>fullname<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment"># 读取文件，拼接showdoc参数</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span>fullname<span class="token punctuation">,</span> encoding<span class="token operator">=</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> file_obj<span class="token punctuation">:</span>
+            lines <span class="token operator">=</span> file_obj<span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        data<span class="token punctuation">[</span><span class="token string">'page_title'</span><span class="token punctuation">]</span> <span class="token operator">=</span> filename<span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">'.md'</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>
+        data<span class="token punctuation">[</span><span class="token string">'page_content'</span><span class="token punctuation">]</span> <span class="token operator">=</span> lines
+        do_post<span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+    <span class="token keyword">except</span> UnicodeDecodeError<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>fullname<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">do_post</span><span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment"># 请求showdoc开放API</span>
+    data <span class="token operator">=</span> urllib<span class="token punctuation">.</span>parse<span class="token punctuation">.</span>urlencode<span class="token punctuation">(</span>data<span class="token punctuation">)</span>
+    req <span class="token operator">=</span> urllib<span class="token punctuation">.</span>request<span class="token punctuation">.</span>Request<span class="token punctuation">(</span>url<span class="token punctuation">,</span> data<span class="token punctuation">.</span>encode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    opener <span class="token operator">=</span> urllib<span class="token punctuation">.</span>request<span class="token punctuation">.</span>urlopen<span class="token punctuation">(</span>req<span class="token punctuation">)</span>
+    json<span class="token punctuation">.</span>loads<span class="token punctuation">(</span>opener<span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+    get_filelist<span class="token punctuation">(</span>wiki_dir<span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h3 id="数据库字典导入"><a href="#数据库字典导入" class="headerlink" title="数据库字典导入"></a>数据库字典导入</h3><p>官方提供了数据库字典的导入方法。</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">wget</span> https://www.showdoc.cc/script/showdoc_db.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sh</span> showdoc_db.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>需要修改脚本内容后执行<code>showdoc_db.sh</code></p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token assign-left variable">host</span><span class="token operator">=</span><span class="token string">"xxx"</span>				<span class="token comment">#数据库所在地址。默认是localhost</span>
+<span class="token assign-left variable">port</span><span class="token operator">=</span><span class="token number">3306</span>						<span class="token comment">#数据库所在端口。默认是3306</span>
+<span class="token assign-left variable">user</span><span class="token operator">=</span><span class="token string">"xxx"</span>   	 			<span class="token comment">#数据库的用户名</span>
+<span class="token assign-left variable">password</span><span class="token operator">=</span><span class="token string">"xxx"</span> 			<span class="token comment">#密码</span>
+<span class="token assign-left variable">db</span><span class="token operator">=</span><span class="token string">"xxx"</span> 					<span class="token comment">#要同步的数据库名。要同步多个db可以将本脚本复制多份</span>
+<span class="token assign-left variable">api_key</span><span class="token operator">=</span><span class="token string">"xxx"</span> 			<span class="token comment">#api_key</span>
+<span class="token assign-left variable">api_token</span><span class="token operator">=</span><span class="token string">"xxx"</span> 	<span class="token comment">#api_token</span>
+<span class="token assign-left variable">cat_name</span><span class="token operator">=</span><span class="token string">"xxx"</span> 	<span class="token comment">#可选。如果想把生成的文档都放在项目的子目录下，则这里填写子目录名。</span>
+<span class="token assign-left variable">url</span><span class="token operator">=</span><span class="token string">"http://xxx.com/server/index.php?s=/api/open/updateDbItem"</span> <span class="token comment">#可选。同步到的url。如果是使用www.showdoc.com.cn ，则不需要再改此项。如果是部署私有版版showdoc，请改此项为http://xx.com/server/index.php?s=/api/open/updateDbItem 。其中xx.com为你的部署域名</span>
+
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">MYSQL_PWD</span><span class="token operator">=</span><span class="token variable">$&#123;password&#125;</span>
+<span class="token assign-left variable">COMMAND</span><span class="token operator">=</span><span class="token string">"set names utf8;select TABLE_NAME ,TABLE_COMMENT from tables where TABLE_SCHEMA ='<span class="token variable">$&#123;db&#125;</span>'  "</span>
+<span class="token builtin class-name">declare</span> <span class="token assign-left variable">table_info</span><span class="token operator">=</span><span class="token variable"><span class="token variable">`</span>mysql -h$<span class="token punctuation">&#123;</span>host<span class="token punctuation">&#125;</span> -P$<span class="token punctuation">&#123;</span>port<span class="token punctuation">&#125;</span> -u$<span class="token punctuation">&#123;</span>user<span class="token punctuation">&#125;</span>  --show-warnings<span class="token operator">=</span>false <span class="token parameter variable">-D</span> information_schema <span class="token parameter variable">-e</span> <span class="token string">"<span class="token variable">$&#123;COMMAND&#125;</span>"</span> <span class="token variable">`</span></span>
+<span class="token comment">#echo $table_info</span>
+<span class="token assign-left variable">COMMAND</span><span class="token operator">=</span><span class="token string">"set names utf8;select TABLE_NAME ,COLUMN_NAME, COLUMN_DEFAULT ,IS_NULLABLE ,COLUMN_TYPE ,COLUMN_COMMENT from COLUMNS where TABLE_SCHEMA ='<span class="token variable">$&#123;db&#125;</span>'  "</span>
+<span class="token builtin class-name">declare</span> <span class="token assign-left variable">table_detail</span><span class="token operator">=</span><span class="token variable"><span class="token variable">`</span>mysql -h$<span class="token punctuation">&#123;</span>host<span class="token punctuation">&#125;</span> -P$<span class="token punctuation">&#123;</span>port<span class="token punctuation">&#125;</span> -u$<span class="token punctuation">&#123;</span>user<span class="token punctuation">&#125;</span>  --show-warnings<span class="token operator">=</span>false <span class="token parameter variable">-D</span> information_schema <span class="token parameter variable">-e</span> <span class="token string">"<span class="token variable">$&#123;COMMAND&#125;</span>"</span> <span class="token variable">`</span></span>
+<span class="token comment">#echo $table_detail</span>
+<span class="token assign-left variable">table_info2</span><span class="token operator">=</span><span class="token variable">$&#123;table_info<span class="token operator">/</span><span class="token operator">/</span>&amp;<span class="token operator">/</span>_this_and_change_&#125;</span>
+<span class="token assign-left variable">table_detail2</span><span class="token operator">=</span><span class="token variable">$&#123;table_detail<span class="token operator">/</span><span class="token operator">/</span>&amp;<span class="token operator">/</span>_this_and_change_&#125;</span>
+<span class="token function">curl</span> <span class="token parameter variable">-H</span> <span class="token string">'Content-Type: application/x-www-form-urlencoded; charset=UTF-8'</span>  <span class="token string">"<span class="token variable">$&#123;url&#125;</span>"</span> --data-binary @- <span class="token operator">&lt;&lt;</span><span class="token string">CURL_DATA
+from=shell&amp;table_info=<span class="token variable">$&#123;table_info2&#125;</span>&amp;table_detail=<span class="token variable">$&#123;table_detail2&#125;</span>&amp;api_key=<span class="token variable">$&#123;api_key&#125;</span>&amp;api_token=<span class="token variable">$&#123;api_token&#125;</span>&amp;cat_name=<span class="token variable">$&#123;cat_name&#125;</span>
+CURL_DATA</span>
+<span class="token builtin class-name">export</span> <span class="token assign-left variable">MYSQL_PWD</span><span class="token operator">=</span><span class="token string">""</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#%E7%AE%80%E4%BB%8B"><span class="top-box-text">简介</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#%E5%AE%89%E8%A3%85"><span class="top-box-text">安装</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#md%E5%AF%BC%E5%85%A5"><span class="top-box-text">md导入</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AD%97%E5%85%B8%E5%AF%BC%E5%85%A5"><span class="top-box-text">数据库字典导入</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/08/31/spring-boot-actuator/">
+          <h3 class="post-title">
+            下一篇：基于Spring Boot Actuator制作炫酷可视化系统监控
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

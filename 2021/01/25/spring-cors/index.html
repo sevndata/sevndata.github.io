@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>Spring CORS原理解析</title>
+<meta name="keywords" content="Spring CORS原理解析, sevndata">
+<meta name="description" content="本文分享了跨域，CORS原理解析等内容。阐述了CORS在Spring MVC和Spring Security中实现原理">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Spring CORS原理解析">
+<meta property="og:description" content="本文分享了跨域，CORS原理解析等内容。阐述了CORS在Spring MVC和Spring Security中实现原理">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">Spring CORS原理解析</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2021-01-25</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Spring/">
+              Spring
+                
+                  ，
+                
+              </a>
+            
+              <a href="/tags/CORS/">
+              CORS
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了跨域，CORS原理解析等内容。阐述了CORS在Spring MVC和Spring Security中实现原理。</p>
+<span id="more"></span>
+
+<h2 id="1-同源策略"><a href="#1-同源策略" class="headerlink" title="1. 同源策略"></a>1. 同源策略</h2><p>同源策略是一种约定，缺少同源策略浏览器容易受到XSS，CSFR等攻击，为了安全，浏览器会限制非同源的请求。同源为协议，域名，端口三者相同，任意一者不同则为非同源。</p>
+<h2 id="2-跨域方案"><a href="#2-跨域方案" class="headerlink" title="2. 跨域方案"></a>2. 跨域方案</h2><ol>
+<li>通过<code>nginx</code>代理转发。避开跨域请求，使浏览器访问同源，<code>nginx</code>转发到不同源。</li>
+<li>JSONP，利用<code>Ajax</code>请求会受到同源策略限制，而<code>script</code>标签请求不会，绕过同源策略。但只支持<code>GET</code>，同时是不安全的。</li>
+<li>CORS是跨域资源共享，对于简单请求只要服务器返回正确的响应头即可，非简单请求需要先进行预检请求，要求首先使用<code>Fetch</code>发起<code>OPTIONS</code>预检请求到服务器，通过<code>Access-Control-Allow-Origin</code>以获知服务器是否允许该请求。</li>
+<li>websocket，document.domain等其他方案。</li>
+</ol>
+<h2 id="3-CORS简介"><a href="#3-CORS简介" class="headerlink" title="3. CORS简介"></a>3. CORS简介</h2><p>跨域资源共享(CORS) 是一种机制，它使用额外的 HTTP 头来告诉浏览器 让运行在一个 origin (domain) 上的Web应用被准许访问来自不同源服务器上的指定的资源。当一个资源从与该资源本身所在的服务器不同的域、协议或端口请求一个资源时，资源会发起一个跨域 HTTP 请求。 跨域资源共享（ CORS ）机制允许 Web 应用服务器进行跨域访问控制，从而使跨域数据传输得以安全进行。现代浏览器支持在 API 容器中（例如 XMLHttpRequest 或 Fetch ）使用 CORS，以降低跨域 HTTP 请求所带来的风险。</p>
+<p>通常配置<code>CorsConfigurationSource</code>即可实现CORS设置。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@Bean</span>
+<span class="token keyword">public</span> <span class="token class-name">CorsConfigurationSource</span> <span class="token function">corsConfigurationSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+  <span class="token class-name">CorsConfiguration</span> configuration <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">CorsConfiguration</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  configuration<span class="token punctuation">.</span><span class="token function">applyPermitDefaultValues</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  configuration<span class="token punctuation">.</span><span class="token function">addAllowedHeader</span><span class="token punctuation">(</span><span class="token string">"Authentication-Info"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  configuration<span class="token punctuation">.</span><span class="token function">addExposedHeader</span><span class="token punctuation">(</span><span class="token string">"Authentication-Info"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  configuration<span class="token punctuation">.</span><span class="token function">setAllowCredentials</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token class-name">UrlBasedCorsConfigurationSource</span> source <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">UrlBasedCorsConfigurationSource</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+  source<span class="token punctuation">.</span><span class="token function">registerCorsConfiguration</span><span class="token punctuation">(</span><span class="token string">"/**"</span><span class="token punctuation">,</span> configuration<span class="token punctuation">)</span><span class="token punctuation">;</span>
+  <span class="token keyword">return</span> source<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<h2 id="4-Spring-MVC"><a href="#4-Spring-MVC" class="headerlink" title="4. Spring MVC"></a>4. Spring MVC</h2><p>当<code>OPTIONS</code>预检请求发生时，<code>HandlerMapping.getHandler</code>会得到<code>PreFlightHandler</code>作为请求<code>handler</code>。更多详细内容可先理解<code>Spring MVC</code>如何处理一个请求。</p>
+<p><code>Spring MVC</code>是如何获取的该<code>handler</code>:</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">final</span> <span class="token class-name">HandlerExecutionChain</span> <span class="token function">getHandler</span><span class="token punctuation">(</span><span class="token class-name">HttpServletRequest</span> request<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span> <span class="token punctuation">&#123;</span>
+	<span class="token class-name">Object</span> handler <span class="token operator">=</span> <span class="token function">getHandlerInternal</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>handler <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		handler <span class="token operator">=</span> <span class="token function">getDefaultHandler</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>handler <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">// Bean name or resolved handler?</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>handler <span class="token keyword">instanceof</span> <span class="token class-name">String</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token class-name">String</span> handlerName <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">)</span> handler<span class="token punctuation">;</span>
+		handler <span class="token operator">=</span> <span class="token function">obtainApplicationContext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getBean</span><span class="token punctuation">(</span>handlerName<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token class-name">HandlerExecutionChain</span> executionChain <span class="token operator">=</span> <span class="token function">getHandlerExecutionChain</span><span class="token punctuation">(</span>handler<span class="token punctuation">,</span> request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>logger<span class="token punctuation">.</span><span class="token function">isTraceEnabled</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		logger<span class="token punctuation">.</span><span class="token function">trace</span><span class="token punctuation">(</span><span class="token string">"Mapped to "</span> <span class="token operator">+</span> handler<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">else</span> <span class="token keyword">if</span> <span class="token punctuation">(</span>logger<span class="token punctuation">.</span><span class="token function">isDebugEnabled</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>request<span class="token punctuation">.</span><span class="token function">getDispatcherType</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span><span class="token class-name">DispatcherType</span><span class="token punctuation">.</span><span class="token constant">ASYNC</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Mapped to "</span> <span class="token operator">+</span> executionChain<span class="token punctuation">.</span><span class="token function">getHandler</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//如果是预检请求则获取HandlerExecutionChain</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token function">hasCorsConfigurationSource</span><span class="token punctuation">(</span>handler<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token comment">//从配置的corsConfigurationSource中获取CorsConfiguration</span>
+		<span class="token class-name">CorsConfiguration</span> config <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>corsConfigurationSource <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">?</span> <span class="token keyword">this</span><span class="token punctuation">.</span>corsConfigurationSource<span class="token punctuation">.</span><span class="token function">getCorsConfiguration</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span> <span class="token operator">:</span> <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">//从注解中获取CorsConfiguration</span>
+		<span class="token class-name">CorsConfiguration</span> handlerConfig <span class="token operator">=</span> <span class="token function">getCorsConfiguration</span><span class="token punctuation">(</span>handler<span class="token punctuation">,</span> request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">//CorsConfiguration选取，优先获取corsConfigurationSource中CorsConfiguration</span>
+		config <span class="token operator">=</span> <span class="token punctuation">(</span>config <span class="token operator">!=</span> <span class="token keyword">null</span> <span class="token operator">?</span> config<span class="token punctuation">.</span><span class="token function">combine</span><span class="token punctuation">(</span>handlerConfig<span class="token punctuation">)</span> <span class="token operator">:</span> handlerConfig<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token comment">//配置获取CorsHandlerExecutionChain,详细查看下一块代码</span>
+		executionChain <span class="token operator">=</span> <span class="token function">getCorsHandlerExecutionChain</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> executionChain<span class="token punctuation">,</span> config<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token keyword">return</span> executionChain<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">protected</span> <span class="token class-name">HandlerExecutionChain</span> <span class="token function">getCorsHandlerExecutionChain</span><span class="token punctuation">(</span><span class="token class-name">HttpServletRequest</span> request<span class="token punctuation">,</span>
+															 <span class="token class-name">HandlerExecutionChain</span> chain<span class="token punctuation">,</span> <span class="token annotation punctuation">@Nullable</span> <span class="token class-name">CorsConfiguration</span> config<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">//是否是预检请求</span>
+	<span class="token comment">//return (HttpMethod.OPTIONS.matches(request.getMethod()) &amp;&amp;</span>
+	<span class="token comment">//		request.getHeader(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD) != null);   </span>
+	<span class="token comment">//public static final String ACCESS_CONTROL_REQUEST_METHOD = "Access-Control-Request-Method";         </span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">CorsUtils</span><span class="token punctuation">.</span><span class="token function">isPreFlightRequest</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token comment">//创建HandlerExecutionChain</span>
+		<span class="token class-name">HandlerInterceptor</span><span class="token punctuation">[</span><span class="token punctuation">]</span> interceptors <span class="token operator">=</span> chain<span class="token punctuation">.</span><span class="token function">getInterceptors</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		chain <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HandlerExecutionChain</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">PreFlightHandler</span><span class="token punctuation">(</span>config<span class="token punctuation">)</span><span class="token punctuation">,</span> interceptors<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+		<span class="token comment">//添加CorsInterceptor</span>
+		chain<span class="token punctuation">.</span><span class="token function">addInterceptor</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">CorsInterceptor</span><span class="token punctuation">(</span>config<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//PreFlightHandler和CorsInterceprtor都是调用corsProcessor.processRequest</span>
+	<span class="token keyword">return</span> chain<span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p><code>CorsProcessor</code>是一个<code>interface</code>，他的默认实现是<code>DefaultCorsProcessor</code>，来看<code>DefaultCorsProcessor</code>:</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">boolean</span> <span class="token function">processRequest</span><span class="token punctuation">(</span><span class="token annotation punctuation">@Nullable</span> <span class="token class-name">CorsConfiguration</span> config<span class="token punctuation">,</span> <span class="token class-name">HttpServletRequest</span> request<span class="token punctuation">,</span>
+							  <span class="token class-name">HttpServletResponse</span> response<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">IOException</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">//Origin</span>
+	response<span class="token punctuation">.</span><span class="token function">addHeader</span><span class="token punctuation">(</span><span class="token class-name">HttpHeaders</span><span class="token punctuation">.</span><span class="token constant">VARY</span><span class="token punctuation">,</span> <span class="token class-name">HttpHeaders</span><span class="token punctuation">.</span><span class="token constant">ORIGIN</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">//Access-Control-Request-Method</span>
+	response<span class="token punctuation">.</span><span class="token function">addHeader</span><span class="token punctuation">(</span><span class="token class-name">HttpHeaders</span><span class="token punctuation">.</span><span class="token constant">VARY</span><span class="token punctuation">,</span> <span class="token class-name">HttpHeaders</span><span class="token punctuation">.</span><span class="token constant">ACCESS_CONTROL_REQUEST_METHOD</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">//AAccess-Control-Request-Headers</span>
+	response<span class="token punctuation">.</span><span class="token function">addHeader</span><span class="token punctuation">(</span><span class="token class-name">HttpHeaders</span><span class="token punctuation">.</span><span class="token constant">VARY</span><span class="token punctuation">,</span> <span class="token class-name">HttpHeaders</span><span class="token punctuation">.</span><span class="token constant">ACCESS_CONTROL_REQUEST_HEADERS</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token comment">//非Cors请求通过</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token class-name">CorsUtils</span><span class="token punctuation">.</span><span class="token function">isCorsRequest</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//已经包含了Access-Control-Allow-Origin通过</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>response<span class="token punctuation">.</span><span class="token function">getHeader</span><span class="token punctuation">(</span><span class="token class-name">HttpHeaders</span><span class="token punctuation">.</span><span class="token constant">ACCESS_CONTROL_ALLOW_ORIGIN</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		logger<span class="token punctuation">.</span><span class="token function">trace</span><span class="token punctuation">(</span><span class="token string">"Skip: response already contains \"Access-Control-Allow-Origin\""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token keyword">boolean</span> preFlightRequest <span class="token operator">=</span> <span class="token class-name">CorsUtils</span><span class="token punctuation">.</span><span class="token function">isPreFlightRequest</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>config <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>preFlightRequest<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token comment">//没有配置CorsConfiguration的预请求返回403</span>
+			<span class="token comment">//response.setStatusCode(HttpStatus.FORBIDDEN);  FORBIDDEN(403, "Forbidden")</span>
+			<span class="token comment">//response.getBody().write("Invalid CORS request".getBytes(StandardCharsets.UTF_8));</span>
+			<span class="token comment">//response.flush();</span>
+			<span class="token function">rejectRequest</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ServletServerHttpResponse</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+			<span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token comment">//否则通过</span>
+		<span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//执行具体处理，详细如下</span>
+	<span class="token keyword">return</span> <span class="token function">handleInternal</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ServletServerHttpRequest</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">ServletServerHttpResponse</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">,</span> config<span class="token punctuation">,</span> preFlightRequest<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">protected</span> <span class="token keyword">boolean</span> <span class="token function">handleInternal</span><span class="token punctuation">(</span><span class="token class-name">ServerHttpRequest</span> request<span class="token punctuation">,</span> <span class="token class-name">ServerHttpResponse</span> response<span class="token punctuation">,</span>
+								 <span class="token class-name">CorsConfiguration</span> config<span class="token punctuation">,</span> <span class="token keyword">boolean</span> preFlightRequest<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">IOException</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">//该方法主要为检查请求是否允许，并作出了不同动作如：</span>
+	<span class="token comment">//rejectRequest 403 Reject:origin is not allowed</span>
+	<span class="token comment">//通过请求设置AccessControlAllowMethods等</span>
+	<span class="token comment">//在下方代码中详细描述checkOrigin，如何确认请求通过</span>
+	<span class="token class-name">String</span> requestOrigin <span class="token operator">=</span> request<span class="token punctuation">.</span><span class="token function">getHeaders</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getOrigin</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token class-name">String</span> allowOrigin <span class="token operator">=</span> <span class="token function">checkOrigin</span><span class="token punctuation">(</span>config<span class="token punctuation">,</span> requestOrigin<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token class-name">HttpHeaders</span> responseHeaders <span class="token operator">=</span> response<span class="token punctuation">.</span><span class="token function">getHeaders</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>allowOrigin <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Reject: '"</span> <span class="token operator">+</span> requestOrigin <span class="token operator">+</span> <span class="token string">"' origin is not allowed"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token function">rejectRequest</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token class-name">HttpMethod</span> requestMethod <span class="token operator">=</span> <span class="token function">getMethodToUse</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> preFlightRequest<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">HttpMethod</span><span class="token punctuation">></span></span> allowMethods <span class="token operator">=</span> <span class="token function">checkMethods</span><span class="token punctuation">(</span>config<span class="token punctuation">,</span> requestMethod<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>allowMethods <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Reject: HTTP '"</span> <span class="token operator">+</span> requestMethod <span class="token operator">+</span> <span class="token string">"' is not allowed"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token function">rejectRequest</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">></span></span> requestHeaders <span class="token operator">=</span> <span class="token function">getHeadersToUse</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> preFlightRequest<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">></span></span> allowHeaders <span class="token operator">=</span> <span class="token function">checkHeaders</span><span class="token punctuation">(</span>config<span class="token punctuation">,</span> requestHeaders<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>preFlightRequest <span class="token operator">&amp;&amp;</span> allowHeaders <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		logger<span class="token punctuation">.</span><span class="token function">debug</span><span class="token punctuation">(</span><span class="token string">"Reject: headers '"</span> <span class="token operator">+</span> requestHeaders <span class="token operator">+</span> <span class="token string">"' are not allowed"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token function">rejectRequest</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	responseHeaders<span class="token punctuation">.</span><span class="token function">setAccessControlAllowOrigin</span><span class="token punctuation">(</span>allowOrigin<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>preFlightRequest<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		responseHeaders<span class="token punctuation">.</span><span class="token function">setAccessControlAllowMethods</span><span class="token punctuation">(</span>allowMethods<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>preFlightRequest <span class="token operator">&amp;&amp;</span> <span class="token operator">!</span>allowHeaders<span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		responseHeaders<span class="token punctuation">.</span><span class="token function">setAccessControlAllowHeaders</span><span class="token punctuation">(</span>allowHeaders<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token class-name">CollectionUtils</span><span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span>config<span class="token punctuation">.</span><span class="token function">getExposedHeaders</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		responseHeaders<span class="token punctuation">.</span><span class="token function">setAccessControlExposeHeaders</span><span class="token punctuation">(</span>config<span class="token punctuation">.</span><span class="token function">getExposedHeaders</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">Boolean</span><span class="token punctuation">.</span><span class="token constant">TRUE</span><span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>config<span class="token punctuation">.</span><span class="token function">getAllowCredentials</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		responseHeaders<span class="token punctuation">.</span><span class="token function">setAccessControlAllowCredentials</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>preFlightRequest <span class="token operator">&amp;&amp;</span> config<span class="token punctuation">.</span><span class="token function">getMaxAge</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		responseHeaders<span class="token punctuation">.</span><span class="token function">setAccessControlMaxAge</span><span class="token punctuation">(</span>config<span class="token punctuation">.</span><span class="token function">getMaxAge</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+
+	response<span class="token punctuation">.</span><span class="token function">flush</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">return</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>检查请求Origin:</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">checkOrigin</span><span class="token punctuation">(</span><span class="token annotation punctuation">@Nullable</span> <span class="token class-name">String</span> requestOrigin<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">//检查请求Origin，不存在则不通过</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token class-name">StringUtils</span><span class="token punctuation">.</span><span class="token function">hasText</span><span class="token punctuation">(</span>requestOrigin<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//allowedOrigins为空不通过</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">ObjectUtils</span><span class="token punctuation">.</span><span class="token function">isEmpty</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>allowedOrigins<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//如果allowedOrigins包含*</span>
+	<span class="token comment">//发出请求时，如果前端携带了cookie, 而服务器配置为*, 浏览器则会拒绝请求</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>allowedOrigins<span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span><span class="token constant">ALL</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token comment">//Access-Control-Allow-Credentials</span>
+		<span class="token comment">//如果allowCredentials配置为true，表示可携带验证信息如：cookie则返回*</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>allowCredentials <span class="token operator">!=</span> <span class="token class-name">Boolean</span><span class="token punctuation">.</span><span class="token constant">TRUE</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">return</span> <span class="token constant">ALL</span><span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+		<span class="token comment">//返回来源地址</span>
+		<span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">return</span> requestOrigin<span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//遍历允许地址，包含改地址则返回</span>
+	<span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token class-name">String</span> allowedOrigin <span class="token operator">:</span> <span class="token keyword">this</span><span class="token punctuation">.</span>allowedOrigins<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>requestOrigin<span class="token punctuation">.</span><span class="token function">equalsIgnoreCase</span><span class="token punctuation">(</span>allowedOrigin<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+			<span class="token keyword">return</span> requestOrigin<span class="token punctuation">;</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//该地址不允许</span>
+	<span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-Spring-Security"><a href="#5-Spring-Security" class="headerlink" title="5. Spring Security"></a>5. Spring Security</h2><p>在<code>Spring Security</code>中通常配置<code>HttpSecurity</code>。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">configure</span><span class="token punctuation">(</span><span class="token class-name">HttpSecurity</span> http<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span> <span class="token punctuation">&#123;</span>
+	http
+		<span class="token punctuation">.</span><span class="token function">authorizeRequests</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token punctuation">.</span><span class="token function">permitAll</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token punctuation">.</span><span class="token function">and</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+		<span class="token punctuation">.</span><span class="token function">cors</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>只需调用<code>.cors()</code>就配置了允许跨域：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token class-name">CorsConfigurer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">HttpSecurity</span><span class="token punctuation">></span></span> <span class="token function">cors</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span> <span class="token punctuation">&#123;</span>
+	<span class="token keyword">return</span> <span class="token function">getOrApply</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">CorsConfigurer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">private</span> <span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">C</span> <span class="token keyword">extends</span> <span class="token class-name">SecurityConfigurerAdapter</span><span class="token punctuation">&lt;</span><span class="token class-name">DefaultSecurityFilterChain</span><span class="token punctuation">,</span> <span class="token class-name">HttpSecurity</span><span class="token punctuation">></span><span class="token punctuation">></span></span> <span class="token class-name">C</span> <span class="token function">getOrApply</span><span class="token punctuation">(</span>
+			<span class="token class-name">C</span> configurer<span class="token punctuation">)</span> <span class="token keyword">throws</span> <span class="token class-name">Exception</span> <span class="token punctuation">&#123;</span>
+	<span class="token class-name">C</span> existingConfig <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">C</span><span class="token punctuation">)</span> <span class="token function">getConfigurer</span><span class="token punctuation">(</span>configurer<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>existingConfig <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> existingConfig<span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">return</span> <span class="token function">apply</span><span class="token punctuation">(</span>configurer<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>在<code>HttpSecurity</code>中获取了<code>CorsConfigurer</code>，<code>configure()</code>在<code>SecurityBuilder</code>build调用，详看<code>configure()</code>如何创建<code>CorsConfigurer</code>：</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">configure</span><span class="token punctuation">(</span><span class="token class-name">H</span> http<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token class-name">ApplicationContext</span> context <span class="token operator">=</span> http<span class="token punctuation">.</span><span class="token function">getSharedObject</span><span class="token punctuation">(</span><span class="token class-name">ApplicationContext</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token comment">//获取CorsFilter</span>
+	<span class="token class-name">CorsFilter</span> corsFilter <span class="token operator">=</span> <span class="token function">getCorsFilter</span><span class="token punctuation">(</span>context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>corsFilter <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">IllegalStateException</span><span class="token punctuation">(</span>
+				<span class="token string">"Please configure either a "</span> <span class="token operator">+</span> <span class="token constant">CORS_FILTER_BEAN_NAME</span> <span class="token operator">+</span> <span class="token string">" bean or a "</span>
+						<span class="token operator">+</span> <span class="token constant">CORS_CONFIGURATION_SOURCE_BEAN_NAME</span> <span class="token operator">+</span> <span class="token string">"bean."</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//添加CorsFilter到filter调用链</span>
+	http<span class="token punctuation">.</span><span class="token function">addFilter</span><span class="token punctuation">(</span>corsFilter<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>获取<code>CorsFilter</code>,<code>CorsFilter</code>是<code>Spring MVC</code>中实现跨域一种方式。</p>
+<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">private</span> <span class="token class-name">CorsFilter</span> <span class="token function">getCorsFilter</span><span class="token punctuation">(</span><span class="token class-name">ApplicationContext</span> context<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+	<span class="token comment">//如果配置了configurationSource，从configurationSource中获取corsFilter</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>configurationSource <span class="token operator">!=</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">CorsFilter</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>configurationSource<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//从容器查corsFilter获取corsFilter</span>
+	<span class="token keyword">boolean</span> containsCorsFilter <span class="token operator">=</span> context
+			<span class="token punctuation">.</span><span class="token function">containsBeanDefinition</span><span class="token punctuation">(</span><span class="token constant">CORS_FILTER_BEAN_NAME</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>containsCorsFilter<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> context<span class="token punctuation">.</span><span class="token function">getBean</span><span class="token punctuation">(</span><span class="token constant">CORS_FILTER_BEAN_NAME</span><span class="token punctuation">,</span> <span class="token class-name">CorsFilter</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//从容器中查corsConfigurationSource创建corsFilter</span>
+	<span class="token keyword">boolean</span> containsCorsSource <span class="token operator">=</span> context
+			<span class="token punctuation">.</span><span class="token function">containsBean</span><span class="token punctuation">(</span><span class="token constant">CORS_CONFIGURATION_SOURCE_BEAN_NAME</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>containsCorsSource<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token class-name">CorsConfigurationSource</span> configurationSource <span class="token operator">=</span> context<span class="token punctuation">.</span><span class="token function">getBean</span><span class="token punctuation">(</span>
+				<span class="token constant">CORS_CONFIGURATION_SOURCE_BEAN_NAME</span><span class="token punctuation">,</span> <span class="token class-name">CorsConfigurationSource</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+		<span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">CorsFilter</span><span class="token punctuation">(</span>configurationSource<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token comment">//从HandlerMappingIntrospector获取corsFilter</span>
+	<span class="token keyword">boolean</span> mvcPresent <span class="token operator">=</span> <span class="token class-name">ClassUtils</span><span class="token punctuation">.</span><span class="token function">isPresent</span><span class="token punctuation">(</span><span class="token constant">HANDLER_MAPPING_INTROSPECTOR</span><span class="token punctuation">,</span>
+			context<span class="token punctuation">.</span><span class="token function">getClassLoader</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span>mvcPresent<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
+		<span class="token keyword">return</span> <span class="token class-name">MvcCorsFilter</span><span class="token punctuation">.</span><span class="token function">getMvcCorsFilter</span><span class="token punctuation">(</span>context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+	<span class="token punctuation">&#125;</span>
+	<span class="token keyword">return</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>Spring Security</code>通过以上四种方式获取<code>corsFilter</code>,同样我们可以通过这四种方式进行跨域配置。<br><code>Spring MVC</code>中<code>CorsFilter</code>同样是调用<code>DefaultCorsProcessor</code>中<code>processRequest</code>，和<code>PreFlightHandler</code>中一样。详细流程参考上方内容。</p>
+<pre><code class="java"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doFilterInternal</span><span class="params">(HttpServletRequest request, HttpServletResponse response,</span></span>
+<span class="function"><span class="params">            FilterChain filterChain)</span> <span class="keyword">throws</span> ServletException, IOException </span>&#123;
+    CorsConfiguration corsConfiguration = <span class="keyword">this</span>.configSource.getCorsConfiguration(request);
+    <span class="keyword">boolean</span> isValid = <span class="keyword">this</span>.processor.processRequest(corsConfiguration, request, response);
+    <span class="keyword">if</span> (!isValid || CorsUtils.isPreFlightRequest(request)) &#123;
+        <span class="keyword">return</span>;
+    &#125;
+    filterChain.doFilter(request, response);
+&#125;</code></pre>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E5%90%8C%E6%BA%90%E7%AD%96%E7%95%A5"><span class="top-box-text">1. 同源策略</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-%E8%B7%A8%E5%9F%9F%E6%96%B9%E6%A1%88"><span class="top-box-text">2. 跨域方案</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-CORS%E7%AE%80%E4%BB%8B"><span class="top-box-text">3. CORS简介</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-Spring-MVC"><span class="top-box-text">4. Spring MVC</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#5-Spring-Security"><span class="top-box-text">5. Spring Security</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2020/10/26/mysql-init/">
+          <h3 class="post-title">
+            下一篇：MySQL8搭建，调优及数据迁移(xtrabackup)
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

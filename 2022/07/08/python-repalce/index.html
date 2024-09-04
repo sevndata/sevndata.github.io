@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>利用Python做web国际化，提取语言文件</title>
+<meta name="keywords" content="利用Python做web国际化，提取语言文件, sevndata">
+<meta name="description" content="本文分享了Web项目国际化过程中提取语言文件，让代码帮你工作">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="利用Python做web国际化，提取语言文件">
+<meta property="og:description" content="本文分享了Web项目国际化过程中提取语言文件，让代码帮你工作">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">利用Python做web国际化，提取语言文件</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-07-08</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/Python/">
+              Python
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了Web项目国际化过程中提取语言文件，让代码帮你工作。</p>
+<span id="more"></span>
+
+<p>起因是一次Web项目需要国际化，但项目前期未考虑到项目需要国际化，所以大量汉字在<code>JS</code>文件中，未提取到语言文件中。需要人工提取汉字并以映射<code>key value</code>方式写入到语言文件中。</p>
+<p>此项工作需要大量人力重复工作，所以考虑使用<code>Python</code>写一个工具，帮助开发做此项工作。</p>
+<p>大体逻辑为通过正则方式提取<code>&quot;汉字&quot; &#39;汉字&#39; &gt;汉字</code>三种形式的汉字，排除注释等其他内容，并将内容通过映射<code>key value</code>写入语言文件，并去重避免重复的翻译内容。把原JS文件中<code>&quot;汉字&quot; &#39;汉字&#39; &gt;汉字</code>替换为<code>&#123;key&#125;</code>等表达式，达到语言文件提取目的。</p>
+<p>以下为参考代码，可能存在部分问题，可据不同情况修改。</p>
+<pre class="line-numbers language-python" data-language="python"><code class="language-python"><span class="token keyword">import</span> os
+<span class="token keyword">import</span> re
+<span class="token keyword">import</span> random
+<span class="token keyword">import</span> string
+<span class="token keyword">import</span> translate
+
+<span class="token comment"># 原代码文件夹</span>
+old_dir <span class="token operator">=</span> <span class="token string">'/doc'</span>
+<span class="token comment"># 处理后的代码文件夹</span>
+new_dir <span class="token operator">=</span> <span class="token string">'/newdoc'</span>
+<span class="token comment"># 语言文件</span>
+message_file<span class="token operator">=</span><span class="token string">'zh-CN.js'</span>
+
+<span class="token comment"># 依次执行除message_file和.DS_Store等无关内容的代码文件</span>
+<span class="token keyword">def</span> <span class="token function">get_filelist</span><span class="token punctuation">(</span><span class="token builtin">dir</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">for</span> home<span class="token punctuation">,</span> dirs<span class="token punctuation">,</span> files <span class="token keyword">in</span> os<span class="token punctuation">.</span>walk<span class="token punctuation">(</span><span class="token builtin">dir</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">for</span> <span class="token builtin">dir</span> <span class="token keyword">in</span> dirs<span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token builtin">dir</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token string">'.DS_Store'</span> <span class="token keyword">in</span> files<span class="token punctuation">:</span>
+            files<span class="token punctuation">.</span>remove<span class="token punctuation">(</span><span class="token string">'.DS_Store'</span><span class="token punctuation">)</span>
+        files<span class="token punctuation">.</span>remove<span class="token punctuation">(</span>message_file<span class="token punctuation">)</span>
+        <span class="token keyword">for</span> filename <span class="token keyword">in</span> files<span class="token punctuation">:</span>
+            fullname <span class="token operator">=</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>join<span class="token punctuation">(</span>home<span class="token punctuation">,</span> filename<span class="token punctuation">)</span>
+            get_file<span class="token punctuation">(</span>fullname<span class="token punctuation">,</span>filename<span class="token punctuation">,</span>home<span class="token punctuation">)</span>
+
+<span class="token comment"># 读取文件内容</span>
+<span class="token keyword">def</span> <span class="token function">get_file</span><span class="token punctuation">(</span>fullname<span class="token punctuation">,</span>filename<span class="token punctuation">,</span>home<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span> 
+        <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span>fullname<span class="token punctuation">,</span> encoding<span class="token operator">=</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> file_obj<span class="token punctuation">:</span>
+            lines <span class="token operator">=</span> file_obj<span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        get_key<span class="token punctuation">(</span>lines<span class="token punctuation">,</span>filename<span class="token punctuation">)</span>
+    <span class="token keyword">except</span> UnicodeDecodeError<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>fullname<span class="token punctuation">)</span>
+
+<span class="token comment"># 提取 "汉字" '汉字' >汉字 三种类型的字符，组成字典</span>
+<span class="token keyword">def</span> <span class="token function">get_key</span><span class="token punctuation">(</span>lines<span class="token punctuation">,</span>filename<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    data1 <span class="token operator">=</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>
+    data2 <span class="token operator">=</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>
+    data3 <span class="token operator">=</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>
+    res1 <span class="token operator">=</span> re<span class="token punctuation">.</span>findall<span class="token punctuation">(</span><span class="token string">'\"[\u4e00-\u9fa5]&#123;1,&#125;\"'</span><span class="token punctuation">,</span>lines<span class="token punctuation">)</span>
+    <span class="token keyword">for</span> iterating_var <span class="token keyword">in</span> res1<span class="token punctuation">:</span>
+        pre_key<span class="token operator">=</span>filename<span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">'.js'</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>
+        data1<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>iterating_var<span class="token punctuation">,</span>pre_key<span class="token operator">+</span><span class="token string">'.'</span><span class="token operator">+</span><span class="token string">''</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>random<span class="token punctuation">.</span>choices<span class="token punctuation">(</span>string<span class="token punctuation">.</span>ascii_lowercase<span class="token punctuation">,</span>k<span class="token operator">=</span><span class="token number">18</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    res2 <span class="token operator">=</span> re<span class="token punctuation">.</span>findall<span class="token punctuation">(</span><span class="token string">'\'[\u4e00-\u9fa5]&#123;1,&#125;\''</span><span class="token punctuation">,</span>lines<span class="token punctuation">)</span>
+    <span class="token keyword">for</span> iterating_var <span class="token keyword">in</span> res2<span class="token punctuation">:</span>
+        data2<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>iterating_var<span class="token punctuation">,</span>pre_key<span class="token operator">+</span><span class="token string">'.'</span><span class="token operator">+</span><span class="token string">''</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>random<span class="token punctuation">.</span>choices<span class="token punctuation">(</span>string<span class="token punctuation">.</span>ascii_lowercase<span class="token punctuation">,</span>k<span class="token operator">=</span><span class="token number">18</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    res3 <span class="token operator">=</span> re<span class="token punctuation">.</span>findall<span class="token punctuation">(</span><span class="token string">'\>[\u4e00-\u9fa5]&#123;1,&#125;'</span><span class="token punctuation">,</span>lines<span class="token punctuation">)</span>
+    <span class="token keyword">for</span> iterating_var <span class="token keyword">in</span> res3<span class="token punctuation">:</span>
+        data3<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>iterating_var<span class="token punctuation">,</span>pre_key<span class="token operator">+</span><span class="token string">'.'</span><span class="token operator">+</span><span class="token string">''</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>random<span class="token punctuation">.</span>choices<span class="token punctuation">(</span>string<span class="token punctuation">.</span>ascii_lowercase<span class="token punctuation">,</span>k<span class="token operator">=</span><span class="token number">18</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    open_message<span class="token punctuation">(</span>lines<span class="token punctuation">,</span>data1<span class="token punctuation">,</span>data2<span class="token punctuation">,</span>data3<span class="token punctuation">,</span>filename<span class="token punctuation">)</span>
+
+<span class="token comment"># 打开语言文件，读取已有的翻译，生成已有翻译data</span>
+<span class="token keyword">def</span> <span class="token function">open_message</span><span class="token punctuation">(</span>oldlines<span class="token punctuation">,</span>data1<span class="token punctuation">,</span>data2<span class="token punctuation">,</span>data3<span class="token punctuation">,</span>filename<span class="token punctuation">)</span><span class="token punctuation">:</span>  
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        data_already <span class="token operator">=</span> <span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>
+        messagefilename<span class="token operator">=</span>old_dir<span class="token operator">+</span><span class="token string">'/'</span><span class="token operator">+</span>message_file
+        <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span>messagefilename<span class="token punctuation">,</span> encoding<span class="token operator">=</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> file_obj<span class="token punctuation">:</span>
+            lines <span class="token operator">=</span> file_obj<span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        res5 <span class="token operator">=</span> re<span class="token punctuation">.</span>findall<span class="token punctuation">(</span><span class="token string">'\'[\S]&#123;1,&#125;\': \'[\u4e00-\u9fa5]&#123;1,&#125;\''</span><span class="token punctuation">,</span>lines<span class="token punctuation">)</span>
+        <span class="token keyword">for</span> iterating_var <span class="token keyword">in</span> res5<span class="token punctuation">:</span>
+            resvalue <span class="token operator">=</span> re<span class="token punctuation">.</span>findall<span class="token punctuation">(</span><span class="token string">'\'[\S]&#123;1,&#125;\': '</span><span class="token punctuation">,</span>iterating_var<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">': '</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">'\''</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>
+            reskey <span class="token operator">=</span> re<span class="token punctuation">.</span>findall<span class="token punctuation">(</span><span class="token string">': \'[\u4e00-\u9fa5]&#123;1,&#125;\''</span><span class="token punctuation">,</span>iterating_var<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">': '</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">'\''</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>
+            data_already<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>reskey<span class="token punctuation">,</span>resvalue<span class="token punctuation">)</span>
+        oldlines<span class="token operator">=</span>get_neew_data<span class="token punctuation">(</span>oldlines<span class="token punctuation">,</span>data1<span class="token punctuation">,</span>data2<span class="token punctuation">,</span>data3<span class="token punctuation">,</span>data_already<span class="token punctuation">,</span>filename<span class="token punctuation">)</span>
+
+    <span class="token keyword">except</span> UnicodeDecodeError<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>messagefilename<span class="token punctuation">)</span>
+
+<span class="token comment"># 根据已有翻译替换提取文字的value</span>
+<span class="token keyword">def</span> <span class="token function">get_neew_data</span><span class="token punctuation">(</span>oldlines<span class="token punctuation">,</span>data1<span class="token punctuation">,</span>data2<span class="token punctuation">,</span>data3<span class="token punctuation">,</span>data_already<span class="token punctuation">,</span>filename<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    datatemp<span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>
+    data_already_new<span class="token operator">=</span><span class="token punctuation">&#123;</span><span class="token punctuation">&#125;</span>
+    sign1<span class="token operator">=</span><span class="token string">'"'</span>
+    sign2<span class="token operator">=</span><span class="token string">'\''</span>
+    sign3<span class="token operator">=</span><span class="token string">'>'</span>    
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span>value <span class="token keyword">in</span> data1<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        keytemp<span class="token operator">=</span>key<span class="token punctuation">.</span>replace<span class="token punctuation">(</span>sign1<span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>        
+        <span class="token keyword">if</span> data_already<span class="token punctuation">.</span>__contains__<span class="token punctuation">(</span>keytemp<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            datatemp<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>key<span class="token punctuation">,</span>data_already<span class="token punctuation">[</span>keytemp<span class="token punctuation">]</span><span class="token punctuation">)</span>
+        <span class="token keyword">else</span> <span class="token punctuation">:</span>
+            datatemp<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>key<span class="token punctuation">,</span>value<span class="token punctuation">)</span>
+            data_already_new<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>keytemp<span class="token punctuation">,</span>value<span class="token punctuation">)</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span>value <span class="token keyword">in</span> data2<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        keytemp<span class="token operator">=</span>key<span class="token punctuation">.</span>replace<span class="token punctuation">(</span>sign2<span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>        
+        <span class="token keyword">if</span> data_already<span class="token punctuation">.</span>__contains__<span class="token punctuation">(</span>keytemp<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            datatemp<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>key<span class="token punctuation">,</span>data_already<span class="token punctuation">[</span>keytemp<span class="token punctuation">]</span><span class="token punctuation">)</span>
+        <span class="token keyword">else</span> <span class="token punctuation">:</span>
+            datatemp<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>key<span class="token punctuation">,</span>value<span class="token punctuation">)</span>
+            data_already_new<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>keytemp<span class="token punctuation">,</span>value<span class="token punctuation">)</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span>value <span class="token keyword">in</span> data3<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        keytemp<span class="token operator">=</span>key<span class="token punctuation">.</span>replace<span class="token punctuation">(</span>sign3<span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>        
+        <span class="token keyword">if</span> data_already<span class="token punctuation">.</span>__contains__<span class="token punctuation">(</span>keytemp<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            datatemp<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>key<span class="token punctuation">,</span>data_already<span class="token punctuation">[</span>keytemp<span class="token punctuation">]</span><span class="token punctuation">)</span>
+        <span class="token keyword">else</span> <span class="token punctuation">:</span>
+            datatemp<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>key<span class="token punctuation">,</span>value<span class="token punctuation">)</span>
+            data_already_new<span class="token punctuation">.</span>setdefault<span class="token punctuation">(</span>keytemp<span class="token punctuation">,</span>value<span class="token punctuation">)</span>
+    get_new_message_file<span class="token punctuation">(</span>data_already_new<span class="token punctuation">)</span>
+    get_new_file<span class="token punctuation">(</span>oldlines<span class="token punctuation">,</span>datatemp<span class="token punctuation">,</span>filename<span class="token punctuation">)</span>
+    
+<span class="token comment"># 替换旧js文件中翻译标记位,并记录到新文件中,保存文件</span>
+<span class="token keyword">def</span> <span class="token function">get_new_file</span><span class="token punctuation">(</span>oldlines<span class="token punctuation">,</span>datatemp<span class="token punctuation">,</span>filename<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span>value <span class="token keyword">in</span> datatemp<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span><span class="token punctuation">(</span>key<span class="token punctuation">.</span>find<span class="token punctuation">(</span><span class="token string">'>'</span><span class="token punctuation">)</span><span class="token operator">==</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            oldlines<span class="token operator">=</span>oldlines<span class="token punctuation">.</span>replace<span class="token punctuation">(</span>key<span class="token punctuation">,</span><span class="token string">"&#123;"</span><span class="token operator">+</span>value<span class="token operator">+</span><span class="token string">"&#125;"</span><span class="token punctuation">)</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            oldlines<span class="token operator">=</span>oldlines<span class="token punctuation">.</span>replace<span class="token punctuation">(</span>key<span class="token punctuation">,</span><span class="token string">">&#123;"</span><span class="token operator">+</span>value<span class="token operator">+</span><span class="token string">"&#125;"</span><span class="token punctuation">)</span>
+
+    <span class="token builtin">file</span> <span class="token operator">=</span> <span class="token builtin">open</span><span class="token punctuation">(</span>new_dir<span class="token operator">+</span><span class="token string">'/new'</span><span class="token operator">+</span>filename<span class="token punctuation">,</span> <span class="token string">'w'</span><span class="token punctuation">,</span>encoding<span class="token operator">=</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span>
+    <span class="token builtin">file</span><span class="token punctuation">.</span>write<span class="token punctuation">(</span>oldlines<span class="token punctuation">)</span>
+    <span class="token builtin">file</span><span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 生成新语言,并追加到语言文件中</span>
+<span class="token keyword">def</span> <span class="token function">get_new_message_file</span><span class="token punctuation">(</span>data_already_new<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    new_message<span class="token operator">=</span><span class="token string">''</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span>value <span class="token keyword">in</span> data_already_new<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        new_message<span class="token operator">=</span>new_message<span class="token operator">+</span><span class="token string">'  \''</span><span class="token operator">+</span>value<span class="token operator">+</span><span class="token string">'\': \''</span><span class="token operator">+</span>key<span class="token operator">+</span><span class="token string">'\','</span><span class="token operator">+</span><span class="token string">'\n'</span>
+    <span class="token builtin">file</span> <span class="token operator">=</span> <span class="token builtin">open</span><span class="token punctuation">(</span>os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>join<span class="token punctuation">(</span>old_dir<span class="token operator">+</span><span class="token string">'/'</span><span class="token punctuation">,</span> message_file<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'a+'</span><span class="token punctuation">,</span>encoding<span class="token operator">=</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span>
+    <span class="token builtin">file</span><span class="token punctuation">.</span>write<span class="token punctuation">(</span>new_message<span class="token punctuation">)</span>
+    <span class="token builtin">file</span><span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token comment"># 程序入口</span>
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+    get_filelist<span class="token punctuation">(</span>old_dir<span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+        </div>
+          
+        <div class="top-div">
+          
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2022/07/02/shell-scpfile/">
+          <h3 class="post-title">
+            下一篇：shell分布式架构下分发应用
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

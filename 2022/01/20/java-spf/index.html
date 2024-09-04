@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>防止任意邮件伪造-SPF</title>
+<meta name="keywords" content="防止任意邮件伪造-SPF, sevndata">
+<meta name="description" content="本文分享了中危漏洞-任意邮件伪造介绍及修复办法">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="防止任意邮件伪造-SPF">
+<meta property="og:description" content="本文分享了中危漏洞-任意邮件伪造介绍及修复办法">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">防止任意邮件伪造-SPF</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-01-20</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/mail/">
+              mail
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了中危漏洞-任意邮件伪造介绍及修复办法</p>
+<span id="more"></span>
+
+<h2 id="1-背景"><a href="#1-背景" class="headerlink" title="1. 背景"></a>1. 背景</h2><ol>
+<li>由于在 SMTP 协议中，允许发件人伪造绝大多数的发件人特征信息，从而导致了任意邮件伪造漏洞。</li>
+<li>为了防止邮箱伪造，出现了 SPF，SPF(或是 Sender ID)是 Sender Policy Framework 的缩写。当定义了域名的 SPF 记录后，接收邮件方会根据你的 SPF 记录来判断连接过来的 IP 地址是否被包含在 SPF记录里面，如果在，则认为是一封正确的邮件，否则则认为是一封伪造的邮件。现在绝大部份反垃圾邮件系统都支持 SPF 过滤，这种过滤一般不会有误判，除非是邮件系统管理员自己把 SPF 记录配置错误或遗漏。</li>
+<li>任意邮件伪造漏洞可伪造管理员或公司其他人员邮箱发送钓鱼邮件，获取接收方信任，使其打开附带的木马文件或者回复想要获取的敏感资料，从而引发主机被控制、重要资料泄密等风险。</li>
+</ol>
+<h2 id="2-修复建议"><a href="#2-修复建议" class="headerlink" title="2. 修复建议"></a>2. 修复建议</h2><ol>
+<li>在域名解析记录中添加 SPF 记录。增加 SPF 记录非常简单，在DNS 里面添加 TXT 记录即可。</li>
+<li>如非必要，可将 MX 记录删除。</li>
+</ol>
+<h2 id="3-SPF-是什么呢？"><a href="#3-SPF-是什么呢？" class="headerlink" title="3. SPF 是什么呢？"></a>3. SPF 是什么呢？</h2><p>简单来说就是人们设计的一套可以杜绝邮件伪造的机制，只要遵照他们设计的方法来配置自己域名的 DNS 解析，就可以杜绝邮件伪造。</p>
+<p>关于 SPF 的一切，你可以在这个网站（英文）上获得：<a target="_blank" rel="noopener" href="http://www.openspf.orgSPF">www.openspf.orgSPF</a> 的原理是这样的，伪造者虽然能伪造你的域名，但是却不能控制你的域名的DNS 解析记录。因为只有拥有域名账户权限，才能更改解析记录。你域名解析到的 ip是 1.1.1.1，而伪造者的 ip 是 2.2.2.2。如果能做一个声明，告诉邮件接收者，我的域名发的邮件 ip 都是 1.1.1.1，其他的都是假的，可以抛弃掉，那么就可以杜绝邮件伪造了。SPF 就是这样的一个协议，你可以按照 SPF 的格式发出声明，邮件服务器按照 SPF 解读你的声明。这样的一次沟通，就可以解决邮件伪造问题了。</p>
+<h2 id="4-如何使用-SPF？"><a href="#4-如何使用-SPF？" class="headerlink" title="4. 如何使用 SPF？"></a>4. 如何使用 SPF？</h2><p>首先，登录你的域名提供商的管理页面，这个页面就是通常用来设置域名解析 IP地址的地方。例如上述例子，可以这样声明，在域名的解析记录里添加一条 txt 记录，</p>
+<pre class="line-numbers language-none"><code class="language-none">二级域名：空或@
+txt记录值为：v&#x3D;spf1 ip4:1.1.1.1 -all<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>这样，就设置了你的邮件只能是从 1.1.1.1 这个 ip 发出的。其中 txt 记录的意义：</p>
+<pre class="line-numbers language-none"><code class="language-none">1. v&#x3D;spf1  #版本号声明
+2. ip4:1.1.1.1  #指定ip地址
+3. -all  #对其余的标记无效<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+<p>当然这样设置有些问题就是你的域名可能需要变化的 ip 地址，或扩增多个 ip，这时候就可以用其他方式，更改中间的部分（ip4 对应位置）:</p>
+<pre class="line-numbers language-none"><code class="language-none">二级域名：空或@
+txt记录值为：v&#x3D;spf1 include:spf1.a.com include:spf2.a.com -all<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>再设置一个 spf1.a.com 的 txt 解析记录，内容为：</p>
+<pre class="line-numbers language-none"><code class="language-none">二级域名：空或@
+txt记录值为：v&#x3D;spf1 ip4:1.1.1.0&#x2F;24 ip4:1.2.3.4 -all<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+
+<p>其中 include 的意思是使用其后的地址的 SPF 记录。而 ip4:1.1.1.0/24则是使用一个段。设置 spf2.a.com 与此类似。这样就可以使用更多的地址作为合法地址。也可以 include 多层，但常见的一般最多三层已经够用，最后一层要指定到具体的 ip 或域名。<br>其他如：v=spf1 a mx ip4:x.x.x.x -all 使用 a 记录，mx 解析记录和指定的ip 作为合法地址。</p>
+<h2 id="5-剩余检查项-all-的配置"><a href="#5-剩余检查项-all-的配置" class="headerlink" title="5. 剩余检查项 all 的配置"></a>5. 剩余检查项 all 的配置</h2><p>关于剩余检查项 all 前面的“-”符号，参见下表：</p>
+<pre class="line-numbers language-none"><code class="language-none">&quot;+&quot; Pass
+&quot;-&quot; Fail
+&quot;~&quot; Soft Fail
+&quot;?&quot; Neutarl<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>建议使用“all”来拒绝陌生地址的邮件。当使用“~all”时，一般会将邮件标记为垃圾邮件。但是由于有时人们还是会翻查垃圾邮件（甚至有时官方都会建议去检查垃圾邮件），因此这样处理并不安全。所以如无特殊需求，建议使用“all”来拒绝。</p>
+<p>禁用所有邮件服务</p>
+<pre class="line-numbers language-none"><code class="language-none">txt记录值为：v&#x3D;spf1 -all<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>— 摘录于支付宝小程序漏洞检测</p>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E8%83%8C%E6%99%AF"><span class="top-box-text">1. 背景</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-%E4%BF%AE%E5%A4%8D%E5%BB%BA%E8%AE%AE"><span class="top-box-text">2. 修复建议</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-SPF-%E6%98%AF%E4%BB%80%E4%B9%88%E5%91%A2%EF%BC%9F"><span class="top-box-text">3. SPF 是什么呢？</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-SPF%EF%BC%9F"><span class="top-box-text">4. 如何使用 SPF？</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#5-%E5%89%A9%E4%BD%99%E6%A3%80%E6%9F%A5%E9%A1%B9-all-%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="top-box-text">5. 剩余检查项 all 的配置</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2022/01/02/shell-getcpurestart/">
+          <h3 class="post-title">
+            下一篇：shell获取CPU使用率信息并重启应用
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    
+
+    
+<script>!function(){var e=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,t=localStorage.getItem("use-color-scheme")||"auto";("dark"===t||e&&"light"!==t)&&document.documentElement.classList.toggle("dark",!0)}()</script>
+    
+
+<meta charset="utf-8" >
+
+<title>在Ubuntu中编译OpenJDK11</title>
+<meta name="keywords" content="在Ubuntu中编译OpenJDK11, sevndata">
+<meta name="description" content="本文分享了在Ubuntu中编译OpenJDK11">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="在Ubuntu中编译OpenJDK11">
+<meta property="og:description" content="本文分享了在Ubuntu中编译OpenJDK11">
+
+<link rel="shortcut icon" href="/image/logo.jpg">
+<link rel="stylesheet" href="/style/main.css">
+
+  <!-- hexo injector head_end start --><script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs">
+    mermaid.initialize(
+      startOnLoad: true,
+    );
+    </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+  <body>
+    <div id="app" class="main">
+
+<div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="http://sevndata.com">
+        <img class="avatar" src="/image/logo.jpg" alt="logo" width="32px" height="32px">
+      </a>
+      <a href="http://sevndata.com">
+        <h1 class="site-title">sevndata</h1>
+      </a>
+    </div>
+    <div class="right">
+        <i class="icon menu-switch icon-menu-outline" ></i>
+    </div>
+  </div>
+</div>
+
+<div class="menu-container" style="height: 0;opacity: 0;">
+<nav class="menu-list">
+  
+    
+      <a href="/" class="menu purple-link">
+        首页
+      </a>
+    
+  
+    
+      <a href="/tags" class="menu purple-link">
+        标签
+      </a>
+    
+  
+    
+      <a href="/categories" class="menu purple-link">
+        分类
+      </a>
+    
+  
+    
+      <a href="/about" class="menu purple-link">
+        关于
+      </a>
+    
+  
+</nav>
+</div>
+
+
+
+  <div class="content-container">
+    <div class="post-detail">
+      
+      <h2 class="post-title">在Ubuntu中编译OpenJDK11</h2>
+      <div class="post-info post-detail-info">
+        <span><i class="icon icon-calendar-outline"></i> 2021-03-20</span>
+        
+          <span>
+          <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="/tags/JDK/">
+              JDK
+                
+              </a>
+            
+          </span>
+        
+      </div>
+      <div class="post-content-wrapper">
+        <div class="post-content">
+          <p>本文分享了在Ubuntu中编译OpenJDK11</p>
+<span id="more"></span>
+
+<h2 id="1-下载"><a href="#1-下载" class="headerlink" title="1. 下载"></a>1. 下载</h2><ol>
+<li>下载源码<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment">#下载源码</span>
+<span class="token function">wget</span> http://hg.openjdk.java.net/jdk/jdk11/archive/tip.tar.gz
+<span class="token comment">#解压源码包</span>
+<span class="token function">tar</span> <span class="token parameter variable">-xzf</span> tip.tar.gz<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre></li>
+<li>从<code>github</code>克隆<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">git</span> clone git@github.com:openjdk/jdk.git<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+</li>
+</ol>
+<h2 id="2-依赖"><a href="#2-依赖" class="headerlink" title="2. 依赖"></a>2. 依赖</h2><p>查看<code>doc/building.html (html version)</code>或者<code>doc/building.md (markdown version)</code>获取编译步骤。</p>
+<p>安装编译基础工具：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> build-essential<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>在配置或编译过程中缺少一些依赖，会有如下类似报错：</p>
+<pre class="line-numbers language-none"><code class="language-none">error: Could not find all X11 headers (shape.h Xrender.h XTest.h Intrinsic.h).
+ You might be able to fix this by running 
+ &#39;sudo apt-get install libx11-dev libxext-dev libxrender-dev libxtst-dev libxt-dev&#39;.<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>根据提示信息安装依赖，本人至少安装以下依赖：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">apt-get</span> <span class="token function">install</span> <span class="token function">zip</span>
+<span class="token function">apt-get</span> <span class="token function">install</span> libx11-dev
+<span class="token function">apt-get</span> <span class="token function">install</span> libxext-dev
+<span class="token function">apt-get</span> <span class="token function">install</span> libxrender-dev
+<span class="token function">apt-get</span> <span class="token function">install</span> libxtst-dev
+<span class="token function">apt-get</span> <span class="token function">install</span> libxt-dev
+<span class="token function">apt-get</span> <span class="token function">install</span> libcups2-dev
+<span class="token function">apt-get</span> <span class="token function">install</span> libfontconfig1-dev
+<span class="token function">apt-get</span> <span class="token function">install</span> libasound2-dev<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="3-配置"><a href="#3-配置" class="headerlink" title="3. 配置"></a>3. 配置</h2><p>在源码根目录下执行：</p>
+<pre class="line-numbers language-none"><code class="language-none">bash configure --enable-debug --with-jvm-variants&#x3D;server 
+    --enable-dtrace --disable-ccache --disable-warnings-as-errors<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>一些参数说明：</p>
+<pre class="line-numbers language-none"><code class="language-none">--enable-debug：启用debug模式
+--with-jvm-variants&#x3D;server：server模式
+--enable-dtrace：开启性能工具
+--disable-warnings-as-errors：跳过警告
+--with-boot-jdk：指定boot jdk路径
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+
+<p>成功结果：</p>
+<pre class="line-numbers language-none"><code class="language-none">Configuration summary:
+* Debug level:    release
+* HS debug level: product
+* JVM variants:   server
+* JVM features:   server: &#39;aot cds cmsgc compiler1 compiler2 epsilongc g1gc graal jfr jni-check jvmci jvmti management nmt parallelgc serialgc services vm-structs&#39;
+* OpenJDK target: OS: linux, CPU architecture: x86, address length: 64
+* Version string: 11-internal+0-adhoc.root.jdk11-1ddf9a99e4ad (11-internal)
+
+Tools summary:
+* Boot JDK:       openjdk version &quot;11.0.10&quot; 2021-01-19 OpenJDK Runtime Environment (build 11.0.10+9-Ubuntu-0ubuntu1.18.04) OpenJDK 64-Bit Server VM (build 11.0.10+9-Ubuntu-0ubuntu1.18.04, mixed mode, sharing)  (at &#x2F;usr&#x2F;lib&#x2F;jvm&#x2F;java-11-openjdk-amd64)
+* Toolchain:      gcc (GNU Compiler Collection)
+* C Compiler:     Version 7.5.0 (at &#x2F;usr&#x2F;bin&#x2F;gcc)
+* C++ Compiler:   Version 7.5.0 (at &#x2F;usr&#x2F;bin&#x2F;g++)
+
+Build performance summary:
+* Cores to use:   3
+* Memory limit:   3921 MB<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h2 id="4-编译"><a href="#4-编译" class="headerlink" title="4. 编译"></a>4. 编译</h2><p>配置后执行编译命令：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">make</span> images<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>成功结果：</p>
+<pre class="line-numbers language-none"><code class="language-none">Creating jdk image
+Stopping sjavac server
+Finished building target &#39;images&#39; in configuration &#39;linux-x86_64-normal-server-fastdebug&#39;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h2 id="5-验证"><a href="#5-验证" class="headerlink" title="5. 验证"></a>5. 验证</h2><p>找到编译好的jdk目录并验证：</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment">#编译日志路径</span>
+build/linux-x86_64-normal-server-fastdebug/configure.log
+<span class="token comment">#jdk路径</span>
+<span class="token builtin class-name">cd</span> build/linux-x86_64-normal-server-fastdebug/jdk
+<span class="token comment">#验证命令</span>
+./build/linux-x86_64-normal-server-fastdebug/jdk/bin/java <span class="token parameter variable">-version</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>成功结果：</p>
+<pre class="line-numbers language-none"><code class="language-none">openjdk version &quot;11-internal&quot; 2018-09-25
+OpenJDK Runtime Environment (fastdebug build 11-internal+0-adhoc.root.jdk11-1ddf9a99e4ad)
+OpenJDK 64-Bit Server VM (fastdebug build 11-internal+0-adhoc.root.jdk11-1ddf9a99e4ad, mixed mode)<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h2 id="6-问题"><a href="#6-问题" class="headerlink" title="6. 问题"></a>6. 问题</h2><ol>
+<li>配置编译过程中，大部分都是缺少依赖问题，提示缺少什么依赖安装什么依赖即可</li>
+<li><code>Boot JDK</code>未找到，如下错误<pre class="line-numbers language-none"><code class="language-none">Could not find a valid Boot JDK. You might be able to fix this by running &#39;sudo apt-get install openjdk-8-jdk&#39;.
+configure: This might be fixed by explicitly setting --with-boot-jdk
+configure: error: Cannot continue
+configure exiting with result code 1<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+安装<code>openjdk-8-jdk</code>依赖：<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">apt-get</span> <span class="token function">install</span> openjdk-8-jdk<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+仍然报错：<pre class="line-numbers language-none"><code class="language-none">configure: Potential Boot JDK found at &#x2F;usr&#x2F;lib&#x2F;jvm&#x2F;java-1.8.0-openjdk-amd64 is incorrect JDK version (openjdk version &quot;1.8.0_282&quot;); ignoring
+configure: (Your Boot JDK version must be one of: 10 11)<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+卸载<code>openjdk-8-jdk</code>并安装<code>openjdk-11-jdk</code>：<pre class="line-numbers language-none"><code class="language-none">apt-get remove openjdk-8-jdk
+apt-get install openjdk-11-jdk
+apt autoremove<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+
+</li>
+</ol>
+<p>至此，在Ubuntu中编译了OpenJDK11。</p>
+
+        </div>
+          
+        <div class="top-div">
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E4%B8%8B%E8%BD%BD"><span class="top-box-text">1. 下载</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-%E4%BE%9D%E8%B5%96"><span class="top-box-text">2. 依赖</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-%E9%85%8D%E7%BD%AE"><span class="top-box-text">3. 配置</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-%E7%BC%96%E8%AF%91"><span class="top-box-text">4. 编译</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#5-%E9%AA%8C%E8%AF%81"><span class="top-box-text">5. 验证</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#6-%E9%97%AE%E9%A2%98"><span class="top-box-text">6. 问题</span></a></li></ol>
+        </div>
+          
+      </div>
+    </div>
+
+    
+      <div class="next-post">
+        <a class="purple-link" href="/2021/03/09/mysql-data/">
+          <h3 class="post-title">
+            下一篇：MySQL阻塞，修复损坏的innodb
+          </h3>
+        </a>
+      </div>
+    
+  </div>
+
+
+
+
+
+
+
+
+
+
+<footer>
+<div class="site-footer">
+  <div class="social-container">
+    
+      
+        <a aria-label="跳转至github" href="https://github.com/sevndata" target="_blank">
+          <i class="icon icon-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+        <a aria-label="跳转至email" href="mailto:sevndata@gmail.com" target="_blank">
+          <i class="icon icon-email"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  
+    Powered by <a href="https://hexo.io/" target="_blank">Hexo</a> <a href="https://github.com/f-dong/hexo-theme-minimalism" target="_blank">Theme</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">© 2023 sevndata.com 版权所有</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/deed.zh-hans" target="_blank">内容发布遵循 CC-BY-NC-SA 协议</a>
+  
+  
+  
+    
+     |
+    
+      <a href="https://sevndata.com/" target="_blank">sevndata@gmail.com</a>
+  
+  
+</div>
+</footer>
+
+
+      </div>
+    </div>
+    
+<script id="hexo-configurations"> window.theme_config = {"image":{"lazyload_enable":true,"photo_zoom":"simple-lightbox"}}; window.is_post = true; </script>
+
+<script src="/js/main.js"></script>
+
+
+
+
+
+
+  </body>
+</html>
+
