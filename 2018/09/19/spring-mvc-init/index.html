@@ -101,17 +101,21 @@
 <span id="more"></span>
 
 <p>首先看<code>Spring MVC</code>的结构。我们知道Spring MVC从创建<code>DispatcherServlet</code>开始:</p>
-<pre class="mermaid" id="mermaid"></pre><script>
-<pre><code>    // 使用 DOMContentLoaded 事件确保 DOM 构建完成后执行脚本
-    document.addEventListener(&apos;DOMContentLoaded&apos;, function() &#123;
-    const originalContent = &quot;  graph BT\n  DispatcherServlet --&gt; FrameworkServlet\n  DispatcherServlet -.- SuppressWarnings\n  FrameworkServlet --&gt; HttpServletBean\n  FrameworkServlet -.-&gt; ApplicationContextAware\n  HttpServletBean --&gt; HttpServlet\n  HttpServletBean -.-&gt; EnvironmentAware\n  HttpServletBean -.-&gt; EnvironmentCapable\n  HttpServlet --&gt; GenericServlet\n  EnvironmentAware --&gt; Aware\n  ApplicationContextAware --&gt; Aware\n  GenericServlet -.-&gt;ServletConfig\n  GenericServlet -.-&gt;Servlet\n  GenericServlet -.-&gt;Serializable&quot;;
-    const mermaid = document.getElementById(&apos;mermaid&apos;);
-    // 创建文本节点并设置内容
-    const textNode = document.createTextNode(originalContent);
-    // 将文本节点添加到元素中
-    mermaid.appendChild(textNode);
-  &#125;);
-&lt;/script&gt;</code></pre><p>可以看到<code>DispatcherServlet</code>继承<code>FrameworkServlet</code>,<code>FrameworkServlet</code>继承<code>HttpServletBean</code>,<code>HttpServletBean</code>继承<code>Servlet</code>中的<code>HttpServlet</code>。</p>
+<pre class="line-numbers language-none"><code class="language-none">graph BT
+DispatcherServlet --&gt; FrameworkServlet
+DispatcherServlet -.- SuppressWarnings
+FrameworkServlet --&gt; HttpServletBean
+FrameworkServlet -.-&gt; ApplicationContextAware
+HttpServletBean --&gt; HttpServlet
+HttpServletBean -.-&gt; EnvironmentAware
+HttpServletBean -.-&gt; EnvironmentCapable
+HttpServlet --&gt; GenericServlet
+EnvironmentAware --&gt; Aware
+ApplicationContextAware --&gt; Aware
+GenericServlet -.-&gt;ServletConfig
+GenericServlet -.-&gt;Servlet
+GenericServlet -.-&gt;Serializable<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>可以看到<code>DispatcherServlet</code>继承<code>FrameworkServlet</code>,<code>FrameworkServlet</code>继承<code>HttpServletBean</code>,<code>HttpServletBean</code>继承<code>Servlet</code>中的<code>HttpServlet</code>。</p>
 <h2 id="1-接口"><a href="#1-接口" class="headerlink" title="1. 接口"></a>1. 接口</h2><p>这三个类实现了<code>EnvironmentCapable</code>,<code>EnvironmentAware</code>.<code>ApplicationContextAware</code>接口。可以实现这些接口获取<code>Environment</code>,<code>ApplicationContext</code>。</p>
 <p><code>Environment</code>：应用运行的环境，包括应用环境的：<code>Profiles</code>和<code>Properties</code></p>
 <pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">interface</span> <span class="token class-name">Environment</span> <span class="token keyword">extends</span> <span class="token class-name">PropertyResolver</span> <span class="token punctuation">&#123;</span>
@@ -373,11 +377,11 @@ mvn install <span class="token operator">-</span><span class="token class-name">
       <span class="token keyword">return</span> <span class="token keyword">new</span> <span class="token class-name">LinkedList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
   <span class="token punctuation">&#125;</span>
 <span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-</script>
+
         </div>
           
         <div class="top-div">
-          
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-%E6%8E%A5%E5%8F%A3"><span class="top-box-text">1. 接口</span></a><ol class="top-box-child"><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#1-Profiles"><span class="top-box-text">1. Profiles</span></a></li><li class="top-box-item top-box-level-3"><a class="top-box-link" href="#2-Properties"><span class="top-box-text">2. Properties</span></a></li></ol></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-HttpServletBean"><span class="top-box-text">2. HttpServletBean</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-FrameworkServlet"><span class="top-box-text">3. FrameworkServlet</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-DispatcherServlet"><span class="top-box-text">4. DispatcherServlet</span></a></li></ol>
         </div>
           
       </div>

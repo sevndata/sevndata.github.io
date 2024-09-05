@@ -99,27 +99,22 @@
         <div class="post-content">
           <p>浅析在java web开发中使用的servlet。</p>
 <span id="more"></span>
-<h2 id="1-main"><a href="#1-main" class="headerlink" title="1. main"></a>1. main</h2><pre class="mermaid" id="mermaid"></pre><script>
-<pre><code>    // 使用 DOMContentLoaded 事件确保 DOM 构建完成后执行脚本
-    document.addEventListener(&apos;DOMContentLoaded&apos;, function() &#123;
-    const originalContent = &quot;  graph BT\n  HttpServlet --&gt; GenericServlet\n  GenericServlet -.-&gt; Serializable\n  GenericServlet -.-&gt; Servlet\n  GenericServlet -.-&gt; ServletConfig&quot;;
-    const mermaid = document.getElementById(&apos;mermaid&apos;);
-    // 创建文本节点并设置内容
-    const textNode = document.createTextNode(originalContent);
-    // 将文本节点添加到元素中
-    mermaid.appendChild(textNode);
-  &#125;);
-&lt;/script&gt;</code></pre><pre class="mermaid" id="mermaid"></pre><script>
-<pre><code>    // 使用 DOMContentLoaded 事件确保 DOM 构建完成后执行脚本
-    document.addEventListener(&apos;DOMContentLoaded&apos;, function() &#123;
-    const originalContent = &quot;  graph BT\n  HttpServletRequestWrapper --&gt;ServletRequestWrapper\n  HttpServletRequestWrapper -.-&gt;HttpServletRequest\n  ServletRequestWrapper -.-&gt; ServletRequest\n  HttpServletRequest --&gt; ServletRequest\n\n  HttpServletResponseWrapper --&gt;ServletResponseWrapper\n  HttpServletResponseWrapper -.-&gt;HttpServletResponse\n  ServletResponseWrapper -.-&gt; ServletResponse \n  HttpServletResponse --&gt; ServletResponse&quot;;
-    const mermaid = document.getElementById(&apos;mermaid&apos;);
-    // 创建文本节点并设置内容
-    const textNode = document.createTextNode(originalContent);
-    // 将文本节点添加到元素中
-    mermaid.appendChild(textNode);
-  &#125;);
-&lt;/script&gt;</code></pre><p>servlet实例化,服务。</p>
+<h2 id="1-main"><a href="#1-main" class="headerlink" title="1. main"></a>1. main</h2><pre class="line-numbers language-none"><code class="language-none">graph BT
+HttpServlet --&gt; GenericServlet
+GenericServlet -.-&gt; Serializable
+GenericServlet -.-&gt; Servlet
+GenericServlet -.-&gt; ServletConfig<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-none"><code class="language-none">graph BT
+HttpServletRequestWrapper --&gt;ServletRequestWrapper
+HttpServletRequestWrapper -.-&gt;HttpServletRequest
+ServletRequestWrapper -.-&gt; ServletRequest
+HttpServletRequest --&gt; ServletRequest
+
+HttpServletResponseWrapper --&gt;ServletResponseWrapper
+HttpServletResponseWrapper -.-&gt;HttpServletResponse
+ServletResponseWrapper -.-&gt; ServletResponse 
+HttpServletResponse --&gt; ServletResponse <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>servlet实例化,服务。</p>
 <ol>
 <li><code>Servlet</code>: init,service,destroy</li>
 <li><code>GenericServlet</code></li>
@@ -165,11 +160,11 @@
 <h2 id="5-Filter"><a href="#5-Filter" class="headerlink" title="5. Filter"></a>5. Filter</h2><p><code>Filter</code>,<code>FilterChain</code>,<code>FilterConfig</code></p>
 <h2 id="6-Asyn"><a href="#6-Asyn" class="headerlink" title="6. Asyn"></a>6. Asyn</h2><p>servlet3.0支持异步。</p>
 <pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token keyword">void</span> <span class="token function">start</span><span class="token punctuation">(</span><span class="token class-name">Runnable</span> run<span class="token punctuation">)</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-</script>
+
         </div>
           
         <div class="top-div">
-          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-main"><span class="top-box-text">1. main</span></a></li></ol>
+          <ol class="top-box"><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#1-main"><span class="top-box-text">1. main</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#2-Wrapper"><span class="top-box-text">2. Wrapper</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#3-ServletContainerInitializer"><span class="top-box-text">3. ServletContainerInitializer</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#4-Listener"><span class="top-box-text">4. Listener</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#5-Filter"><span class="top-box-text">5. Filter</span></a></li><li class="top-box-item top-box-level-2"><a class="top-box-link" href="#6-Asyn"><span class="top-box-text">6. Asyn</span></a></li></ol>
         </div>
           
       </div>
